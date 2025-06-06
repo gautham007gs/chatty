@@ -47,3 +47,6 @@ export async function GET() {
         details: "Ensure your Firebase project is set up, Firestore is enabled, environment variables (NEXT_PUBLIC_FIREBASE_...) are correct in .env.local, and Firestore security rules allow access."
       }, 
       { status: 500 }
+    ); // Added missing closing parenthesis here
+  }
+}
