@@ -1,0 +1,160 @@
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+}
+
+@layer base {
+  :root {
+    /* WhatsApp Inspired Green Theme */
+    --background: 48 33% 94%; /* Light Beige/Cream for page background (e.g., #F5F1E8) */
+    --foreground: 0 0% 15%; /* Dark Gray for text - good contrast */
+
+    --card: 0 0% 100%; /* Default card background (white) */
+    --card-foreground: 0 0% 15%; /* Text on default cards */
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 15%;
+
+    --primary: 130 50% 45%; /* WhatsApp Green (e.g., #34A853 or a similar shade like #409977) */
+    --primary-foreground: 0 0% 100%; /* White text on primary green */
+
+    --secondary: 120 20% 90%; /* Lighter shade for less prominent elements (e.g., #E1E8E0) */
+    --secondary-foreground: 0 0% 20%;
+
+    --muted: 0 0% 96%; 
+    --muted-foreground: 0 0% 45%; /* Grey for timestamps, non-read ticks */
+
+    --accent: 30 90% 60%; /* A distinct accent color, e.g. an orange/yellow if not blue */
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 120 15% 80%; /* (e.g., #C4CEC8) */
+    --input: 0 0% 98%; /* Lighter input background */
+    --ring: 130 50% 45%; /* Primary green for rings */
+
+    --chart-1: 130 50% 50%; /* Green for charts */
+    --chart-2: 150 45% 45%; /* Teal/Darker Green */
+    --chart-3: 197 37% 24%;
+    --chart-4: 43 74% 66%;
+    --chart-5: 27 87% 67%;
+    --radius: 0.5rem;
+
+    /* Sidebar (adjust if used, keeping WhatsApp feel) */
+    --sidebar-background: 120 25% 92%; /* (e.g., #E6EBE5) */
+    --sidebar-foreground: 0 0% 15%;
+    --sidebar-primary: 130 50% 45%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 120 20% 88%;
+    --sidebar-accent-foreground: 0 0% 15%;
+    --sidebar-border: 120 15% 80%;
+    --sidebar-ring: 130 50% 45%;
+
+    /* Chat specific variables reflecting the new theme */
+    --chat-bg-user: 98 55% 88%; /* Light green for user messages e.g. #DDF7C7 (hsl(98, 55%, 88%)) */
+    --chat-text-user: 0 0% 10%; /* Dark Grey/Black text on user messages */
+    
+    --chat-bg-ai: 0 0% 97%; /* WhatsApp AI/other person bubble: Very light grey/off-white (e.g. #F7F7F7) */
+    --chat-text-ai: 0 0% 15%; /* Dark text for AI messages on light background */
+    
+    /* This is the background for the chat message viewing area (ChatView.tsx) */
+    /* It's a light beige, suitable to go under a doodle pattern if you add one. */
+    --chat-bg-default: 48 33% 92%; /* Lighter beige for chat area background - e.g. #F2EDE4 */
+    
+    --chat-header-bg: 0 0% 98%; /* Whitish background for in-chat header */
+    --chat-header-text: hsl(var(--foreground)); /* Dark text on in-chat header */
+    
+    --chat-input-bg: 0 0% 96%; /* Light grey/off-white for input area */
+  }
+
+  .dark {
+    /* Dark Theme (adjust if needed, keeping general structure but with darker greens/greys) */
+    --background: 220 13% 10%; /* Dark grey/blue background */
+    --foreground: 120 10% 85%; /* Light grey/greenish text */
+
+    --card: 220 13% 18%; /* AI message bubble background (darker) */
+    --card-foreground: 120 10% 85%;
+
+    --popover: 220 13% 10%;
+    --popover-foreground: 120 10% 85%;
+
+    --primary: 130 50% 55%; /* WhatsApp Green (brighter for dark mode) */
+    --primary-foreground: 0 0% 10%; /* Dark text on primary green */
+
+    --secondary: 220 13% 25%;
+    --secondary-foreground: 120 10% 85%;
+
+    --muted: 220 13% 22%; 
+    --muted-foreground: 120 10% 65%;
+
+    --accent: 30 80% 65%; /* Brighter accent for dark mode */
+    --accent-foreground: 0 0% 10%;
+
+    --destructive: 0 70% 50%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 220 13% 30%;
+    --input: 220 13% 22%; /* Darker input field */
+    --ring: 130 50% 55%;
+
+    --chart-1: 130 50% 60%;
+    --chart-2: 150 45% 55%;
+
+    /* Chat specific variables - Dark Mode */
+    --chat-bg-user: 130 40% 28%; /* Darker shade of user message green for dark mode (e.g. #2E4B2E) */
+    --chat-text-user: 120 15% 90%; /* Light text for user messages in dark mode */
+
+    --chat-bg-ai: 220 10% 20%; /* WhatsApp AI/other person bubble: Dark grey (e.g. #2E3033) */
+    --chat-text-ai: 0 0% 90%; /* Light text for AI messages on dark background */
+    
+    /* This is the background for the chat message viewing area in dark mode */
+    --chat-bg-default: 220 13% 12%; /* Darker grey for chat area background */
+    
+    --chat-header-bg: 220 13% 18%; /* Darker background for in-chat header in dark mode */
+    --chat-header-text: hsl(var(--foreground)); /* Light text for in-chat header in dark mode */
+    
+    --chat-input-bg: 220 13% 16%; 
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    background-color: hsl(var(--chat-bg-default)); /* Uses the chat area background for the whole page */
+    @apply text-foreground;
+  }
+  /* Ensure header text color is applied */
+  header {
+    color: hsl(var(--chat-header-text)); 
+  }
+  header .text-muted-foreground { /* For online status in header */
+    color: hsl(var(--chat-header-text) / 0.7); 
+  }
+   header .lucide-more-vertical, header .lucide-phone, header .lucide-video, header .lucide-arrow-left { /* For icons in header */
+    color: hsl(var(--chat-header-text) / 0.85); 
+  }
+}
+
+/* Custom scrollbar for chat view */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: hsl(var(--secondary) / 0.5); 
+  border-radius: 10px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: hsl(var(--muted-foreground) / 0.7);
+  border-radius: 10px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--accent) / 0.9); /* Uses accent color for hover */
+}
+    

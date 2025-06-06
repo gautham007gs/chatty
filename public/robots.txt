@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /api/
+
+# Replace [YOUR_DOMAIN] with your actual domain once deployed
+# Example: Sitemap: https://www.kruthikachat.com/sitemap.xml
+Sitemap: https://[YOUR_DOMAIN]/sitemap.xml
