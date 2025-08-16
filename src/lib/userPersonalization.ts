@@ -21,6 +21,10 @@ interface UserProfile {
   repeatUser: boolean;
   dailyVisitCount: number;
   totalVisitDays: number;
+  lastAPIFailure?: number;
+  apiFailureCount?: number;
+  preferredChatTimes?: number[];
+  lastExcuseType?: string;
 }
 
 class UserPersonalization {
@@ -261,11 +265,44 @@ class UserPersonalization {
     );
 
     if (isRepetitiveUser && Math.random() < 0.7) {
-      profile.apiCallsAvoided++;
+      profile.apiCallsAvoaded++;
       return false; // Skip API 70% for repetitive users
     }
 
     return true;
+  }
+
+  // Track API failures for better user experience
+  recordAPIFailure(userId: string): void {
+    let profile = this.profiles.get(userId);
+    if (!profile) return;
+
+    profile.lastAPIFailure = Date.now();
+    profile.apiFailureCount = (profile.apiFailureCount || 0) + 1;
+    this.profiles.set(userId, profile);
+  }
+
+  // Get user's preferred excuse type based on their interaction history
+  getPreferredExcuseType(userId: string): 'network' | 'personal' | 'environmental' | 'time' {
+    const profile = this.profiles.get(userId);
+    if (!profile) return 'network';
+
+    // If user talks about family a lot, use personal excuses
+    if (profile.favoriteTopics.includes('family')) return 'personal';
+    
+    // If user talks about weather/location, use environmental
+    if (profile.favoriteTopics.some(topic => ['weather', 'rain', 'heat'].includes(topic))) {
+      return 'environmental';
+    }
+
+    // If user is active at specific times, use time-based
+    const currentHour = new Date().getHours();
+    if (profile.preferredChatTimes && profile.preferredChatTimes.includes(currentHour)) {
+      return 'time';
+    }
+
+    // Default to network issues (most universal)
+    return 'network';
   }
 
   // Helper function for fuzzy matching

@@ -8,7 +8,7 @@ import ChatView from '@/components/chat/ChatView';
 import ChatInput from '@/components/chat/ChatInput';
 import type { Message, AIProfile, MessageStatus, AdSettings, AIMediaAssetsConfig } from '@/types';
 import { defaultAIProfile, defaultAdSettings, defaultAIMediaAssetsConfig, DEFAULT_ADSTERRA_DIRECT_LINK, DEFAULT_MONETAG_DIRECT_LINK } from '@/config/ai';
-import { generateResponse, type EmotionalStateInput, type EmotionalStateOutput } from '@/ai/flows/emotional-state-simulation';
+import { generateResponse, getAPIFailureFallback, type EmotionalStateInput, type EmotionalStateOutput } from '@/ai/flows/emotional-state-simulation';
 import { generateOfflineMessage, type OfflineMessageInput } from '@/ai/flows/offline-message-generation';
 import { userPersonalization } from '@/lib/userPersonalization';
 import { useToast } from "@/hooks/use-toast";
@@ -273,9 +273,9 @@ const KruthikaChatPage: NextPage = () => {
 
         supabase
           .from('daily_activity_log')
-          .insert({ 
-            user_pseudo_id: userPseudoId, 
-            activity_date: today, 
+          .insert({
+            user_pseudo_id: userPseudoId,
+            activity_date: today,
             chat_id: 'kruthika_chat',
             visit_streak: currentStreak,
             total_visits: dailyVisits

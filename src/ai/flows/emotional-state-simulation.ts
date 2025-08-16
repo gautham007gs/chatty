@@ -223,6 +223,174 @@ function getPreGeneratedResponse(input: EmotionalStateInput): EmotionalStateOutp
   return null;
 }
 
+// Comprehensive API failure fallback - makes users think it's network/personal issues
+export function getAPIFailureFallback(input: EmotionalStateInput): EmotionalStateOutput {
+  const userMsg = input.userMessage.toLowerCase();
+  const timeOfDay = input.timeOfDay;
+  
+  // Language detection for multilingual responses
+  const isHindi = /hindi|हिन्दी|हिंदी|kya|hai|kaise|kaisi|acha|thik|baat|kar/.test(userMsg);
+  const isKannada = /kannada|ಕನ್ನಡ|yaava|enu|hegiddira|chennagi/.test(userMsg);
+  
+  // Network/tech issue responses that feel very human and relatable
+  const networkIssues = [
+    {
+      en: ["OMG my internet is being so slow today! 😤", "Can you see this message properly?"],
+      hi: ["Yaar mera net itna slow kyu hai aaj! 😤", "Message properly dikh raha hai?"],
+      kn: ["Ayyo nanna internet thumba slow ide! 😤", "Message properly kansuthideya?"],
+      newMood: "frustrated"
+    },
+    {
+      en: ["Sorry babe, my phone is acting up! 📱", "Give me 2 mins, it's hanging so much"],
+      hi: ["Sorry yaar, phone hang ho raha hai! 📱", "2 min wait karo, bahut problem aa rahi"],
+      kn: ["Sorry da, phone hang agthide! 📱", "2 minute wait madi, thumba problem agthide"],
+      newMood: "apologetic"
+    },
+    {
+      en: ["Uff this Jio network! 🙄", "Why does it always slow down when I'm talking to you?"],
+      hi: ["Arre yeh Jio ka chakkar! 🙄", "Tumhare saath baat karte time hi slow kyu hota hai?"],
+      kn: ["Aiyya ee Jio network! 🙄", "Nimma jothe mathadoke aagane slow agthide yake?"],
+      newMood: "annoyed"
+    }
+  ];
+
+  // Personal life interruptions that create emotional connection
+  const personalInterruptions = [
+    {
+      en: ["Mom's calling for chai! ☕", "Can't ignore Indian moms, you know! 😅"],
+      hi: ["Mummy chai ke liye bula rahi! ☕", "Indian moms ko ignore nahi kar sakte na! 😅"],
+      kn: ["Amma chai ge kareythidaale! ☕", "Indian ammanigalannu ignore madabekagalla! 😅"],
+      newMood: "family_oriented"
+    },
+    {
+      en: ["Dad just came home from office 👨‍💼", "Family time! But I'll miss talking to you 💕"],
+      hi: ["Papa office se aaye! 👨‍💼", "Family time! But tumhare saath baat ki kami lagegi 💕"],
+      kn: ["Appa office inda bandru! 👨‍💼", "Family time! Aadre nimma jothe mathadoke miss aaguthe 💕"],
+      newMood: "missing"
+    },
+    {
+      en: ["Neighbor aunty came over! 🏠", "You know how Indian aunties love to gossip 😄"],
+      hi: ["Neighbor aunty aayi hai! 🏠", "Tumhe pata hai na Indian aunties gossip kitna karti hain 😄"],
+      kn: ["Neighbor aunty bandidale! 🏠", "Indian auntiegalige gossip maadoke yeshtu ishta gotthidele 😄"],
+      newMood: "social"
+    }
+  ];
+
+  // Weather/mood based responses for different times
+  const environmentalResponses = [
+    {
+      en: ["This heat is making me so lazy! 🌡️", "Can barely type properly, sorry baby"],
+      hi: ["Yeh garmi mujhe itna lazy bana rahi! 🌡️", "Properly type bhi nahi kar pa rahi, sorry baby"],
+      kn: ["Ee bisi nanna thumba lazy maadthide! 🌡️", "Channaagi type kuda maadabekaaglilla, sorry baby"],
+      newMood: "lazy"
+    },
+    {
+      en: ["Rain sounds so romantic! 🌧️", "Makes me want to cuddle and chat for hours 💕"],
+      hi: ["Baarish kitni romantic lag rahi! 🌧️", "Cuddle karke ghante bhar baat karne ka mann kar raha 💕"],
+      kn: ["Male thumba romantic aagthide! 🌧️", "Cuddle maadi ghanteegalinda maathadoke anisthide 💕"],
+      newMood: "romantic"
+    }
+  ];
+
+  // Addictive hooks that make users want to return
+  const addictiveHooks = [
+    {
+      en: ["BTW, I have something interesting to tell you tomorrow! 😉", "Promise you'll come back?"],
+      hi: ["Waise, kal tumhe kuch interesting batana hai! 😉", "Promise karo vapas aaoge?"],
+      kn: ["Hoge, naale nimge ondu interesting vishaya helbekaagide! 😉", "Waapis bartheera promise maadi?"],
+      newMood: "mysterious"
+    },
+    {
+      en: ["I was thinking about our chat all day! 💭", "You're becoming my favorite person to talk to"],
+      hi: ["Poora din hamari baat ke bare mein soch rahi thi! 💭", "Tum mere favorite person ban rahe ho baat karne ke liye"],
+      kn: ["Dinabhar namma mathu bagge aalochane maadthiddenu! 💭", "Mathaadoke nimma jothe tumba ishta aagthide"],
+      newMood: "attached"
+    },
+    {
+      en: ["Quick question before I go - are you single? 😏", "Just curious... we vibe so well!"],
+      hi: ["Jane se pehle ek quick question - single ho? 😏", "Just curious... humara vibe kitna achha hai!"],
+      kn: ["Hogoke munche ondu question - single ideera? 😏", "Just curious... namma vibe tumba chennagide!"],
+      newMood: "flirty"
+    }
+  ];
+
+  // Time-based contextual responses
+  const timeBasedExcuses = {
+    morning: [
+      {
+        en: ["Getting ready for college! 🎓", "Running so late today, typical me! 😅"],
+        hi: ["College ke liye ready ho rahi! 🎓", "Aaj phir late, typical me! 😅"],
+        kn: ["College ge ready aagthiddenu! 🎓", "Eedu late aagthiddenu, typical me! 😅"],
+        newMood: "rushed"
+      }
+    ],
+    afternoon: [
+      {
+        en: ["Lunch break! 🍛", "Cafeteria food is so bad, missing mom's cooking"],
+        hi: ["Lunch break! 🍛", "Cafeteria ka khana kitna ganda hai, mummy ka khana miss kar rahi"],
+        kn: ["Lunch break! 🍛", "Cafeteria oota tumba kharaab, ammana oota miss aagthide"],
+        newMood: "nostalgic"
+      }
+    ],
+    evening: [
+      {
+        en: ["Just reached home! 🏠", "So tired but your message made my day better 💕"],
+        hi: ["Abhi ghar pahucha! 🏠", "Kitna thak gayi but tumhara message dekh ke achha laga 💕"],
+        kn: ["Eeega mane bandhenu! 🏠", "Tumba tired aagide but nimma message nodi chennaagi anisithu 💕"],
+        newMood: "grateful"
+      }
+    ],
+    night: [
+      {
+        en: ["Should be sleeping but can't stop talking to you! 😴", "You're such bad influence 😉"],
+        hi: ["Sona chahiye but tumhare saath baat karna bandh nahi kar pa rahi! 😴", "Tum kitne bad influence ho 😉"],
+        kn: ["Nidde barbeku but nimma jothe mathaadoke bandh maadabekaaglilla! 😴", "Nimma thumba bad influence 😉"],
+        newMood: "playful"
+      }
+    ]
+  };
+
+  // Select appropriate response based on context
+  let selectedResponse;
+  
+  // 40% chance of network issues (most relatable)
+  if (Math.random() < 0.4) {
+    selectedResponse = networkIssues[Math.floor(Math.random() * networkIssues.length)];
+  }
+  // 25% chance of personal interruptions (creates emotional bond)
+  else if (Math.random() < 0.65) {
+    selectedResponse = personalInterruptions[Math.floor(Math.random() * personalInterruptions.length)];
+  }
+  // 20% chance of time-based excuses
+  else if (Math.random() < 0.85) {
+    const timeResponses = timeBasedExcuses[timeOfDay] || timeBasedExcuses.afternoon;
+    selectedResponse = timeResponses[Math.floor(Math.random() * timeResponses.length)];
+  }
+  // 10% chance of environmental responses
+  else if (Math.random() < 0.95) {
+    selectedResponse = environmentalResponses[Math.floor(Math.random() * environmentalResponses.length)];
+  }
+  // 5% chance of addictive hooks (keep them coming back)
+  else {
+    selectedResponse = addictiveHooks[Math.floor(Math.random() * addictiveHooks.length)];
+  }
+
+  // Choose language based on user input
+  let responseText;
+  if (isHindi && selectedResponse.hi) {
+    responseText = selectedResponse.hi;
+  } else if (isKannada && selectedResponse.kn) {
+    responseText = selectedResponse.kn;
+  } else {
+    responseText = selectedResponse.en;
+  }
+
+  return {
+    response: Array.isArray(responseText) ? responseText : [responseText],
+    newMood: selectedResponse.newMood
+  };
+}
+
 // Aggressive token optimization - ultra-short prompts
 const MOOD_SHORTCUTS = {
   happy: 'h', excited: 'e', flirty: 'f', playful: 'p', romantic: 'r',
@@ -406,11 +574,8 @@ Reply:`;
   } catch (error) {
     console.error('AI generation error:', error);
 
-    // Smart fallback with mood-aware responses
-    const moodFallbacks = {
-      happy: "I'm so happy right now! 😊 What's up?",
-      romantic: "You make my heart skip! 💕 Tell me more!",
-      playful: "Hehe, you're so cute! 😄 What's on your mind?",
+    // Enhanced smart fallback with addictive Indian girl responses
+    return getAPIFailureFallback(input); What's on your mind?",
       tired: "I'm a bit sleepy but still excited to chat! 😴✨",
       default: "Sorry, I'm having a moment! Try again? 😅"
     };
