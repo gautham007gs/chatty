@@ -21,4 +21,4 @@ mode = "sequential"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "npm run dev -- --turbopack -p 9002"
+args = "npm run dev -- --turbopack -p 5000"

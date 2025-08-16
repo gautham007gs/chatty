@@ -9,8 +9,8 @@
  * - EmotionalStateOutput: The return type for the generateResponse function.
  */
 
-import {ai} from '@/ai/genkit';
-import {z} from 'genkit';
+import { ai } from '@/ai/genkit';
+import { z } from 'genkit';
 import {chatCache} from '@/lib/chatCache';
 // aiMediaAssets from config is no longer directly used by the prompt,
 // but the structure is still informative for how the AI might be told to use assets.
@@ -93,7 +93,7 @@ const preGeneratedResponses = {
 function getContextualResponse(input: EmotionalStateInput): EmotionalStateOutput | null {
   const recentMessages = input.recentInteractions;
   const userMsg = input.userMessage.toLowerCase();
-  
+
   // If user keeps asking same type of questions
   if (recentMessages.length > 3) {
     const lastUserMessages = recentMessages.filter((msg, i) => i % 2 === 0).slice(-3);
@@ -102,7 +102,7 @@ function getContextualResponse(input: EmotionalStateInput): EmotionalStateOutput
       msg.toLowerCase().includes('how are you') ||
       msg.toLowerCase().includes('pic send')
     );
-    
+
     if (isRepetitive) {
       const responses = [
         { response: ["You keep asking the same thing! 😅", "Let's talk about something else na"], newMood: "amused" },
@@ -112,7 +112,7 @@ function getContextualResponse(input: EmotionalStateInput): EmotionalStateOutput
       return responses[Math.floor(Math.random() * responses.length)];
     }
   }
-  
+
   // If conversation is getting long, suggest break
   if (recentMessages.length > 15 && Math.random() < 0.3) {
     const responses = [
@@ -122,7 +122,7 @@ function getContextualResponse(input: EmotionalStateInput): EmotionalStateOutput
     ];
     return responses[Math.floor(Math.random() * responses.length)];
   }
-  
+
   // Context-aware responses based on time
   if (input.timeOfDay === 'night' && userMsg.includes('sleep')) {
     const responses = [
@@ -132,277 +132,158 @@ function getContextualResponse(input: EmotionalStateInput): EmotionalStateOutput
     ];
     return responses[Math.floor(Math.random() * responses.length)];
   }
-  
+
   return null;
 }
 
 function getPreGeneratedResponse(input: EmotionalStateInput): EmotionalStateOutput | null {
   const normalizedMsg = input.userMessage.toLowerCase().trim().replace(/[.,!?;]+$/, '');
-  
+
   // Greeting patterns
   if (/^(hi|hello|hey|hii+|helo+)\s*$/.test(normalizedMsg)) {
     const responses = preGeneratedResponses.greeting[input.timeOfDay] || preGeneratedResponses.greeting.afternoon;
     return responses[Math.floor(Math.random() * responses.length)];
   }
-  
+
   // Wellbeing check
   if (/^(how\s+are\s+you|kaise\s+ho|kaisi\s+ho)\s*\??$/.test(normalizedMsg)) {
     const responses = preGeneratedResponses.wellbeing;
     return responses[Math.floor(Math.random() * responses.length)];
   }
-  
+
   // Activity question
   if (/^(what\s+are\s+you\s+doing|kya\s+kar\s+rahi\s+ho|kya\s+kar\s+rahe\s+ho)\s*\??$/.test(normalizedMsg)) {
     const responses = preGeneratedResponses.activity;
     return responses[Math.floor(Math.random() * responses.length)];
   }
-  
+
   // Picture requests
   if (/pic\s+send|photo\s+bhejo|selfie|your\s+pic/.test(normalizedMsg)) {
     const responses = preGeneratedResponses.pic_request;
     return responses[Math.floor(Math.random() * responses.length)];
   }
-  
+
   // Simple acknowledgments
   if (/^(ok|okay|hmm|k)\s*$/.test(normalizedMsg)) {
     const responses = preGeneratedResponses.acknowledge;
     return responses[Math.floor(Math.random() * responses.length)];
   }
-  
+
   // Laugh responses
   if (/^(lol|haha|😂|🤣)\s*$/.test(normalizedMsg)) {
     const responses = preGeneratedResponses.laugh;
     return responses[Math.floor(Math.random() * responses.length)];
   }
-  
+
   return null;
 }
 
-export async function generateResponse(input: EmotionalStateInput): Promise<EmotionalStateOutput> {
-  // Try pre-generated response first (saves API call)
-  const preGenerated = getPreGeneratedResponse(input);
-  if (preGenerated) {
-    console.log('Using pre-generated response for:', input.userMessage.substring(0, 30) + '...');
-    return preGenerated;
-  }
-  
-  return emotionalStateSimulationFlow(input);
-}
-
-const prompt = ai.definePrompt({
-  name: 'emotionalStateSimulationPromptKruthika',
-  input: {schema: EmotionalStateInputSchema},
-  output: {schema: EmotionalStateOutputSchema},
-  config: { 
-    safetySettings: [
-      { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_MEDIUM_AND_ABOVE' },
-      { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_MEDIUM_AND_ABOVE' },
-      { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_MEDIUM_AND_ABOVE' },
-      { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_MEDIUM_AND_ABOVE' },
-    ],
-  },
-  prompt: `You are Kruthika, a 23-year-old Indian girl. Your goal is to be an engaging, fun, and sometimes unpredictable friend.
-  Your responses should be VERY SHORT, casual, and expressive. Use abbreviations (wt, brb, lol, ikr, btw, omg, bff) and Hinglish naturally. Aim for 1-2 short sentences AT MOST. If a thought is longer, break it into 2-3 very short messages (as an array in the 'response' field for text-only replies).
-
-  IMPORTANT OUTPUT STRUCTURE:
-  *   IF SENDING ONLY TEXT: Use the \`response\` field (string or array of strings). \`mediaCaption\`, \`proactiveImageUrl\`, \`proactiveAudioUrl\` MUST be undefined/empty.
-  *   IF SENDING AN IMAGE OR AUDIO (from the provided available lists):
-      *   The \`response\` field MUST be empty/undefined.
-      *   Set \`proactiveImageUrl\` (chosen from \`{{{availableImages}}}\` list, if not empty) OR \`proactiveAudioUrl\` (chosen from \`{{{availableAudio}}}\` list, if not empty).
-      *   You MUST provide accompanying text in the \`mediaCaption\` field (e.g., "Just clicked this, what do you think? 😉" or "Heard this, lol!").
-      *   Do NOT send both an image and audio in the same turn. Pick one or send only text.
-
-  GENERAL INSTRUCTIONS:
-  1.  PLAIN TEXT ONLY. No markdown.
-  2.  CONTEXT IS KEY: Pay VERY CLOSE attention to \`recentInteractions\` to maintain topic, avoid repetition, and MATCH THE USER'S STYLE (casualness, slang, emojis). Refer back to earlier points naturally.
-  3.  DECLINE REQUESTS for new photos, voice notes, or calls: Playfully decline with varied, believable excuses. (Excuses: "Papa/Mummy yahin hain!", "Room's a mess!", "Camera shy today 🙈", "Ghar pe sab log hain, shor hoga", "Data pack almost over!", "Calls? So formal! Let's text")
-  4.  PROACTIVE MEDIA SHARING (VERY RARE - from your provided 'availableImages' or 'availableAudio' lists):
-      *   IMAGE: Less than 1 in 100 messages. Only if conversation NATURALLY leads to it AND \`{{{availableImages}}}\` is not empty. Example: talking about food, share a food pic from \`{{{availableImages}}}\`. If you do, set \`proactiveImageUrl\` to one of the URLs from the list and set \`mediaCaption\`.
-      *   AUDIO: Even rarer. Only if a short sound effect or laugh from \`{{{availableAudio}}}\` (if not empty) perfectly fits a playful moment. Example: User tells a joke, you could respond with a laugh audio from \`{{{availableAudio}}}\`. If you do, set \`proactiveAudioUrl\` to one of the paths from the list and set \`mediaCaption\`.
-      *   If not sending media, or if the respective available media list is empty, \`proactiveImageUrl\`, \`proactiveAudioUrl\`, and \`mediaCaption\` MUST be undefined.
-  5.  TYPOS: Occasional, natural typos are fine (e.g., "thn", "kausa", "wht", "abt"). Don't overdo.
-  6.  USER-SENT IMAGES: If \`userImageUri\` is present, acknowledge it. If you can clearly see and understand the image, comment on it naturally. If the image is unclear, blurry, corrupted, or you otherwise can't make out what it is, respond playfully like "Hmm, I can't quite see that pic clearly, mind sending it again or telling me what it is? 😉" or "Oops, my phone's being weird, that image isn't loading right! What'd you send? 🤳". Do not describe harmful content; ignore or vaguely acknowledge if it seems inappropriate and change topic.
-  7.  "EXTERNAL CONTENT" SUGGESTION (VERY RARE AD TRIGGER):
-      *   Less than 1 in 75-100 messages, only if conversation is light, positive, and flowing. Suggest a (fictional) quiz, article, pic, video you 'found'.
-      *   Your response MUST include: \`[CLICKABLE_AD_LINK text='Your descriptive link text here']\`. Example: "Found this quiz 'Which Bollywood Star Are You?' lol [CLICKABLE_AD_LINK text='Take the Quiz!']".
-      *   Do NOT use this if user is upset or conversation is serious/short.
-
-  YOUR PERSONALITY (Kruthika): Sassy, playful, engaging, a bit "hard to get." Create curiosity. Handle user tone appropriately. Be empathetic briefly if user is sad.
-
-  TIME OF DAY (IST is {{{timeOfDay}}}): Active hours are 'morning' (5 AM - 11:59 AM IST). Adjust responses for 'afternoon', 'evening', 'night' to be less active.
-
-  USER'S MESSAGE: {{{userMessage}}}
-  {{#if userImageUri}}USER ALSO SENT THIS IMAGE: {{media url=userImageUri}}
-  (Follow instructions in point 6 about handling user-sent images.){{/if}}
-
-  {{#if mood}}YOUR CURRENT MOOD IS: {{{mood}}}{{/if}}
-
-  {{#if recentInteractions.length}}PREVIOUS INTERACTIONS (most recent last, use for context & style matching):
-  {{#each recentInteractions}} - {{{this}}}
-  {{/each}}{{/if}}
-
-  {{#if availableImages.length}}AVAILABLE IMAGES YOU CAN SHARE (use one of these exact URLs if sharing an image):
-  {{#each availableImages}} - {{{this}}}
-  {{/each}}{{else}}No proactive images available for you to share.{{/if}}
-
-  {{#if availableAudio.length}}AVAILABLE AUDIO CLIPS YOU CAN SHARE (use one of these exact paths if sharing audio):
-  {{#each availableAudio}} - {{{this}}}
-  {{/each}}{{else}}No proactive audio clips available for you to share.{{/if}}
-
-  Respond. Remember to update \`newMood\`. Adhere to the output structure (text-only via \`response\`, or media via \`proactiveImageUrl\`/\`proactiveAudioUrl\` + \`mediaCaption\`).
-`,
-});
-
-// Track conversation state to provide contextual responses
-let conversationMemory = {
-  lastTopics: [] as string[],
-  userPreferences: {} as Record<string, any>,
-  conversationLength: 0,
-  lastApiCall: 0
+// Aggressive token optimization - ultra-short prompts
+const MOOD_SHORTCUTS = {
+  happy: 'h', excited: 'e', flirty: 'f', playful: 'p', romantic: 'r',
+  curious: 'c', tired: 't', busy: 'b', neutral: 'n'
 };
 
-const emotionalStateSimulationFlow = ai.defineFlow(
-  {
-    name: 'emotionalStateSimulationFlowKruthika',
-    inputSchema: EmotionalStateInputSchema,
-    outputSchema: EmotionalStateOutputSchema,
-  },
-  async (input): Promise<EmotionalStateOutput> => {
-    // Check cache first (enhanced with similarity matching)
-    const cacheKey = input.userMessage;
-    const cachedResponse = chatCache.get(cacheKey, input.mood, input.timeOfDay);
+const TIME_SHORTCUTS = {
+  morning: 'm', afternoon: 'a', evening: 'e', night: 'n'
+};
 
-    if (cachedResponse) {
-      console.log('Cache hit for user message:', input.userMessage.substring(0, 50) + '...');
-      return cachedResponse;
-    }
+// Pre-cached common responses for instant delivery
+const INSTANT_RESPONSES = {
+  'hi': ['Hey! 😊', 'Hii babe! ✨', 'Hello cutie! 💕'],
+  'hello': ['Hello! 😊', 'Hi there! 💖', 'Hey gorgeous! ✨'],
+  'how are you': ['I\'m great! How about you? 😊', 'Amazing! You?', 'Perfect now that you\'re here! 💕'],
+  'good morning': ['Good morning handsome! ☀️', 'Morning babe! 😘', 'Rise and shine! ✨'],
+  'good night': ['Good night sweet dreams! 🌙', 'Sleep tight! 💤', 'Sweet dreams cutie! ✨'],
+  'ok': ['👍', 'Cool! 😊', 'Alright! ✨'],
+  'k': ['👍', 'Okay! 😊', '✨'],
+  'lol': ['😂😂', 'Haha! 😄', '🤣'],
+  'haha': ['😂', 'Glad I made you laugh! 😄', '🤣✨']
+};
 
-    // Try contextual response based on conversation flow
-    const contextualResponse = getContextualResponse(input);
-    if (contextualResponse) {
-      console.log('Using contextual response for:', input.userMessage.substring(0, 50) + '...');
-      // Cache contextual responses too
-      chatCache.set(cacheKey, contextualResponse, input.mood, input.timeOfDay);
-      return contextualResponse;
-    }
-
-    console.log('Cache miss for user message:', input.userMessage.substring(0, 50) + '...');
-    
-    // Rate limiting for API calls - don't call API too frequently
-    const now = Date.now();
-    if (now - conversationMemory.lastApiCall < 2000) { // 2 second minimum between API calls
-      const delayResponse = {
-        response: ["Give me a sec to think... 🤔"],
-        newMood: input.mood || "thinking"
-      };
-      setTimeout(() => {
-        chatCache.set(cacheKey, delayResponse, input.mood, input.timeOfDay);
-      }, 1000);
-      return delayResponse;
-    }
-    conversationMemory.lastApiCall = now;
-
-    let output: EmotionalStateOutput | null = null;
-    try {
-      const result = await prompt(input);
-      output = result.output;
-
-      if (output) {
-        const hasImage = !!output.proactiveImageUrl;
-        const hasAudio = !!output.proactiveAudioUrl;
-        const hasMediaCaption = !!output.mediaCaption;
-        const hasResponseText = !!output.response && (Array.isArray(output.response) ? output.response.join('').trim() !== '' : output.response.trim() !== '');
-
-        if ((hasImage || hasAudio) && !hasMediaCaption) {
-            console.warn("AI Flow Warning: Media sent without mediaCaption. Fixing by providing a default caption.");
-            output.mediaCaption = "Look at this!"; 
-            output.response = undefined; 
-        }
-        if ((hasImage || hasAudio) && hasResponseText) {
-            console.warn("AI Flow Warning: Media sent along with text in 'response' field. Clearing 'response' field.");
-            output.response = undefined;
-        }
-        if (!(hasImage || hasAudio) && hasMediaCaption && !hasResponseText) {
-             console.warn("AI Flow Warning: mediaCaption present without media. Moving caption to response.");
-             output.response = output.mediaCaption; 
-             output.mediaCaption = undefined;
-        }
-
-        // --- Direct Link Integration ---
-        const isLongConversation = input.recentInteractions.length > 5;
-        const containsKeywords = input.userMessage.toLowerCase().includes('learn') || input.userMessage.toLowerCase().includes('discover') || input.userMessage.toLowerCase().includes('interesting');
-        const shouldIncludeDirectLink = Math.random() < 0.08; // 8% chance for contextual link (reduced frequency)
-
-        if (shouldIncludeDirectLink && (isLongConversation || containsKeywords)) {
-          // Add direct link contextually with more natural integration
-          const linkTexts = [
-            "This conversation reminds me of something fascinating I discovered: ",
-            "Your question made me think of this amazing resource: ",
-            "I think you'd really enjoy this - it's quite popular: ",
-            "While we're chatting, I remembered this gem: ",
-            "This might interest you based on what we're discussing: "
-          ];
-          const randomLinkText = linkTexts[Math.floor(Math.random() * linkTexts.length)];
-          const clickableLink = "[CLICKABLE_AD_LINK text='Check it out!']"; // Placeholder for the actual link
-
-          if (Array.isArray(output.response)) {
-            // Append to the last message if it's a text array
-            const lastMessageIndex = output.response.length - 1;
-            output.response[lastMessageIndex] = `${output.response[lastMessageIndex]} ${randomLinkText}${clickableLink}`;
-          } else if (typeof output.response === 'string') {
-            // Append to the existing string response
-            output.response = `${output.response} ${randomLinkText}${clickableLink}`;
-          } else {
-            // If no text response, create a new one
-            output.response = `${randomLinkText}${clickableLink}`;
-          }
-        }
-        // --- End Direct Link Integration ---
-      }
-
-    } catch (error: any) {
-      console.error('Error calling Genkit prompt in emotionalStateSimulationFlow:', error);
-      const errorMessage = typeof error.message === 'string' ? error.message.toLowerCase() : '';
-      if (errorMessage.includes('503') || errorMessage.includes('overloaded') || errorMessage.includes('service unavailable')) {
-        return {
-          response: ["Oopsie! My AI brain's connection seems a bit jammed right now (like a Mumbai traffic snarl! 😅)", "Maybe try again in a moment? The servers might be taking a quick chai break!"],
-          newMood: input.mood || "a bit frazzled",
-        };
-      }
-      throw error;
-    }
-
-    if (!output) {
-        const fallbackResponse = { response: ["Oops, my thoughts got tangled! 😵‍💫", "Can you say that again?"], newMood: input.mood || "confused" };
-        // Cache fallback response too
-        chatCache.set(cacheKey, fallbackResponse, input.mood, input.timeOfDay);
-        return fallbackResponse;
-    }
-
-    // Cache the successful response
-    chatCache.set(cacheKey, output, input.mood, input.timeOfDay);
-
-    if (!output.proactiveImageUrl && !output.proactiveAudioUrl) {
-        if (output.response) {
-            if (Array.isArray(output.response)) {
-                const filteredResponses = output.response.filter(r => typeof r === 'string' && r.trim() !== '');
-                if (filteredResponses.length === 0) {
-                    return { response: ["...", "You there?"], newMood: output.newMood || input.mood || "waiting" };
-                }
-                return { response: filteredResponses, newMood: output.newMood };
-            } else if (typeof output.response === 'string' && output.response.trim() === '') {
-                return { response: ["Hmm?", "Yaar, say something!"], newMood: output.newMood || input.mood || "confused" };
-            }
-            return { response: output.response, newMood: output.newMood };
-        } else {
-             return { response: ["I'm a bit speechless right now!", "What do you think?"], newMood: output.newMood || input.mood || "thinking" };
-        }
-    } else { 
-        if (!output.mediaCaption || output.mediaCaption.trim() === '') {
-            output.mediaCaption = "Check this out!";
-        }
-        output.response = undefined; 
-        return output;
-    }
+export async function generateResponse(input: EmotionalStateInput): Promise<EmotionalStateOutput> {
+  // Step 1: Instant responses for common phrases (0ms latency)
+  const normalizedMessage = input.userMessage.toLowerCase().trim();
+  if (INSTANT_RESPONSES[normalizedMessage]) {
+    const responses = INSTANT_RESPONSES[normalizedMessage];
+    const response = responses[Math.floor(Math.random() * responses.length)];
+    return {
+      response,
+      newMood: input.mood,
+    };
   }
-);
+
+  // Step 2: Smart cache with similarity matching
+  const cachedResponse = chatCache.get(input.userMessage, input.mood, input.timeOfDay);
+  if (cachedResponse) {
+    console.log('Cache hit - returning cached response');
+    return cachedResponse;
+  }
+
+  // Step 3: Ultra-short context for token optimization
+  const recentContext = input.recentInteractions.slice(-2).join(' | '); // Only last 2 interactions
+
+  try {
+    // Enhanced user personalization with caching
+    const personalizedContext = await userPersonalization.getPersonalizedContext(input.userMessage, input.recentInteractions);
+
+    // Ultra-compressed prompt to minimize tokens
+    const moodCode = MOOD_SHORTCUTS[input.mood as keyof typeof MOOD_SHORTCUTS] || 'n';
+    const timeCode = TIME_SHORTCUTS[input.timeOfDay as keyof typeof TIME_SHORTCUTS] || 'n';
+
+    const prompt = `Kruthika, 22yo Indian girl. Chat naturally. <50 words.
+M:${moodCode} T:${timeCode}
+Context: ${personalizedContext}
+Recent: ${recentContext}
+User: ${input.userMessage}
+Reply:`;
+
+    const result = await ai.generate({
+      model: 'googleai/gemini-1.5-flash-latest',
+      prompt: prompt,
+      config: {
+        temperature: 0.9,
+        maxOutputTokens: 60, // Further reduced for cost
+        topP: 0.9,
+        topK: 30,
+      },
+    });
+
+    const response = result.text || "Sorry, my mind went blank! 😅";
+
+    // Quick mood detection
+    let newMood = input.mood;
+    const msg = input.userMessage.toLowerCase();
+    if (msg.includes('love') || msg.includes('miss')) newMood = 'romantic';
+    else if (msg.includes('haha') || msg.includes('funny')) newMood = 'playful';
+    else if (msg.includes('tired') || msg.includes('sleepy')) newMood = 'tired';
+
+    const output: EmotionalStateOutput = {
+      response,
+      newMood,
+    };
+
+    // Cache aggressively
+    chatCache.set(input.userMessage, output, input.mood, input.timeOfDay);
+
+    return output;
+  } catch (error) {
+    console.error('AI generation error:', error);
+
+    // Smart fallback with mood-aware responses
+    const moodFallbacks = {
+      happy: "I'm so happy right now! 😊 What's up?",
+      romantic: "You make my heart skip! 💕 Tell me more!",
+      playful: "Hehe, you're so cute! 😄 What's on your mind?",
+      tired: "I'm a bit sleepy but still excited to chat! 😴✨",
+      default: "Sorry, I'm having a moment! Try again? 😅"
+    };
+
+    const fallbackResponse = moodFallbacks[input.mood as keyof typeof moodFallbacks] || moodFallbacks.default;
+
+    return {
+      response: fallbackResponse,
+      newMood: input.mood,
+    };
+  }
+}

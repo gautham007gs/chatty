@@ -418,10 +418,8 @@ const KruthikaChatPage: NextPage = () => {
     const currentEffectiveAIProfile = globalAIProfile || defaultAIProfile;
 
     if (!text.trim() && !currentImageUri) return;
-    if (isLoadingAdSettings || isLoadingAIProfile || isLoadingMediaAssets) {
-        toast({ title: "Please wait", description: "Loading essential settings...", variant: "default"});
-        return;
-    }
+    
+    // Skip loading checks for better performance - use defaults if needed
     resetInactivityTimer();
 
     let imageAttemptedAndAllowed = false;
@@ -488,7 +486,8 @@ const KruthikaChatPage: NextPage = () => {
         ));
     }, 300 + Math.random() * 200);
 
-    const typingAppearDelay = 700 + Math.random() * 800;
+    // Faster typing indicator for better responsiveness
+    const typingAppearDelay = 200 + Math.random() * 300;
     setTimeout(() => setIsAiTyping(true), typingAppearDelay);
 
     try {
@@ -534,7 +533,8 @@ const KruthikaChatPage: NextPage = () => {
       };
 
       const processAiTextMessage = async (responseText: string, messageIdSuffix: string = '') => {
-        const typingDuration = Math.min(Math.max(responseText.length * 60, 800), 3000);
+        // Much faster typing simulation for better perceived performance
+        const typingDuration = Math.min(Math.max(responseText.length * 20, 300), 1200);
         await new Promise(resolve => setTimeout(resolve, typingDuration));
 
         const newAiMessageId = (Date.now() + Math.random()).toString() + messageIdSuffix;
