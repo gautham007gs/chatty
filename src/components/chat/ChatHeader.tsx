@@ -1,4 +1,3 @@
-
 "use client";
 
 import React from 'react';
@@ -24,6 +23,7 @@ interface ChatHeaderProps {
   onAvatarClick: () => void;
   onCallClick: () => void; 
   onVideoClick: () => void; 
+  tokenUsage?: {used: number; limit: number; percentage: number} | null;
 }
 
 const ChatHeader: React.FC<ChatHeaderProps> = ({
@@ -33,20 +33,37 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
   onAvatarClick,
   onCallClick,
   onVideoClick,
+  tokenUsage,
 }) => {
   const router = useRouter();
-  
+
   let avatarUrlToUse = aiAvatarUrl; 
   if (!avatarUrlToUse || typeof avatarUrlToUse !== 'string' || avatarUrlToUse.trim() === '' || (!avatarUrlToUse.startsWith('http') && !avatarUrlToUse.startsWith('data:'))) {
     avatarUrlToUse = defaultAIProfile.avatarUrl;
   }
-  
+
   // if (aiName === "Kruthika") {
     // console.log(`ChatHeader - Kruthika's final aiAvatarUrlToUse: ${avatarUrlToUse}`);
   // }
 
   const handleAvatarError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
     console.error(`ChatHeader - AvatarImage load error for ${aiName}. URL: ${avatarUrlToUse}`, e);
+  };
+
+  const getTokenMessage = () => {
+    if (!tokenUsage) return null;
+
+    const { percentage } = tokenUsage;
+    if (percentage >= 95) {
+      return "💕 Almost time to say bye... but I'll miss you!";
+    } else if (percentage >= 80) {
+      return "🌸 We've been chatting so much! Love it!";
+    } else if (percentage >= 60) {
+      return "✨ Having so much fun talking to you!";
+    } else if (percentage >= 40) {
+      return "😊 This conversation is getting interesting!";
+    }
+    return null;
   };
 
   return (
@@ -85,8 +102,13 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
       <div className="flex-grow cursor-pointer" onClick={onAvatarClick}>
         <h1 className="font-semibold text-lg text-chat-header-text">{aiName}</h1>
         <p className="text-xs text-chat-header-text/70">{onlineStatus}</p>
+        {tokenUsage && tokenUsage.percentage > 0 && (
+          <div className="text-xs text-pink-300 mt-1">
+            {getTokenMessage()}
+          </div>
+        )}
       </div >
-      
+
       <Button variant="ghost" size="icon" className="text-inherit hover:bg-accent/10" aria-label="Video call (simulated ad)" onClick={onVideoClick}>
         <Video className="h-5 w-5" />
       </Button>

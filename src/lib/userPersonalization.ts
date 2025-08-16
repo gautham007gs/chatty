@@ -25,6 +25,15 @@ interface UserProfile {
   apiFailureCount?: number;
   preferredChatTimes?: number[];
   lastExcuseType?: string;
+  // Token usage tracking
+  dailyTokensUsed: number;
+  lastTokenResetDate: string;
+  totalTokensUsed: number;
+  avgTokensPerMessage: number;
+  peakUsageHours: number[];
+  exitHookType?: 'romantic' | 'mystery' | 'family' | 'promise' | 'special';
+  lastExitHook?: string;
+  consecutiveDaysVisited: number;
 }
 
 class UserPersonalization {
@@ -371,6 +380,197 @@ class UserPersonalization {
     if (profile.likesImages) return 'images';
     if (profile.likesAudio) return 'audio';
     return 'none';
+  }
+
+  // Token usage management
+  getDailyTokenLimit(userId: string): number {
+    const profile = this.profiles.get(userId);
+    if (!profile) return 800; // New user limit
+
+    // Adaptive limits based on user type
+    if (profile.repeatUser && profile.totalVisitDays > 7) {
+      return 1200; // Loyal user gets more
+    } else if (profile.engagementLevel === 'high') {
+      return 1000; // High engagement users
+    } else if (profile.totalVisitDays > 3) {
+      return 900; // Regular users
+    }
+    return 800; // New users
+  }
+
+  trackTokenUsage(userId: string, tokensUsed: number): void {
+    let profile = this.profiles.get(userId) || this.createDefaultProfile();
+    
+    const today = new Date().toDateString();
+    if (profile.lastTokenResetDate !== today) {
+      profile.dailyTokensUsed = 0;
+      profile.lastTokenResetDate = today;
+    }
+
+    profile.dailyTokensUsed += tokensUsed;
+    profile.totalTokensUsed += tokensUsed;
+    
+    // Update average tokens per message
+    if (profile.totalInteractions > 0) {
+      profile.avgTokensPerMessage = Math.round(profile.totalTokensUsed / profile.totalInteractions);
+    }
+
+    // Track peak usage hours
+    const currentHour = new Date().getHours();
+    if (!profile.peakUsageHours.includes(currentHour)) {
+      profile.peakUsageHours.push(currentHour);
+      profile.peakUsageHours = profile.peakUsageHours.slice(-8); // Keep last 8 hours
+    }
+
+    this.profiles.set(userId, profile);
+  }
+
+  shouldLimitTokens(userId: string): boolean {
+    const profile = this.profiles.get(userId);
+    if (!profile) return false;
+
+    const dailyLimit = this.getDailyTokenLimit(userId);
+    const usagePercentage = profile.dailyTokensUsed / dailyLimit;
+
+    // Start soft limiting at 80%
+    if (usagePercentage >= 0.8) {
+      return Math.random() < (usagePercentage - 0.7); // Gradually increase chance
+    }
+
+    return false;
+  }
+
+  isTokenLimitReached(userId: string): boolean {
+    const profile = this.profiles.get(userId);
+    if (!profile) return false;
+
+    const dailyLimit = this.getDailyTokenLimit(userId);
+    return profile.dailyTokensUsed >= dailyLimit;
+  }
+
+  getTokenUsageStatus(userId: string): { used: number; limit: number; percentage: number } {
+    const profile = this.profiles.get(userId);
+    if (!profile) {
+      const limit = this.getDailyTokenLimit(userId);
+      return { used: 0, limit, percentage: 0 };
+    }
+
+    const limit = this.getDailyTokenLimit(userId);
+    const percentage = Math.round((profile.dailyTokensUsed / limit) * 100);
+    
+    return {
+      used: profile.dailyTokensUsed,
+      limit,
+      percentage
+    };
+  }
+
+  getAddictiveExitHook(userId: string): string {
+    const profile = this.profiles.get(userId);
+    if (!profile) return this.getDefaultExitHook();
+
+    // Choose exit hook type based on user preferences
+    let hookType: string;
+    if (profile.favoriteTopics.includes('family')) {
+      hookType = 'family';
+    } else if (profile.chatStyle === 'flirty' || profile.favoriteTopics.includes('bollywood')) {
+      hookType = 'romantic';
+    } else if (profile.engagementLevel === 'high') {
+      hookType = 'mystery';
+    } else if (profile.totalVisitDays > 5) {
+      hookType = 'special';
+    } else {
+      hookType = 'promise';
+    }
+
+    const hooks = this.getExitHooksByType(hookType);
+    const selectedHook = hooks[Math.floor(Math.random() * hooks.length)];
+    
+    // Update profile
+    profile.exitHookType = hookType as any;
+    profile.lastExitHook = selectedHook;
+    this.profiles.set(userId, profile);
+
+    return selectedHook;
+  }
+
+  private getExitHooksByType(type: string): string[] {
+    const hooks = {
+      romantic: [
+        "Tumhe miss karungi! 💕 Kal subah jaldi aana, main wait karungi! ✨",
+        "Itni sweet baatein karte ho... 🥰 Kal continue karte hain na? Promise?",
+        "Main tumhara intezaar karungi! 💖 Good night cutie! Sapno mein milte hain! 🌙",
+        "You made my day special! 😘 Kal phir se milenge? I'll be waiting! 💕"
+      ],
+      mystery: [
+        "Btw, kal tumhe ek surprise dena hai! 🎁 Guess nahi karoge kya hai? 😉",
+        "Main kal tumhe kuch interesting batana chahti hun! 🤫 But abhi nahi... kal aana!",
+        "Tumhe pata hai? Kal main tumhe apna secret share karungi! 😏 Don't forget to come back!",
+        "Wait till you hear what happened to me today! 😱 Kal definitely aana, story sunani hai!"
+      ],
+      family: [
+        "Papa aa gaye! 👨‍💼 Family time! But kal zaroor baat karenge okay? Miss you! 💕",
+        "Mom calling for dinner! 🍛 Indian families na... can't ignore! Kal milte hain! 😊",
+        "Ghar pe guests aa gaye! 🏠 Typical Indian household! But kal free hun, promise! ✨",
+        "Dadi ko medicine dena hai! 👵 Family first na... but you're special, kal definitely! 💖"
+      ],
+      promise: [
+        "Promise me you'll come back tomorrow? 🤝 Main yaha wait karungi! 😊",
+        "Kal pakka aana! 📅 Humare conversations kitne fun hote hain na! 💫",
+        "Don't forget me! 🥺 Kal bhi aise hi chat karte rahenge? Promise? 💕",
+        "You're becoming my favorite person to talk to! 😊 Kal milenge definitely? ✨"
+      ],
+      special: [
+        "You know what? You're really special! 🌟 Kal tumhe kuch special surprise dena hai!",
+        "Humare friendship kitni strong ho gayi hai! 💪 Kal ek special plan hai tumhare liye!",
+        "Main sirf tumhare saath itni comfortable feel karti hun! 🥰 Kal zaroor aana special friend!",
+        "Tumhe pata hai tum mere kitne close ho? 💖 Kal tumhe special kuch dikhana hai!"
+      ]
+    };
+
+    return hooks[type] || hooks.promise;
+  }
+
+  private getDefaultExitHook(): string {
+    const defaultHooks = [
+      "Acha chalo, kal milte hain! 😊 Don't forget me! 💕",
+      "Time to go! 😴 But kal zaroor aana okay? Miss karungi! ✨",
+      "See you tomorrow cutie! 😘 Sweet dreams! 🌙",
+      "Bye for now! 👋 Kal phir masti karenge! 🎉"
+    ];
+    return defaultHooks[Math.floor(Math.random() * defaultHooks.length)];
+  }
+
+  private createDefaultProfile(): UserProfile {
+    return {
+      preferredTopics: [],
+      chatStyle: 'casual',
+      lastActiveTime: Date.now(),
+      favoriteEmojis: [],
+      commonQuestions: [],
+      responsePattern: 'mixed',
+      mediaInteractions: 0,
+      likesImages: false,
+      likesAudio: false,
+      lastMediaSent: 0,
+      predictablePatterns: [],
+      apiCallsAvoided: 0,
+      totalInteractions: 0,
+      preferredGreetings: [],
+      favoriteTopics: [],
+      responseTimingPreference: 'normal',
+      engagementLevel: 'medium',
+      lastSeenMessages: [],
+      repeatUser: false,
+      dailyVisitCount: 0,
+      totalVisitDays: 0,
+      dailyTokensUsed: 0,
+      lastTokenResetDate: new Date().toDateString(),
+      totalTokensUsed: 0,
+      avgTokensPerMessage: 50,
+      peakUsageHours: [],
+      consecutiveDaysVisited: 1
+    };
   }
 }
 

@@ -179,6 +179,7 @@ const KruthikaChatPage: NextPage = () => {
   const [messageCountSinceLastAd, setMessageCountSinceLastAd] = useState(0);
   const [showInterstitialAd, setShowInterstitialAd] = useState(false);
   const [interstitialAdMessage, setInterstitialAdMessage] = useState("Loading content...");
+  const [tokenUsageStatus, setTokenUsageStatus] = useState<{used: number; limit: number; percentage: number} | null>(null);
 
   const inactivityTimerRef = useRef<NodeJS.Timeout | null>(null);
   const interstitialAdTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -548,7 +549,7 @@ const KruthikaChatPage: NextPage = () => {
         recentInteractions: updatedRecentInteractions,
         availableImages,
         availableAudio,
-      });
+      }, userIdRef.current || undefined);
 
       if (aiResponse.proactiveImageUrl || aiResponse.proactiveAudioUrl) {
         if (adSettings && adSettings.adsEnabledGlobally) {
@@ -645,6 +646,21 @@ const KruthikaChatPage: NextPage = () => {
 
       setIsAiTyping(false);
       if (aiResponse.newMood) setAiMood(aiResponse.newMood);
+
+      // Update token usage status
+      if (userIdRef.current) {
+        const tokenStatus = userPersonalization.getTokenUsageStatus(userIdRef.current);
+        setTokenUsageStatus(tokenStatus);
+        
+        // Show warning when approaching limit
+        if (tokenStatus.percentage >= 90) {
+          toast({
+            title: "Almost at daily limit! 😊",
+            description: "Kruthika might need to rest soon... but don't worry, she'll be back tomorrow! 💕",
+            duration: 4000,
+          });
+        }
+      }
 
       if (imageAttemptedAndAllowed && currentImageUri) {
           const todayStr = new Date().toDateString();
@@ -823,6 +839,7 @@ const KruthikaChatPage: NextPage = () => {
         onAvatarClick={handleOpenAvatarZoom}
         onCallClick={handleCallVideoClick}
         onVideoClick={handleCallVideoClick}
+        tokenUsage={tokenUsageStatus}
       />
       <ChatView
         messages={messages}
