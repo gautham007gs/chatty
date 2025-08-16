@@ -221,7 +221,7 @@ function getPreGeneratedResponse(input: EmotionalStateInput): EmotionalStateOutp
 }
 
 // Comprehensive API failure fallback - makes users think it's network/personal issues
-export function getAPIFailureFallback(input: EmotionalStateInput): EmotionalStateOutput {
+export async function getAPIFailureFallback(input: EmotionalStateInput): Promise<EmotionalStateOutput> {
   const userMsg = input.userMessage.toLowerCase();
   const timeOfDay = input.timeOfDay;
 
