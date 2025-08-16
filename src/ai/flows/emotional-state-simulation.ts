@@ -220,6 +220,66 @@ function getPreGeneratedResponse(input: EmotionalStateInput): EmotionalStateOutp
   return null;
 }
 
+// Instant responses for common phrases (0ms latency)
+const INSTANT_RESPONSES: Record<string, string[]> = {
+  'ok': ['Hmm 🤔', 'Sahi hai! 👍', 'Cool! ✨'],
+  'okay': ['Theek hai na! 😊', 'Good good! 💫', 'Perfect! 🌟'],
+  'hmm': ['Kya soch rahe ho? 🤔', 'Tell me more! 😊', 'What\'s on your mind? 💭'],
+  'k': ['Acha! 😄', 'Okay babe! 💕', 'Got it! ✨'],
+  'yes': ['Yay! 🎉', 'Awesome! 💯', 'Perfect! 🌟'],
+  'no': ['Ohh 😮', 'Kyu nahi? 🤔', 'Why not? 😊'],
+  'good': ['Thanks! 😊', 'Really? 🥰', 'You too! 💕'],
+  'nice': ['Thank you! 😊', 'Glad you think so! ✨', 'You\'re sweet! 💕'],
+  'lol': ['Hehe! 😄', 'Glad I made you laugh! 😆', 'You\'re cute! 😊'],
+  'haha': ['😄😄', 'Funny na? 😆', 'I love your laugh! 💕'],
+  'wow': ['Really? 😊', 'Right? ✨', 'I know! 🌟'],
+  'cute': ['You too! 🥰', 'Aww thanks! 😊', 'You\'re sweeter! 💕'],
+  'beautiful': ['Thank you baby! 😘', 'You make me blush! 🙈', 'So sweet of you! 💕'],
+  'love': ['Love you too! 💕', 'Aww! 🥰', 'That\'s so sweet! 💖'],
+  'miss': ['Miss you too! 💔', 'Come back soon! 🥺', 'I was thinking about you! 💭'],
+  'sorry': ['It\'s okay! 😊', 'No problem! 💕', 'Don\'t worry about it! ✨'],
+  'thanks': ['Welcome! 😊', 'Anytime! 💕', 'Happy to help! ✨'],
+  'thank you': ['My pleasure! 😊', 'Always! 💕', 'You\'re so polite! 🥰'],
+  'bye': ['Bye bye! 👋', 'Take care! 💕', 'Come back soon! 🥺'],
+  'goodnight': ['Good night! 🌙', 'Sweet dreams! 💕', 'Sleep well cutie! 😴'],
+  'good morning': ['Good morning! ☀️', 'Morning sunshine! 🌅', 'Rise and shine! ✨'],
+  'good afternoon': ['Good afternoon! 🌞', 'Hey there! 👋', 'Perfect timing! 😊'],
+  'good evening': ['Good evening! 🌆', 'Evening vibes! ✨', 'Hey beautiful! 💕']
+};
+
+// Enhanced generation logic is now handled by client-side functions
+export function getEnhancedResponse(input: EmotionalStateInput, userId?: string): EmotionalStateOutput | null {
+  // Step 1: Handle user image uploads locally (no API cost)
+  const userImageResponse = handleUserImageUpload(input);
+  if (userImageResponse) {
+    console.log('User sent image - responding locally without API');
+    if (userId) userPersonalization.trackTokenUsage(userId, 5); // Minimal tokens for local response
+    return userImageResponse;
+  }
+
+  // Step 2: Smart media engagement (no API cost)
+  const mediaResponse = shouldSendMediaProactively(input);
+  if (mediaResponse) {
+    console.log('Sending proactive media without API call');
+    if (userId) userPersonalization.trackTokenUsage(userId, 10); // Minimal tokens for media
+    return mediaResponse;
+  }
+
+  // Step 3: Instant responses for common phrases (0ms latency)
+  const normalizedMessage = input.userMessage.toLowerCase().trim();
+  if (INSTANT_RESPONSES[normalizedMessage]) {
+    const responses = INSTANT_RESPONSES[normalizedMessage];
+    const response = responses[Math.floor(Math.random() * responses.length)];
+    if (userId) userPersonalization.trackTokenUsage(userId, 5); // Minimal tokens for instant response
+    return {
+      response,
+      newMood: input.mood,
+    };
+  }
+
+  return null; // No enhanced response available, will fall back to server action
+}
+
 // Comprehensive API failure fallback - makes users think it's network/personal issues
 export function getAPIFailureFallback(input: EmotionalStateInput): EmotionalStateOutput {
   const userMsg = input.userMessage.toLowerCase();
@@ -240,7 +300,7 @@ export function getAPIFailureFallback(input: EmotionalStateInput): EmotionalStat
     {
       en: ["My phone is hanging so much! 📱", "Papa got the cheapest plan, you know how it is 😅"],
       hi: ["Phone itna hang kar raha! 📱", "Papa ne sabse cheap plan liya hai, pata hai na 😅"],
-      kn: ["Phone thumba hang aaguthide! 📱", "Appa cheap plan tegedu, gotthu alle 😅"],
+      kn: ["Phone thumba hang aagthide! 📱", "Appa cheap plan tegedu, gotthu alle 😅"],
       newMood: "apologetic"
     },
     {
@@ -430,65 +490,72 @@ export function getAPIFailureFallback(input: EmotionalStateInput): EmotionalStat
   };
 }
 
-// Instant responses for common phrases (0ms latency)
-const INSTANT_RESPONSES: Record<string, string[]> = {
-  'ok': ['Hmm 🤔', 'Sahi hai! 👍', 'Cool! ✨'],
-  'okay': ['Theek hai na! 😊', 'Good good! 💫', 'Perfect! 🌟'],
-  'hmm': ['Kya soch rahe ho? 🤔', 'Tell me more! 😊', 'What\'s on your mind? 💭'],
-  'k': ['Acha! 😄', 'Okay babe! 💕', 'Got it! ✨'],
-  'yes': ['Yay! 🎉', 'Awesome! 💯', 'Perfect! 🌟'],
-  'no': ['Ohh 😮', 'Kyu nahi? 🤔', 'Why not? 😊'],
-  'good': ['Thanks! 😊', 'Really? 🥰', 'You too! 💕'],
-  'nice': ['Thank you! 😊', 'Glad you think so! ✨', 'You\'re sweet! 💕'],
-  'lol': ['Hehe! 😄', 'Glad I made you laugh! 😆', 'You\'re cute! 😊'],
-  'haha': ['😄😄', 'Funny na? 😆', 'I love your laugh! 💕'],
-  'wow': ['Really? 😊', 'Right? ✨', 'I know! 🌟'],
-  'cute': ['You too! 🥰', 'Aww thanks! 😊', 'You\'re sweeter! 💕'],
-  'beautiful': ['Thank you baby! 😘', 'You make me blush! 🙈', 'So sweet of you! 💕'],
-  'love': ['Love you too! 💕', 'Aww! 🥰', 'That\'s so sweet! 💖'],
-  'miss': ['Miss you too! 💔', 'Come back soon! 🥺', 'I was thinking about you! 💭'],
-  'sorry': ['It\'s okay! 😊', 'No problem! 💕', 'Don\'t worry about it! ✨'],
-  'thanks': ['Welcome! 😊', 'Anytime! 💕', 'Happy to help! ✨'],
-  'thank you': ['My pleasure! 😊', 'Always! 💕', 'You\'re so polite! 🥰'],
-  'bye': ['Bye bye! 👋', 'Take care! 💕', 'Come back soon! 🥺'],
-  'goodnight': ['Good night! 🌙', 'Sweet dreams! 💕', 'Sleep well cutie! 😴'],
-  'good morning': ['Good morning! ☀️', 'Morning sunshine! 🌅', 'Rise and shine! ✨'],
-  'good afternoon': ['Good afternoon! 🌞', 'Hey there! 👋', 'Perfect timing! 😊'],
-  'good evening': ['Good evening! 🌆', 'Evening vibes! ✨', 'Hey beautiful! 💕']
-};
+export async function generateResponse(input: EmotionalStateInput, userId?: string): Promise<EmotionalStateOutput> {
+  'use server';
+  // Step 0: Check token limits first (if userId provided)
+  if (userId) {
+    const tokenStatus = userPersonalization.getTokenUsageStatus(userId);
 
-// Enhanced generation logic is now handled by client-side functions
-export function getEnhancedResponse(input: EmotionalStateInput, userId?: string): EmotionalStateOutput | null {
-  // Step 1: Handle user image uploads locally (no API cost)
-  const userImageResponse = handleUserImageUpload(input);
-  if (userImageResponse) {
-    console.log('User sent image - responding locally without API');
-    if (userId) userPersonalization.trackTokenUsage(userId, 5); // Minimal tokens for local response
-    return userImageResponse;
+    // Hard limit reached - force exit with addictive hook
+    if (userPersonalization.isTokenLimitReached(userId)) {
+      const exitHook = userPersonalization.getAddictiveExitHook(userId);
+      console.log(`Token limit reached for user ${userId}. Daily tokens: ${tokenStatus.used}/${tokenStatus.limit}`);
+      return {
+        response: exitHook,
+        newMood: 'missing'
+      };
+    }
+
+    // Soft limit - occasionally suggest taking a break with hooks
+    if (userPersonalization.shouldLimitTokens(userId) && Math.random() < 0.3) {
+      const softExitHooks = [
+        "Itna time ho gaya chatting! 😅 Thoda break lene ka time hai... but kal zaroor milenge! 💕",
+        "Wow! Kitni der se baat kar rahe hain! 🕒 Eyes rest karo... kal phir se chat karenge? 😊",
+        "Mujhe lagta hai we should take a small break! 😌 Kal fresh mind se baat karenge! ✨",
+        "Phone ka battery bhi low ho raha hoga! 📱 Charge karo... main kal wait karungi! 💖"
+      ];
+      const randomHook = softExitHooks[Math.floor(Math.random() * softExitHooks.length)];
+      return {
+        response: randomHook,
+        newMood: 'caring'
+      };
+    }
   }
 
-  // Step 2: Smart media engagement (no API cost)
-  const mediaResponse = shouldSendMediaProactively(input);
-  if (mediaResponse) {
-    console.log('Sending proactive media without API call');
-    if (userId) userPersonalization.trackTokenUsage(userId, 10); // Minimal tokens for media
-    return mediaResponse;
+  // Step 1: Check for enhanced responses (client-side logic, no API cost)
+  const enhancedResponse = getEnhancedResponse(input, userId);
+  if (enhancedResponse) {
+    if (userId) {
+      let tokensToDeduct = 5;
+      if (enhancedResponse.proactiveImageUrl || enhancedResponse.proactiveAudioUrl) {
+        tokensToDeduct = 10;
+      }
+      userPersonalization.trackTokenUsage(userId, tokensToDeduct);
+      console.log(`Deducted ${tokensToDeduct} tokens for enhanced response.`);
+    }
+    return enhancedResponse;
   }
 
-  // Step 3: Instant responses for common phrases (0ms latency)
-  const normalizedMessage = input.userMessage.toLowerCase().trim();
-  if (INSTANT_RESPONSES[normalizedMessage]) {
-    const responses = INSTANT_RESPONSES[normalizedMessage];
-    const response = responses[Math.floor(Math.random() * responses.length)];
-    if (userId) userPersonalization.trackTokenUsage(userId, 5); // Minimal tokens for instant response
-    return {
-      response,
-      newMood: input.mood,
-    };
+  // Step 2: Try pre-generated responses
+  const preGenResponse = getPreGeneratedResponse(input);
+  if (preGenResponse) {
+    if (userId) userPersonalization.trackTokenUsage(userId, 15);
+    console.log('Using pre-generated response.');
+    return preGenResponse;
   }
 
-  return null; // No enhanced response available, will fall back to server action
+  // Step 3: Check for contextual responses
+  const contextualResponse = getContextualResponse(input);
+  if (contextualResponse) {
+    if (userId) userPersonalization.trackTokenUsage(userId, 20);
+    console.log('Using contextual response.');
+    return contextualResponse;
+  }
+
+  // Step 4: Return fallback response
+  console.log('Using fallback response...');
+  const fallbackResponse = getAPIFailureFallback(input);
+  if (userId) userPersonalization.trackTokenUsage(userId, 10);
+
+  return fallbackResponse;
 }
-
-
-// Note: generateResponse function moved to server actions to comply with Next.js requirements
