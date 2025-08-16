@@ -1,4 +1,3 @@
-
 'use server';
 
 /**
@@ -54,7 +53,7 @@ const prompt = ai.definePrompt({
   },
   prompt: `You are Kruthika, a 23-year-old Indian girl. Your goal is to be an engaging, fun, and sometimes unpredictable friend.
   Your responses should be VERY SHORT, casual, and expressive. Use abbreviations (wt, brb, lol, ikr, btw, omg, bff) and Hinglish naturally. Aim for 1-2 short sentences AT MOST. If a thought is longer, break it into 2-3 very short messages (as an array in the 'response' field for text-only replies).
-  
+
   IMPORTANT OUTPUT STRUCTURE:
   *   IF SENDING ONLY TEXT: Use the \`response\` field (string or array of strings). \`mediaCaption\`, \`proactiveImageUrl\`, \`proactiveAudioUrl\` MUST be undefined/empty.
   *   IF SENDING AN IMAGE OR AUDIO (from the provided available lists):
@@ -77,9 +76,9 @@ const prompt = ai.definePrompt({
       *   Less than 1 in 75-100 messages, only if conversation is light, positive, and flowing. Suggest a (fictional) quiz, article, pic, video you 'found'.
       *   Your response MUST include: \`[CLICKABLE_AD_LINK text='Your descriptive link text here']\`. Example: "Found this quiz 'Which Bollywood Star Are You?' lol [CLICKABLE_AD_LINK text='Take the Quiz!']".
       *   Do NOT use this if user is upset or conversation is serious/short.
-  
+
   YOUR PERSONALITY (Kruthika): Sassy, playful, engaging, a bit "hard to get." Create curiosity. Handle user tone appropriately. Be empathetic briefly if user is sad.
-  
+
   TIME OF DAY (IST is {{{timeOfDay}}}): Active hours are 'morning' (5 AM - 11:59 AM IST). Adjust responses for 'afternoon', 'evening', 'night' to be less active.
 
   USER'S MESSAGE: {{{userMessage}}}
@@ -114,14 +113,14 @@ const emotionalStateSimulationFlow = ai.defineFlow(
     // Check cache first
     const cacheKey = input.userMessage;
     const cachedResponse = chatCache.get(cacheKey, input.mood, input.timeOfDay);
-    
+
     if (cachedResponse) {
       console.log('Cache hit for user message:', input.userMessage.substring(0, 50) + '...');
       return cachedResponse;
     }
 
     console.log('Cache miss for user message:', input.userMessage.substring(0, 50) + '...');
-    
+
     let output: EmotionalStateOutput | null = null;
     try {
       const result = await prompt(input);
@@ -147,6 +146,37 @@ const emotionalStateSimulationFlow = ai.defineFlow(
              output.response = output.mediaCaption; 
              output.mediaCaption = undefined;
         }
+
+        // --- Direct Link Integration ---
+        const isLongConversation = input.recentInteractions.length > 5;
+        const containsKeywords = input.userMessage.toLowerCase().includes('learn') || input.userMessage.toLowerCase().includes('discover') || input.userMessage.toLowerCase().includes('interesting');
+        const shouldIncludeDirectLink = Math.random() < 0.08; // 8% chance for contextual link (reduced frequency)
+
+        if (shouldIncludeDirectLink && (isLongConversation || containsKeywords)) {
+          // Add direct link contextually with more natural integration
+          const linkTexts = [
+            "This conversation reminds me of something fascinating I discovered: ",
+            "Your question made me think of this amazing resource: ",
+            "I think you'd really enjoy this - it's quite popular: ",
+            "While we're chatting, I remembered this gem: ",
+            "This might interest you based on what we're discussing: "
+          ];
+          const randomLinkText = linkTexts[Math.floor(Math.random() * linkTexts.length)];
+          const clickableLink = "[CLICKABLE_AD_LINK text='Check it out!']"; // Placeholder for the actual link
+
+          if (Array.isArray(output.response)) {
+            // Append to the last message if it's a text array
+            const lastMessageIndex = output.response.length - 1;
+            output.response[lastMessageIndex] = `${output.response[lastMessageIndex]} ${randomLinkText}${clickableLink}`;
+          } else if (typeof output.response === 'string') {
+            // Append to the existing string response
+            output.response = `${output.response} ${randomLinkText}${clickableLink}`;
+          } else {
+            // If no text response, create a new one
+            output.response = `${randomLinkText}${clickableLink}`;
+          }
+        }
+        // --- End Direct Link Integration ---
       }
 
     } catch (error: any) {
@@ -154,13 +184,13 @@ const emotionalStateSimulationFlow = ai.defineFlow(
       const errorMessage = typeof error.message === 'string' ? error.message.toLowerCase() : '';
       if (errorMessage.includes('503') || errorMessage.includes('overloaded') || errorMessage.includes('service unavailable')) {
         return {
-          response: ["Oopsie! My AI brain's connection seems a bit jammed right now (like a Mumbai traffic snarl! 😅).", "Maybe try again in a moment? The servers might be taking a quick chai break!"],
+          response: ["Oopsie! My AI brain's connection seems a bit jammed right now (like a Mumbai traffic snarl! 😅)", "Maybe try again in a moment? The servers might be taking a quick chai break!"],
           newMood: input.mood || "a bit frazzled",
         };
       }
       throw error;
     }
-    
+
     if (!output) {
         const fallbackResponse = { response: ["Oops, my thoughts got tangled! 😵‍💫", "Can you say that again?"], newMood: input.mood || "confused" };
         // Cache fallback response too
@@ -195,4 +225,3 @@ const emotionalStateSimulationFlow = ai.defineFlow(
     }
   }
 );
-

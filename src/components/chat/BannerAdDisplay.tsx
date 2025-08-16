@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect, useRef } from 'react';
@@ -10,16 +9,25 @@ interface BannerAdDisplayProps {
   adType: 'standard' | 'native'; // Specify banner type
   placementKey: string; 
   className?: string;
+  contextual?: boolean; // For conversation-aware placement
+  delayMs?: number; // Optional delay before showing
 }
 
-const BannerAdDisplay: React.FC<BannerAdDisplayProps> = ({ adType, placementKey, className }) => {
+const BannerAdDisplay: React.FC<BannerAdDisplayProps> = ({ adType, placementKey, className, contextual, delayMs }) => {
   const { adSettings, isLoadingAdSettings } = useAdSettings();
   const [isVisible, setIsVisible] = useState(false);
   const [adCodeToInject, setAdCodeToInject] = useState<string | null>(null);
   const adContainerRef = useRef<HTMLDivElement>(null);
   const scriptInjectedRef = useRef(false);
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
+    // Clear any existing timer when settings or delay change
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
+      timerRef.current = null;
+    }
+
     if (isLoadingAdSettings || !adSettings || !adSettings.adsEnabledGlobally) {
       setIsVisible(false);
       setAdCodeToInject(null);
@@ -49,16 +57,30 @@ const BannerAdDisplay: React.FC<BannerAdDisplayProps> = ({ adType, placementKey,
         selectedNetworkEnabled = true;
       }
     }
-    
+
     if (selectedNetworkEnabled && selectedAdCode.trim()) {
       setAdCodeToInject(selectedAdCode);
-      setIsVisible(true);
+      if (delayMs !== undefined && delayMs > 0) {
+        // Set visibility after a delay if specified
+        timerRef.current = setTimeout(() => {
+          setIsVisible(true);
+        }, delayMs);
+      } else {
+        setIsVisible(true);
+      }
     } else {
       setAdCodeToInject(null);
       setIsVisible(false);
       scriptInjectedRef.current = false;
     }
-  }, [adSettings, isLoadingAdSettings, adType]);
+
+    // Cleanup timer on unmount or when dependencies change
+    return () => {
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+      }
+    };
+  }, [adSettings, isLoadingAdSettings, adType, delayMs]); // Include delayMs in dependency array
 
   useEffect(() => {
     // Inject script only when adCodeToInject is set and container is available
@@ -66,7 +88,7 @@ const BannerAdDisplay: React.FC<BannerAdDisplayProps> = ({ adType, placementKey,
     if (adCodeToInject && adContainerRef.current && !scriptInjectedRef.current) {
       // Clear previous content
       adContainerRef.current.innerHTML = '';
-      
+
       try {
         // Using a more robust way to append script tags
         const fragment = document.createRange().createContextualFragment(adCodeToInject);
@@ -86,7 +108,7 @@ const BannerAdDisplay: React.FC<BannerAdDisplayProps> = ({ adType, placementKey,
   if (isLoadingAdSettings || !isVisible || !adCodeToInject) {
     return null; 
   }
-  
+
   // Key includes adCodeToInject to attempt re-render if the code itself changes.
   // However, direct script injection might need more nuanced handling if the *same*
   // container is reused for *different* ad codes frequently.
@@ -95,7 +117,8 @@ const BannerAdDisplay: React.FC<BannerAdDisplayProps> = ({ adType, placementKey,
       ref={adContainerRef}
       className={cn(
         "kruthika-chat-banner-ad-container my-2 flex justify-center items-center bg-secondary/10 min-h-[50px] w-full overflow-hidden",
-        className
+        className,
+        contextual && "kruthika-chat-contextual-ad" // Apply contextual class if true
       )}
       key={`${placementKey}-${adType}-${adCodeToInject.substring(0, 30)}`} 
     />

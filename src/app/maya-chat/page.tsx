@@ -29,9 +29,11 @@ const AI_DISCLAIMER_DURATION = 2000;
 // These constants will now be effectively overridden by AdSettings from context
 // const MAX_ADS_PER_DAY = 6; 
 // const MAX_ADS_PER_SESSION = 3;
-const MESSAGES_PER_AD_TRIGGER = 10; // Kept as a fixed trigger point
-const INACTIVITY_AD_TIMEOUT_MS = 60000; // 1 minute
-const INACTIVITY_AD_CHANCE = 0.2; // 20% chance
+const MESSAGES_PER_AD_TRIGGER = 15; // Increased from 10 to reduce frequency
+const INACTIVITY_AD_TIMEOUT_MS = 90000; // Increased to 1.5 minutes
+const INACTIVITY_AD_CHANCE = 0.15; // Reduced to 15% chance
+const ENGAGEMENT_THRESHOLD_MESSAGES = 5; // Minimum messages before first ad
+const DAILY_FIRST_VISIT_AD_DELAY = 30000; // 30 seconds delay on first daily visit
 const REWARD_AD_INTERSTITIAL_DURATION_MS = 3000; // 3 seconds
 const USER_MEDIA_INTERSTITIAL_CHANCE = 0.3; // 30% chance to show ad after user sends media
 
@@ -341,15 +343,31 @@ const KruthikaChatPage: NextPage = () => {
 
   const maybeTriggerAdOnMessageCount = useCallback(() => {
     if (isLoadingAdSettings || !adSettings || !adSettings.adsEnabledGlobally) return;
+    
     setMessageCountSinceLastAd(prev => {
       const newCount = prev + 1;
-      if (newCount >= MESSAGES_PER_AD_TRIGGER) {
-        tryShowAdAndMaybeInterstitial("Thanks for chatting!"); 
+      const totalMessages = messages.length;
+      
+      // Only show ads after user has engaged sufficiently
+      if (totalMessages < ENGAGEMENT_THRESHOLD_MESSAGES) return newCount;
+      
+      // Adaptive trigger based on session length
+      const adaptiveTrigger = totalMessages > 30 ? MESSAGES_PER_AD_TRIGGER - 3 : MESSAGES_PER_AD_TRIGGER;
+      
+      if (newCount >= adaptiveTrigger) {
+        const encouragingMessages = [
+          "Thanks for the great conversation!",
+          "Hope you're enjoying our chat!",
+          "You're awesome to talk with!",
+          "Let's keep this conversation going!"
+        ];
+        const randomMessage = encouragingMessages[Math.floor(Math.random() * encouragingMessages.length)];
+        tryShowAdAndMaybeInterstitial(randomMessage); 
         return 0;
       }
       return newCount;
     });
-  }, [tryShowAdAndMaybeInterstitial, adSettings, isLoadingAdSettings]);
+  }, [tryShowAdAndMaybeInterstitial, adSettings, isLoadingAdSettings, messages.length]);
 
   const resetInactivityTimer = useCallback(() => {
     if (inactivityTimerRef.current) clearTimeout(inactivityTimerRef.current);
@@ -362,13 +380,31 @@ const KruthikaChatPage: NextPage = () => {
     }
   }, [tryShowAdAndMaybeInterstitial, adSettings]);
 
+  // Check if this is first visit of the day
+  const checkFirstDailyVisit = useCallback(() => {
+    const today = format(new Date(), 'yyyy-MM-dd');
+    const lastActiveDate = localStorage.getItem(LAST_ACTIVE_DATE_KEY);
+    const isFirstDailyVisit = lastActiveDate !== today;
+    
+    if (isFirstDailyVisit) {
+      localStorage.setItem(LAST_ACTIVE_DATE_KEY, today);
+      // Delay first ad on first daily visit
+      setTimeout(() => {
+        if (Math.random() < 0.4) { // 40% chance for welcome ad
+          tryShowAdAndMaybeInterstitial("Welcome back! Hope you have a great day!");
+        }
+      }, DAILY_FIRST_VISIT_AD_DELAY);
+    }
+  }, [tryShowAdAndMaybeInterstitial]);
+
   useEffect(() => {
+    checkFirstDailyVisit();
     resetInactivityTimer();
     return () => {
       if (inactivityTimerRef.current) clearTimeout(inactivityTimerRef.current);
       if (interstitialAdTimerRef.current) clearTimeout(interstitialAdTimerRef.current);
     };
-  }, [messages, resetInactivityTimer]);
+  }, [messages, resetInactivityTimer, checkFirstDailyVisit]);
 
 
   const handleSendMessage = async (text: string, imageUriFromInput?: string) => {
@@ -758,8 +794,14 @@ const KruthikaChatPage: NextPage = () => {
       
       <BannerAdDisplay adType="standard" placementKey="chatViewBottomStandard" className="mx-auto w-full max-w-md" />
       
+      {/* Native ad with delayed appearance and contextual placement */}
       <div className="my-1 mx-auto w-full max-w-md">
-        <BannerAdDisplay adType="native" placementKey="chatViewBottomNative" />
+        <BannerAdDisplay 
+          adType="native" 
+          placementKey="chatViewBottomNative" 
+          contextual={true}
+          delayMs={messages.length > 10 ? 5000 : 10000} // Show after 5s if engaged, 10s if new
+        />
       </div>
 
 
