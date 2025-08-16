@@ -42,13 +42,36 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, isAiTyping }) => {
       }
       const reader = new FileReader();
       reader.onloadend = () => {
-        setSelectedImage(reader.result as string);
-        // If input is empty, we can send image directly.
-        if (!inputValue.trim()) {
-            onSendMessage("", reader.result as string);
-            setSelectedImage(null);
-            if(fileInputRef.current) fileInputRef.current.value = ""; // Reset file input
+        try {
+          const result = reader.result as string;
+          if (result) {
+            setSelectedImage(result);
+            // If input is empty, we can send image directly.
+            if (!inputValue.trim()) {
+                onSendMessage("", result);
+                setSelectedImage(null);
+                if(fileInputRef.current) fileInputRef.current.value = ""; // Reset file input
+            }
+          }
+        } catch (error) {
+          console.error('Error processing image:', error);
+          toast({
+            title: "Image Processing Error",
+            description: "There was an error processing your image. Please try again.",
+            variant: "destructive",
+            duration: 5000,
+          });
+          if(fileInputRef.current) fileInputRef.current.value = ""; // Reset file input
         }
+      };
+      reader.onerror = () => {
+        toast({
+          title: "Image Read Error",
+          description: "Could not read the selected image. Please try again.",
+          variant: "destructive",
+          duration: 5000,
+        });
+        if(fileInputRef.current) fileInputRef.current.value = ""; // Reset file input
       };
       reader.readAsDataURL(file);
     }

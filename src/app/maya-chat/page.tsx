@@ -274,23 +274,27 @@ const KruthikaChatPage: NextPage = () => {
           });
         }
 
-        supabase
-          .from('daily_activity_log')
-          .insert({
-            user_pseudo_id: userPseudoId,
-            activity_date: today,
-            chat_id: 'kruthika_chat',
-            visit_streak: currentStreak,
-            total_visits: dailyVisits
-          })
-          .then(({ error }) => {
-            if (error && error.code !== '23505') {
-              console.error('Error logging daily activity to Supabase:', error.message);
-            } else if (!error) {
-              localStorage.setItem(LAST_ACTIVE_DATE_KEY, today);
-            }
-          })
-          .catch(e => console.error('Supabase daily activity logging failed (catch):', e?.message || String(e)));
+        try {
+          const { error: activityError } = await supabase
+            .from('daily_activity_log')
+            .upsert([{
+              date: today,
+              user_id: userIdRef.current,
+              first_visit_timestamp: new Date().toISOString(),
+              last_visit_timestamp: new Date().toISOString(),
+            }], {
+              onConflict: 'date,user_id',
+              ignoreDuplicates: false
+            });
+
+          if (activityError) {
+            console.warn('Database activity logging unavailable - continuing normally:', activityError.message);
+          } else {
+            localStorage.setItem(LAST_ACTIVE_DATE_KEY, today);
+          }
+        } catch (e: any) {
+          console.warn('Daily activity logging failed - continuing normally:', e?.message || String(e));
+        }
       }
     }
   }, [userIdRef.current, toast]);
@@ -555,7 +559,7 @@ const KruthikaChatPage: NextPage = () => {
 
       // Try enhanced client-side response first
       let aiResponse = getEnhancedResponse(inputData, userIdRef.current || undefined);
-      
+
       // If no enhanced response, use server action
       if (!aiResponse) {
         aiResponse = await generateResponse(inputData, userIdRef.current || undefined);
@@ -661,7 +665,7 @@ const KruthikaChatPage: NextPage = () => {
       if (userIdRef.current) {
         const tokenStatus = userPersonalization.getTokenUsageStatus(userIdRef.current);
         setTokenUsageStatus(tokenStatus);
-        
+
         // Show warning when approaching limit
         if (tokenStatus.percentage >= 90) {
           toast({
