@@ -326,7 +326,7 @@ export async function getAPIFailureFallback(input: EmotionalStateInput): Promise
     {
       en: ["Rain sounds so romantic! 🌧️", "Makes me want to cuddle and chat for hours 💕"],
       hi: ["Baarish kitni romantic lag rahi! 🌧️", "Cuddle karke ghante bhar baat karne ka mann kar raha 💕"],
-      kn: ["Male thumba romantic aagthide! 🌧️", "Cuddle maadi ghanteegalinda maathadoke anisthide 💕"],
+      kn: ["Male thumba romantic aagthide! 🌧️", "Cuddle maadi ghanteegalinda mathaadoke anisthide 💕"],
       newMood: "romantic"
     }
   ];
