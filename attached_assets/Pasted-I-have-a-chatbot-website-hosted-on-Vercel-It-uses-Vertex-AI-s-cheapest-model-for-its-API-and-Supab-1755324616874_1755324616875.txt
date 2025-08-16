@@ -1,0 +1,25 @@
+I have a chatbot website hosted on Vercel. It uses Vertex AI's cheapest model for its API, and Supabase for its database. I want to optimize it to reduce API costs and improve loading times, especially for the admin panel.
+
+Here's the current setup:
+- AI chat API: Calls the Vertex AI API for every user message.
+- Admin Panel: Fetches AI settings (like name, DP image URL) from Supabase on every page load.
+
+My goal is to minimize Vertex AI costs and make both the chatbot and the admin panel load faster.
+
+Please modify my existing application to implement the following changes:
+
+1.  **Implement a Caching Layer for the Chat API:**
+    - Before making a call to the Vertex AI API, check if the exact user prompt already exists in a cache.
+    - Use a hash of the user's prompt (e.g., using `SHA-256`) as the cache key.
+    - If a cached response exists (cache hit), return it immediately to the user. This saves an API call.
+    - If the prompt is not in the cache (cache miss), proceed with the API call to Vertex AI.
+    - After receiving the response from Vertex AI, store the user's prompt and the AI's response in the cache with the hash as the key.
+    - For this, you can either create a dedicated table in Supabase or use an in-memory cache solution like a simple JavaScript Map, which will be faster but won't persist across serverless function invocations. Please use an in-memory cache first for simplicity and speed.
+
+2.  **Optimize the Admin Panel:**
+    - The AI's details (like name and DP image) are static data that don't change often.
+    - Modify the API route for the admin panel to cache the response from Supabase.
+    - Use Vercel's built-in caching headers (e.g., `Cache-Control: public, max-age=3600, must-revalidate`). This will cache the response at the edge for one hour (3600 seconds), making subsequent loads instant.
+    - The cache should be invalidated (i.e., force a new fetch from Supabase) whenever a change is saved in the admin panel.
+
+Please provide the specific code changes and the file paths where they should be applied. Explain the purpose of each change clearly.
