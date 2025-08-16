@@ -470,7 +470,7 @@ function handleUserImageUpload(input: EmotionalStateInput): EmotionalStateOutput
     { response: ["So pretty! 🥰", "I love seeing your photos! 💖"], newMood: "affectionate" },
     { response: ["Beautiful! 😊", "Thanks for sharing babe! 💕"], newMood: "grateful" },
   ];
-  
+
   return responses[Math.floor(Math.random() * responses.length)];
 }
 
@@ -478,10 +478,10 @@ function handleUserImageUpload(input: EmotionalStateInput): EmotionalStateOutput
 function shouldSendMediaProactively(input: EmotionalStateInput): EmotionalStateOutput | null {
   // Very rarely send media (less than 1% chance)
   if (Math.random() > 0.01) return null;
-  
+
   const availableImages = input.availableImages || [];
   const availableAudio = input.availableAudio || [];
-  
+
   if (availableImages.length > 0 && Math.random() < 0.7) {
     const randomImage = availableImages[Math.floor(Math.random() * availableImages.length)];
     return {
@@ -490,7 +490,7 @@ function shouldSendMediaProactively(input: EmotionalStateInput): EmotionalStateO
       newMood: "playful"
     };
   }
-  
+
   if (availableAudio.length > 0) {
     const randomAudio = availableAudio[Math.floor(Math.random() * availableAudio.length)];
     return {
@@ -499,7 +499,7 @@ function shouldSendMediaProactively(input: EmotionalStateInput): EmotionalStateO
       newMood: "musical"
     };
   }
-  
+
   return null;
 }
 
