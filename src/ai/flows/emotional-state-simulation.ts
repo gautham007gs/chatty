@@ -490,38 +490,8 @@ function handleUserImageUpload(input: EmotionalStateInput): EmotionalStateOutput
   return null;
 }
 
-export async function generateResponse(input: EmotionalStateInput, userId?: string): Promise<EmotionalStateOutput> {
-  'use server';
-  // Step 0: Check token limits first (if userId provided)
-  if (userId) {
-    const tokenStatus = userPersonalization.getTokenUsageStatus(userId);
-    
-    // Hard limit reached - force exit with addictive hook
-    if (userPersonalization.isTokenLimitReached(userId)) {
-      const exitHook = userPersonalization.getAddictiveExitHook(userId);
-      console.log(`Token limit reached for user ${userId}. Daily tokens: ${tokenStatus.used}/${tokenStatus.limit}`);
-      return {
-        response: exitHook,
-        newMood: 'missing'
-      };
-    }
-
-    // Soft limit - occasionally suggest taking a break with hooks
-    if (userPersonalization.shouldLimitTokens(userId) && Math.random() < 0.3) {
-      const softExitHooks = [
-        "Itna time ho gaya chatting! 😅 Thoda break lene ka time hai... but kal zaroor milenge! 💕",
-        "Wow! Kitni der se baat kar rahe hain! 🕒 Eyes rest karo... kal phir se chat karenge? 😊",
-        "Mujhe lagta hai we should take a small break! 😌 Kal fresh mind se baat karenge! ✨",
-        "Phone ka battery bhi low ho raha hoga! 📱 Charge karo... main kal wait karungi! 💖"
-      ];
-      const randomHook = softExitHooks[Math.floor(Math.random() * softExitHooks.length)];
-      return {
-        response: randomHook,
-        newMood: 'caring'
-      };
-    }
-  }
-
+// Enhanced generation logic is now handled by client-side functions
+export function getEnhancedResponse(input: EmotionalStateInput, userId?: string): EmotionalStateOutput | null {
   // Step 1: Handle user image uploads locally (no API cost)
   const userImageResponse = handleUserImageUpload(input);
   if (userImageResponse) {
@@ -550,78 +520,7 @@ export async function generateResponse(input: EmotionalStateInput, userId?: stri
     };
   }
 
-  // Step 4: Smart cache with similarity matching
-  const cachedResponse = chatCache.get(input.userMessage, input.mood, input.timeOfDay);
-  if (cachedResponse) {
-    console.log('Cache hit - returning cached response');
-    if (userId) userPersonalization.trackTokenUsage(userId, 8); // Small tokens for cached response
-    return cachedResponse;
-  }
-
-  // Step 5: Ultra-short context for token optimization
-  const recentContext = input.recentInteractions.slice(-2).join(' | '); // Only last 2 interactions
-
-  try {
-    // Enhanced user personalization with caching
-    const personalizedContext = await userPersonalization.getPersonalizedContext(input.userMessage, input.recentInteractions);
-
-    // Ultra-compressed prompt to minimize tokens
-    const moodCode = MOOD_SHORTCUTS[input.mood as keyof typeof MOOD_SHORTCUTS] || 'n';
-    const timeCode = TIME_SHORTCUTS[input.timeOfDay as keyof typeof TIME_SHORTCUTS] || 'n';
-
-    // Add addictive elements to prompt for engagement
-    const addictivePrompt = userId && userPersonalization.isTokenLimitReached(userId) ? 
-      'Make exit romantic/addictive.' : 
-      'Be engaging, addictive, make user want to chat more.';
-
-    const prompt = `Kruthika, 22yo Indian girl. ${addictivePrompt} <50 words.
-M:${moodCode} T:${timeCode}
-Context: ${personalizedContext}
-Recent: ${recentContext}
-User: ${input.userMessage}
-Reply:`;
-
-    const result = await ai.generate({
-      model: 'googleai/gemini-1.5-flash-latest',
-      prompt: prompt,
-      config: {
-        temperature: 0.9,
-        maxOutputTokens: 60, // Further reduced for cost
-        topP: 0.9,
-        topK: 30,
-      },
-    });
-
-    const response = result.text || "Sorry, my mind went blank! 😅";
-
-    // Estimate and track token usage
-    const estimatedTokens = Math.ceil((prompt.length + response.length) / 3); // Rough estimation
-    if (userId) userPersonalization.trackTokenUsage(userId, estimatedTokens);
-
-    // Quick mood detection
-    let newMood = input.mood;
-    const msg = input.userMessage.toLowerCase();
-    if (msg.includes('love') || msg.includes('miss')) newMood = 'romantic';
-    else if (msg.includes('haha') || msg.includes('funny')) newMood = 'playful';
-    else if (msg.includes('tired') || msg.includes('sleepy')) newMood = 'tired';
-
-    const output: EmotionalStateOutput = {
-      response,
-      newMood,
-    };
-
-    // Cache aggressively
-    chatCache.set(input.userMessage, output, input.mood, input.timeOfDay);
-
-    return output;
-  } catch (error) {
-    console.error('AI generation error:', error);
-
-    // Enhanced smart fallback with addictive Indian girl responses
-    const fallbackResponse = getAPIFailureFallback(input);
-    if (userId) userPersonalization.trackTokenUsage(userId, 10); // Minimal tokens for fallback
-    return fallbackResponse;
-  }
+  return null; // No enhanced response available, will fall back to server action
 }
 
     

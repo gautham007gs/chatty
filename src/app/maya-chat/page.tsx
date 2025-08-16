@@ -8,7 +8,8 @@ import ChatView from '@/components/chat/ChatView';
 import ChatInput from '@/components/chat/ChatInput';
 import type { Message, AIProfile, MessageStatus, AdSettings, AIMediaAssetsConfig } from '@/types';
 import { defaultAIProfile, defaultAdSettings, defaultAIMediaAssetsConfig, DEFAULT_ADSTERRA_DIRECT_LINK, DEFAULT_MONETAG_DIRECT_LINK } from '@/config/ai';
-import { generateResponse, getAPIFailureFallback, type EmotionalStateInput, type EmotionalStateOutput } from '@/ai/flows/emotional-state-simulation';
+import { getAPIFailureFallback, getEnhancedResponse, type EmotionalStateInput, type EmotionalStateOutput } from '@/ai/flows/emotional-state-simulation';
+import { generateResponse } from '@/ai/actions/emotional-state-actions';
 import { generateOfflineMessage, type OfflineMessageInput } from '@/ai/flows/offline-message-generation';
 import { userPersonalization } from '@/lib/userPersonalization';
 import { useToast } from "@/hooks/use-toast";
@@ -541,7 +542,7 @@ const KruthikaChatPage: NextPage = () => {
       const availableImages = (mediaAssetsConfig?.assets?.filter(asset => asset.type === 'image') || []).map(asset => asset.url);
       const availableAudio = (mediaAssetsConfig?.assets?.filter(asset => asset.type === 'audio') || []).map(asset => asset.url);
 
-      const aiResponse = await generateResponse({
+      const inputData = {
         userMessage: text,
         userImageUri: currentImageUri,
         timeOfDay: getTimeOfDay(),
@@ -549,7 +550,15 @@ const KruthikaChatPage: NextPage = () => {
         recentInteractions: updatedRecentInteractions,
         availableImages,
         availableAudio,
-      }, userIdRef.current || undefined);
+      };
+
+      // Try enhanced client-side response first
+      let aiResponse = getEnhancedResponse(inputData, userIdRef.current || undefined);
+      
+      // If no enhanced response, use server action
+      if (!aiResponse) {
+        aiResponse = await generateResponse(inputData, userIdRef.current || undefined);
+      }
 
       if (aiResponse.proactiveImageUrl || aiResponse.proactiveAudioUrl) {
         if (adSettings && adSettings.adsEnabledGlobally) {
