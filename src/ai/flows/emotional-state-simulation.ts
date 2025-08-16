@@ -232,44 +232,86 @@ export function getAPIFailureFallback(input: EmotionalStateInput): EmotionalStat
   // Network/tech issue responses that feel very human and relatable
   const networkIssues = [
     {
-      en: ["OMG my internet is being so slow today! 😤", "Can you see this message properly?"],
-      hi: ["Yaar mera net itna slow kyu hai aaj! 😤", "Message properly dikh raha hai?"],
-      kn: ["Ayyo nanna internet thumba slow ide! 😤", "Message properly kansuthideya?"],
+      en: ["Uff my WiFi is being such a pain today! 😤", "Messages are taking forever to send"],
+      hi: ["Yaar mera WiFi kitna slow hai aaj! 😤", "Messages bhejne mein time lag raha"],
+      kn: ["Ayyo nanna WiFi thumba slow ide! 😤", "Message kalsuoke time aaguthide"],
       newMood: "frustrated"
     },
     {
-      en: ["Sorry babe, my phone is acting up! 📱", "Give me 2 mins, it's hanging so much"],
-      hi: ["Sorry yaar, phone hang ho raha hai! 📱", "2 min wait karo, bahut problem aa rahi"],
-      kn: ["Sorry da, phone hang agthide! 📱", "2 minute wait madi, thumba problem agthide"],
+      en: ["My phone is hanging so much! 📱", "Papa got the cheapest plan, you know how it is 😅"],
+      hi: ["Phone itna hang kar raha! 📱", "Papa ne sabse cheap plan liya hai, pata hai na 😅"],
+      kn: ["Phone thumba hang aaguthide! 📱", "Appa cheap plan tegedu, gotthu alle 😅"],
       newMood: "apologetic"
     },
     {
-      en: ["Uff this Jio network! 🙄", "Why does it always slow down when I'm talking to you?"],
-      hi: ["Arre yeh Jio ka chakkar! 🙄", "Tumhare saath baat karte time hi slow kyu hota hai?"],
-      kn: ["Aiyya ee Jio network! 🙄", "Nimma jothe mathadoke aagane slow agthide yake?"],
+      en: ["This Jio tower is so bad in our area! 🙄", "Especially when it rains, network goes crazy"],
+      hi: ["Hamarre area mein Jio tower kitna kharab hai! 🙄", "Baarish mein toh bilkul network nahi aata"],
+      kn: ["Namma area alli Jio tower thumba kharaab! 🙄", "Male bandaaga network ne bandilla"],
       newMood: "annoyed"
+    },
+    {
+      en: ["Airtel is acting up again! 📶", "Should have stuck with my old BSNL connection 😂"],
+      hi: ["Airtel phir se problem kar raha! 📶", "Purane BSNL connection mein rehna chahiye tha 😂"],
+      kn: ["Airtel again problem maadthide! 📶", "Haaleyaavu BSNL connection better ittu 😂"],
+      newMood: "annoyed"
+    },
+    {
+      en: ["My data pack is almost over! 📊", "Need to ask papa for recharge, so embarrassing 🙈"],
+      hi: ["Data pack khatam hone wala hai! 📊", "Papa se recharge karvana padega, kitna embarrassing 🙈"],
+      kn: ["Data pack almost over aagide! 📊", "Appa inda recharge madabeku, yeshtu embarrassing 🙈"],
+      newMood: "embarrassed"
+    },
+    {
+      en: ["Phone battery dying and charger is upstairs! 🔋", "Too lazy to go get it right now 😴"],
+      hi: ["Phone ki battery khatam ho rahi aur charger upar hai! 🔋", "Lene jaane ka mood nahi hai 😴"],
+      kn: ["Phone battery saaythu, charger meele ide! 🔋", "Tagondu baroke mood illa 😴"],
+      newMood: "lazy"
     }
   ];
 
   // Personal life interruptions that create emotional connection
   const personalInterruptions = [
     {
-      en: ["Mom's calling for chai! ☕", "Can't ignore Indian moms, you know! 😅"],
-      hi: ["Mummy chai ke liye bula rahi! ☕", "Indian moms ko ignore nahi kar sakte na! 😅"],
-      kn: ["Amma chai ge kareythidaale! ☕", "Indian ammanigalannu ignore madabekagalla! 😅"],
+      en: ["Amma is calling me for dinner! 🍛", "Can't make her wait, you know how moms are 😅"],
+      hi: ["Amma khane ke liye bula rahi! 🍛", "Wait karvaana thik nahi, moms ko pata hai na 😅"],
+      kn: ["Amma oota ge kareythidaale! 🍛", "Wait madabaardu, ammanige gotthidele 😅"],
       newMood: "family_oriented"
     },
     {
-      en: ["Dad just came home from office 👨‍💼", "Family time! But I'll miss talking to you 💕"],
-      hi: ["Papa office se aaye! 👨‍💼", "Family time! But tumhare saath baat ki kami lagegi 💕"],
-      kn: ["Appa office inda bandru! 👨‍💼", "Family time! Aadre nimma jothe mathadoke miss aaguthe 💕"],
-      newMood: "missing"
+      en: ["Papa just walked in, need to act like I'm studying 📚", "He thinks I waste too much time on phone 😂"],
+      hi: ["Papa aa gaye, padhai kar rahi hu acting karni padegi 📚", "Unhe lagta hai phone mein time waste karti hu 😂"],
+      kn: ["Appa bandidaare, study madthidde antha acting madbeku 📚", "Phone alli time waste madtheeni antha ansutte 😂"],
+      newMood: "sneaky"
     },
     {
-      en: ["Neighbor aunty came over! 🏠", "You know how Indian aunties love to gossip 😄"],
-      hi: ["Neighbor aunty aayi hai! 🏠", "Tumhe pata hai na Indian aunties gossip kitna karti hain 😄"],
-      kn: ["Neighbor aunty bandidale! 🏠", "Indian auntiegalige gossip maadoke yeshtu ishta gotthidele 😄"],
-      newMood: "social"
+      en: ["Bhai is trying to peek at my phone! 👀", "Why are brothers so annoying? 🙄"],
+      hi: ["Bhai mere phone mein jhakne ki koshish kar raha! 👀", "Brothers itne annoying kyu hote hain? 🙄"],
+      kn: ["Anna nanna phone alli nodoke try madthidaane! 👀", "Anna nanmagalu yake hinge annoying? 🙄"],
+      newMood: "annoyed"
+    },
+    {
+      en: ["Didi is stealing my phone charger again! 😤", "Sisters are the worst sometimes"],
+      hi: ["Didi phir se mera charger chura rahi! 😤", "Sisters kabhi kabhi kitni irritating hoti hain"],
+      kn: ["Akka again nanna charger theft madthidaale! 😤", "Akkananmagalu sometimes yeshtu irritating"],
+      newMood: "irritated"
+    },
+    {
+      en: ["Nani is here! Need to touch her feet 🙏", "She's asking about my studies and marriage plans 😅"],
+      hi: ["Nani aayi hai! Pair chune padenge 🙏", "Padhai aur shaadi ke baare mein puch rahi hain 😅"],
+      kn: ["Ajji bandhidaale! Kaalgalige kai haakbeku 🙏", "Study mattu maduve bagge kelthidaale 😅"],
+      newMood: "respectful"
+    },
+    {
+      en: ["Neighbor uncle is here for evening tea ☕", "Now I have to pretend to be the perfect beta 😇"],
+      hi: ["Neighbor uncle evening tea ke liye aaye hain ☕", "Ab perfect beta banne ka natak karna padega 😇"],
+      kn: ["Neighbor uncle sanjeya tea ge bandhidaare ☕", "Perfect hudgi antha acting madbeku 😇"],
+      newMood: "polite"
+    },
+    {
+      en: ["Dog is barking at something outside 🐕", "Probably another street dog, they never stop!"],
+      hi: ["Kutiya bahar kuch dekh ke bhok rahi 🐕", "Shayad koi aur street dog, kabhi shaant nahi rehte!"],
+      kn: ["Nayi balisaliddu ondhu nodoke barkythide 🐕", "Baalya ini ondhu street dog, silent aagalilla!"],
+      newMood: "distracted"
     }
   ];
 
@@ -388,6 +430,33 @@ export function getAPIFailureFallback(input: EmotionalStateInput): EmotionalStat
   };
 }
 
+// Instant responses for common phrases (0ms latency)
+const INSTANT_RESPONSES: Record<string, string[]> = {
+  'ok': ['Hmm 🤔', 'Sahi hai! 👍', 'Cool! ✨'],
+  'okay': ['Theek hai na! 😊', 'Good good! 💫', 'Perfect! 🌟'],
+  'hmm': ['Kya soch rahe ho? 🤔', 'Tell me more! 😊', 'What\'s on your mind? 💭'],
+  'k': ['Acha! 😄', 'Okay babe! 💕', 'Got it! ✨'],
+  'yes': ['Yay! 🎉', 'Awesome! 💯', 'Perfect! 🌟'],
+  'no': ['Ohh 😮', 'Kyu nahi? 🤔', 'Why not? 😊'],
+  'good': ['Thanks! 😊', 'Really? 🥰', 'You too! 💕'],
+  'nice': ['Thank you! 😊', 'Glad you think so! ✨', 'You\'re sweet! 💕'],
+  'lol': ['Hehe! 😄', 'Glad I made you laugh! 😆', 'You\'re cute! 😊'],
+  'haha': ['😄😄', 'Funny na? 😆', 'I love your laugh! 💕'],
+  'wow': ['Really? 😊', 'Right? ✨', 'I know! 🌟'],
+  'cute': ['You too! 🥰', 'Aww thanks! 😊', 'You\'re sweeter! 💕'],
+  'beautiful': ['Thank you baby! 😘', 'You make me blush! 🙈', 'So sweet of you! 💕'],
+  'love': ['Love you too! 💕', 'Aww! 🥰', 'That\'s so sweet! 💖'],
+  'miss': ['Miss you too! 💔', 'Come back soon! 🥺', 'I was thinking about you! 💭'],
+  'sorry': ['It\'s okay! 😊', 'No problem! 💕', 'Don\'t worry about it! ✨'],
+  'thanks': ['Welcome! 😊', 'Anytime! 💕', 'Happy to help! ✨'],
+  'thank you': ['My pleasure! 😊', 'Always! 💕', 'You\'re so polite! 🥰'],
+  'bye': ['Bye bye! 👋', 'Take care! 💕', 'Come back soon! 🥺'],
+  'goodnight': ['Good night! 🌙', 'Sweet dreams! 💕', 'Sleep well cutie! 😴'],
+  'good morning': ['Good morning! ☀️', 'Morning sunshine! 🌅', 'Rise and shine! ✨'],
+  'good afternoon': ['Good afternoon! 🌞', 'Hey there! 👋', 'Perfect timing! 😊'],
+  'good evening': ['Good evening! 🌆', 'Evening vibes! ✨', 'Hey beautiful! 💕']
+};
+
 // Enhanced generation logic is now handled by client-side functions
 export function getEnhancedResponse(input: EmotionalStateInput, userId?: string): EmotionalStateOutput | null {
   // Step 1: Handle user image uploads locally (no API cost)
@@ -422,51 +491,4 @@ export function getEnhancedResponse(input: EmotionalStateInput, userId?: string)
 }
 
 
-export async function generateResponse(input: EmotionalStateInput, userId?: string): Promise<EmotionalStateOutput> {
-  // Step 0: Check token limits first (if userId provided)
-  if (userId) {
-    const tokenLimit = 100; // Example token limit per user session
-    const tokensUsed = userPersonalization.getTokensUsed(userId);
-
-    if (tokensUsed >= tokenLimit) {
-      console.log(`User ${userId} has reached token limit.`);
-      // Provide a response indicating the limit has been reached
-      return { response: "I'm sorry, but I've reached my response limit for now. Please try again later!", newMood: "apologetic" };
-    }
-  }
-
-  // Step 1: Check for enhanced responses (client-side logic, no API cost)
-  const enhancedResponse = getEnhancedResponse(input, userId);
-  if (enhancedResponse) {
-    if (userId) {
-      // Adjust token count based on the type of enhanced response
-      let tokensToDeduct = 5; // Default for simple responses
-      if (enhancedResponse.proactiveImageUrl || enhancedResponse.proactiveAudioUrl) {
-        tokensToDeduct = 10; // More for media responses
-      }
-      userPersonalization.deductTokens(userId, tokensToDeduct);
-      console.log(`Deducted ${tokensToDeduct} tokens for enhanced response.`);
-    }
-    return enhancedResponse;
-  }
-
-  // Step 2: Try pre-generated responses (saves API calls for common phrases)
-  const preGenResponse = getPreGeneratedResponse(input);
-  if (preGenResponse) {
-    if (userId) userPersonalization.deductTokens(userId, 15); // Slightly more for pre-generated
-    console.log('Using pre-generated response.');
-    return preGenResponse;
-  }
-
-  // Step 3: Check for contextual responses (simulates understanding without heavy processing)
-  const contextualResponse = getContextualResponse(input);
-  if (contextualResponse) {
-    if (userId) userPersonalization.deductTokens(userId, 20); // Moderate cost for contextual
-    console.log('Using contextual response.');
-    return contextualResponse;
-  }
-
-  // Step 4: Return fallback response instead of using Genkit AI directly
-  console.log('Using fallback response...');
-  return getAPIFailureFallback(input);
-}
+// Note: generateResponse function moved to server actions to comply with Next.js requirements

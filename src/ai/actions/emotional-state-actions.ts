@@ -141,3 +141,53 @@ Reply:`;
     return fallbackResponse;
   }
 }
+
+export async function generateResponse(input: EmotionalStateInput, userId?: string): Promise<EmotionalStateOutput> {
+  // Step 0: Check token limits first (if userId provided)
+  if (userId) {
+    const tokenLimit = 100;
+    const tokensUsed = userPersonalization.getTokensUsed(userId);
+
+    if (tokensUsed >= tokenLimit) {
+      console.log(`User ${userId} has reached token limit.`);
+      return { response: "I'm sorry, but I've reached my response limit for now. Please try again later!", newMood: "apologetic" };
+    }
+  }
+
+  // Step 1: Check for enhanced responses (client-side logic, no API cost)
+  const { getEnhancedResponse, getPreGeneratedResponse, getContextualResponse, getAPIFailureFallback } = await import('@/ai/flows/emotional-state-simulation');
+  
+  const enhancedResponse = getEnhancedResponse(input, userId);
+  if (enhancedResponse) {
+    if (userId) {
+      let tokensToDeduct = 5;
+      if (enhancedResponse.proactiveImageUrl || enhancedResponse.proactiveAudioUrl) {
+        tokensToDeduct = 10;
+      }
+      userPersonalization.deductTokens(userId, tokensToDeduct);
+      console.log(`Deducted ${tokensToDeduct} tokens for enhanced response.`);
+    }
+    return enhancedResponse;
+  }
+
+  // Step 2: Try pre-generated responses
+  const preGenResponse = getPreGeneratedResponse(input);
+  if (preGenResponse) {
+    if (userId) userPersonalization.deductTokens(userId, 15);
+    console.log('Using pre-generated response.');
+    return preGenResponse;
+  }
+
+  // Step 3: Check for contextual responses
+  const contextualResponse = getContextualResponse(input);
+  if (contextualResponse) {
+    if (userId) userPersonalization.deductTokens(userId, 20);
+    console.log('Using contextual response.');
+    return contextualResponse;
+  }
+
+  // Step 4: Return fallback response
+  console.log('Using fallback response...');
+  return getAPIFailureFallback(input);rn fallbackResponse;
+  }
+}
