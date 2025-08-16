@@ -16,7 +16,7 @@ const AppHeader: React.FC<AppHeaderProps> = ({ title }) => {
   const pathname = usePathname();
 
   const navItems = [
-    { name: 'Chats', href: '/', icon: <MessageSquareText size={20} /> },
+    { name: 'Chats', href: '/maya-chat', icon: <MessageSquareText size={20} /> },
     { name: 'Status', href: '/status', icon: <Users size={20} /> },
     // { name: 'Calls', href: '/calls', icon: <Phone size={20} /> }, // Example for future
   ];

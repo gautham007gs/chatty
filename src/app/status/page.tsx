@@ -217,7 +217,12 @@ const StatusPage: React.FC = () => {
      return (
       <div className="flex flex-col h-screen max-w-3xl mx-auto bg-background shadow-2xl">
         <AppHeader title="Status" />
-        <div className="flex-grow flex items-center justify-center text-muted-foreground">Loading statuses...</div>
+        <div className="flex-grow flex items-center justify-center text-muted-foreground">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+            <p>Loading statuses...</p>
+          </div>
+        </div>
       </div>
     );
   }

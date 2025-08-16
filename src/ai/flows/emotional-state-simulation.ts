@@ -620,10 +620,14 @@ Reply:`;
     // Enhanced smart fallback with addictive Indian girl responses
     const fallbackResponse = getAPIFailureFallback(input);
     if (userId) userPersonalization.trackTokenUsage(userId, 10); // Minimal tokens for fallback
-    return fallbackResponse; What's on your mind?",
-      tired: "I'm a bit sleepy but still excited to chat! 😴✨",
-      default: "Sorry, I'm having a moment! Try again? 😅"
-    };
+    return fallbackResponse;
+  } catch (error) {
+    console.error('Error in generateResponse:', error);
+    const fallbackResponse = getAPIFailureFallback(input);
+    if (userId) userPersonalization.trackTokenUsage(userId, 10);
+    return fallbackResponse;
+  }
+}
 
     const fallbackResponse = moodFallbacks[input.mood as keyof typeof moodFallbacks] || moodFallbacks.default;
 
