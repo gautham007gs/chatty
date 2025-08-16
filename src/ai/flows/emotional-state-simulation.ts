@@ -226,11 +226,11 @@ function getPreGeneratedResponse(input: EmotionalStateInput): EmotionalStateOutp
 export function getAPIFailureFallback(input: EmotionalStateInput): EmotionalStateOutput {
   const userMsg = input.userMessage.toLowerCase();
   const timeOfDay = input.timeOfDay;
-  
+
   // Language detection for multilingual responses
   const isHindi = /hindi|हिन्दी|हिंदी|kya|hai|kaise|kaisi|acha|thik|baat|kar/.test(userMsg);
   const isKannada = /kannada|ಕನ್ನಡ|yaava|enu|hegiddira|chennagi/.test(userMsg);
-  
+
   // Network/tech issue responses that feel very human and relatable
   const networkIssues = [
     {
@@ -351,7 +351,7 @@ export function getAPIFailureFallback(input: EmotionalStateInput): EmotionalStat
 
   // Select appropriate response based on context
   let selectedResponse;
-  
+
   // 40% chance of network issues (most relatable)
   if (Math.random() < 0.4) {
     selectedResponse = networkIssues[Math.floor(Math.random() * networkIssues.length)];
@@ -523,4 +523,72 @@ export function getEnhancedResponse(input: EmotionalStateInput, userId?: string)
   return null; // No enhanced response available, will fall back to server action
 }
 
-    
+
+export async function generateResponse(input: EmotionalStateInput, userId?: string): Promise<EmotionalStateOutput> {
+  // Step 0: Check token limits first (if userId provided)
+  if (userId) {
+    const tokenLimit = 100; // Example token limit per user session
+    const tokensUsed = userPersonalization.getTokensUsed(userId);
+
+    if (tokensUsed >= tokenLimit) {
+      console.log(`User ${userId} has reached token limit.`);
+      // Provide a response indicating the limit has been reached
+      return { response: "I'm sorry, but I've reached my response limit for now. Please try again later!", newMood: "apologetic" };
+    }
+  }
+
+  // Step 1: Check for enhanced responses (client-side logic, no API cost)
+  const enhancedResponse = getEnhancedResponse(input, userId);
+  if (enhancedResponse) {
+    if (userId) {
+      // Adjust token count based on the type of enhanced response
+      let tokensToDeduct = 5; // Default for simple responses
+      if (enhancedResponse.proactiveImageUrl || enhancedResponse.proactiveAudioUrl) {
+        tokensToDeduct = 10; // More for media responses
+      }
+      userPersonalization.deductTokens(userId, tokensToDeduct);
+      console.log(`Deducted ${tokensToDeduct} tokens for enhanced response.`);
+    }
+    return enhancedResponse;
+  }
+
+  // Step 2: Try pre-generated responses (saves API calls for common phrases)
+  const preGenResponse = getPreGeneratedResponse(input);
+  if (preGenResponse) {
+    if (userId) userPersonalization.deductTokens(userId, 15); // Slightly more for pre-generated
+    console.log('Using pre-generated response.');
+    return preGenResponse;
+  }
+
+  // Step 3: Check for contextual responses (simulates understanding without heavy processing)
+  const contextualResponse = getContextualResponse(input);
+  if (contextualResponse) {
+    if (userId) userPersonalization.deductTokens(userId, 20); // Moderate cost for contextual
+    console.log('Using contextual response.');
+    return contextualResponse;
+  }
+
+  // Step 4: If no other option, use the API for a truly novel response
+  console.log('Generating novel response using Genkit AI...');
+  const response = await ai
+    .chat()
+    .pipe(
+      z.chat(EmotionalStateInputSchema, EmotionalStateOutputSchema),
+      ai.transformers.merge_output(),
+      ai.transformers.combine_output(),
+    )
+    .run({
+      input,
+      // Optional: Add system message for better control over AI personality/behavior
+      // system: "You are Kruthika, a friendly and playful AI assistant. You are helpful and empathetic.",
+    });
+
+  if (userId) {
+    // Estimate token usage for the API call (replace with actual token count if available)
+    userPersonalization.deductTokens(userId, 50); // Heavier cost for API calls
+    console.log(`Deducted 50 tokens for Genkit AI response.`);
+  }
+
+  // Return the generated response
+  return response;
+}

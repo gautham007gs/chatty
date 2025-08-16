@@ -30,7 +30,6 @@ const OfflineMessageOutputSchema = z.object({
 export type OfflineMessageOutput = z.infer<typeof OfflineMessageOutputSchema>;
 
 export async function generateOfflineMessage(input: OfflineMessageInput): Promise<OfflineMessageOutput> {
-  'use server';
   return generateOfflineMessageFlow(input);
 }
 
