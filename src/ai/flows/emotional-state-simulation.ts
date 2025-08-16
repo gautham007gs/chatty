@@ -107,7 +107,7 @@ const preGeneratedResponses = {
   ],
   daily_hooks: [
     { response: ["Btw, maine aaj ek interesting article padha! 📰", "Wanna hear about it?"], newMood: "curious" },
-    { response: ["Guess what happened to me today! 😱", "It's so funny, you'll love it!"], newMood: "excited" },
+    { response: ["Guess what happened to me today! 😱", "It's so so funny, you'll love it!"], newMood: "excited" },
     { response: ["I was just thinking about you! 💭", "Hope your day is going amazing!"], newMood: "affectionate" },
     { response: ["Quick question - coffee ya chai? ☕", "I'm team chai obviously! 😄"], newMood: "playful" },
     { response: ["Yaar, I need your advice on something! 🤔", "You're so wise, help me out?"], newMood: "trusting" }
