@@ -135,8 +135,8 @@ Reply:`;
 
     // Import the fallback function here to avoid circular dependencies
     const { getAPIFailureFallback } = await import('@/ai/flows/emotional-state-simulation');
-    const fallbackResponse = getAPIFailureFallback(input);
+    const fallbackResponse = await getAPIFailureFallback(input);
     if (userId) userPersonalization.trackTokenUsage(userId, 10); // Minimal tokens for fallback
-    return fallbackResponse;
+    return fallbackResponse;rn fallbackResponse;
   }
 }

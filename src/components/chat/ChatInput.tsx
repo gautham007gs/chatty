@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from 'react';
 import { Send, Paperclip, Smile, Mic } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -77,21 +76,19 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, isAiTyping }) => {
     }
   };
 
-  const handleSubmit = (e?: React.FormEvent<HTMLFormElement>) => {
-    e?.preventDefault();
-    const textToSend = inputValue.trim();
-    const imageToSend = selectedImage;
+  const handleSendMessage = async (text: string, image?: File) => {
+    if (!text.trim() && !image) return;
 
-    if (textToSend || imageToSend) {
-      onSendMessage(textToSend, imageToSend || undefined);
-      setInputValue('');
-      setSelectedImage(null);
-      if (textareaRef.current) {
-        textareaRef.current.style.height = 'auto'; // Reset height
-      }
-      if(fileInputRef.current) fileInputRef.current.value = ""; // Reset file input
-      textareaRef.current?.focus();
+    const messageId = Date.now().toString();
+    let userMessage = text;
+    onSendMessage(userMessage, selectedImage || undefined);
+    setInputValue('');
+    setSelectedImage(null);
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto'; // Reset height
     }
+    if(fileInputRef.current) fileInputRef.current.value = ""; // Reset file input
+    textareaRef.current?.focus();
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -100,7 +97,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, isAiTyping }) => {
       handleSubmit();
     }
   };
-  
+
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setInputValue(e.target.value);
     if (textareaRef.current) {
@@ -157,4 +154,3 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, isAiTyping }) => {
 };
 
 export default ChatInput;
-

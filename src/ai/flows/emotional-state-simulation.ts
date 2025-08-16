@@ -457,6 +457,52 @@ const INSTANT_RESPONSES: Record<string, string[]> = {
   'good evening': ['Good evening! 🌆', 'Evening vibes! ✨', 'Hey beautiful! 💕']
 };
 
+// Handle user image uploads without throwing errors
+function handleUserImageUpload(input: EmotionalStateInput): EmotionalStateOutput | null {
+  if (!input.userImageUri) {
+    return null; // No image uploaded, continue normal flow
+  }
+
+  // User sent an image - respond locally
+  const responses = [
+    { response: ["Aww you look so cute! 😍", "Thanks for sharing this with me! 💕"], newMood: "happy" },
+    { response: ["Wow! 😍", "You're looking amazing! ✨"], newMood: "impressed" },
+    { response: ["So pretty! 🥰", "I love seeing your photos! 💖"], newMood: "affectionate" },
+    { response: ["Beautiful! 😊", "Thanks for sharing babe! 💕"], newMood: "grateful" },
+  ];
+  
+  return responses[Math.floor(Math.random() * responses.length)];
+}
+
+// Check if we should send media proactively
+function shouldSendMediaProactively(input: EmotionalStateInput): EmotionalStateOutput | null {
+  // Very rarely send media (less than 1% chance)
+  if (Math.random() > 0.01) return null;
+  
+  const availableImages = input.availableImages || [];
+  const availableAudio = input.availableAudio || [];
+  
+  if (availableImages.length > 0 && Math.random() < 0.7) {
+    const randomImage = availableImages[Math.floor(Math.random() * availableImages.length)];
+    return {
+      proactiveImageUrl: randomImage,
+      mediaCaption: "Just thought you'd like to see this! 😊💕",
+      newMood: "playful"
+    };
+  }
+  
+  if (availableAudio.length > 0) {
+    const randomAudio = availableAudio[Math.floor(Math.random() * availableAudio.length)];
+    return {
+      proactiveAudioUrl: randomAudio,
+      mediaCaption: "Something for you! 🎵💕",
+      newMood: "musical"
+    };
+  }
+  
+  return null;
+}
+
 // Enhanced generation logic is now handled by client-side functions
 export function getEnhancedResponse(input: EmotionalStateInput, userId?: string): EmotionalStateOutput | null {
   // Step 1: Handle user image uploads locally (no API cost)
