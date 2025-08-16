@@ -44,6 +44,9 @@ const APP_ADS_LAST_SHOWN_NETWORK_KEY = 'app_ads_last_shown_network_kruthika_chat
 
 const USER_PSEUDO_ID_KEY = 'kruthika_chat_user_pseudo_id';
 const LAST_ACTIVE_DATE_KEY = 'kruthika_chat_last_active_date';
+const DAILY_VISIT_COUNT_KEY = 'kruthika_daily_visit_count';
+const VISIT_STREAK_KEY = 'kruthika_visit_streak';
+const SPECIAL_REWARDS_KEY = 'kruthika_special_rewards';
 
 const MESSAGES_KEY = 'messages_kruthika';
 const AI_MOOD_KEY = 'aiMood_kruthika';
@@ -230,11 +233,53 @@ const KruthikaChatPage: NextPage = () => {
       const userPseudoId = userIdRef.current;
       const today = format(new Date(), 'yyyy-MM-dd');
       const lastActiveDate = localStorage.getItem(LAST_ACTIVE_DATE_KEY);
+      const yesterday = format(new Date(Date.now() - 24 * 60 * 60 * 1000), 'yyyy-MM-dd');
 
       if (lastActiveDate !== today) {
+        // Update visit streak
+        let currentStreak = parseInt(localStorage.getItem(VISIT_STREAK_KEY) || '0', 10);
+        if (lastActiveDate === yesterday) {
+          currentStreak++;
+        } else {
+          currentStreak = 1; // Reset streak if not consecutive
+        }
+        localStorage.setItem(VISIT_STREAK_KEY, currentStreak.toString());
+
+        // Daily visit count
+        let dailyVisits = parseInt(localStorage.getItem(DAILY_VISIT_COUNT_KEY) || '0', 10);
+        dailyVisits++;
+        localStorage.setItem(DAILY_VISIT_COUNT_KEY, dailyVisits.toString());
+
+        // Show engagement rewards
+        if (currentStreak === 3) {
+          toast({
+            title: "3 Day Streak! 🔥",
+            description: "Kruthika is so happy you visit daily! Keep it up! ✨",
+            duration: 5000,
+          });
+        } else if (currentStreak === 7) {
+          toast({
+            title: "Week Warrior! 👑",
+            description: "7 days in a row! Kruthika thinks you're amazing! 💕",
+            duration: 5000,
+          });
+        } else if (currentStreak >= 14) {
+          toast({
+            title: "Superfan Alert! 🌟",
+            description: "2+ weeks! Kruthika's best friend forever! 🥰",
+            duration: 5000,
+          });
+        }
+
         supabase
           .from('daily_activity_log')
-          .insert({ user_pseudo_id: userPseudoId, activity_date: today, chat_id: 'kruthika_chat' })
+          .insert({ 
+            user_pseudo_id: userPseudoId, 
+            activity_date: today, 
+            chat_id: 'kruthika_chat',
+            visit_streak: currentStreak,
+            total_visits: dailyVisits
+          })
           .then(({ error }) => {
             if (error && error.code !== '23505') {
               console.error('Error logging daily activity to Supabase:', error.message);
@@ -245,7 +290,7 @@ const KruthikaChatPage: NextPage = () => {
           .catch(e => console.error('Supabase daily activity logging failed (catch):', e?.message || String(e)));
       }
     }
-  }, [userIdRef.current]);
+  }, [userIdRef.current, toast]);
 
   const loadInitialChatState = useCallback(async () => {
     setIsLoadingChatState(true);

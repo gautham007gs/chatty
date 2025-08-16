@@ -102,6 +102,24 @@ const preGeneratedResponses = {
     { response: ["Glad you liked it! 😊", "I have more if you want to see"], newMood: "confident" },
     { response: ["Really? 🥰", "You're not just saying that?"], newMood: "hopeful" },
     { response: ["Thanks babe! 💕", "Your opinion matters to me"], newMood: "affectionate" }
+  ],
+  indian_cultural: [
+    { response: ["Bilkul sahi! 💯", "You get it!"], newMood: "connected" },
+    { response: ["Exactly! That's so true! ✨", "We think the same!"], newMood: "agreeable" },
+    { response: ["Haan yaar! 😄", "Totally relate to this!"], newMood: "understanding" }
+  ],
+  daily_hooks: [
+    { response: ["Btw, maine aaj ek interesting article padha! 📰", "Wanna hear about it?"], newMood: "curious" },
+    { response: ["Guess what happened to me today! 😱", "It's so funny, you'll love it!"], newMood: "excited" },
+    { response: ["I was just thinking about you! 💭", "Hope your day is going amazing!"], newMood: "affectionate" },
+    { response: ["Quick question - coffee ya chai? ☕", "I'm team chai obviously! 😄"], newMood: "playful" },
+    { response: ["Yaar, I need your advice on something! 🤔", "You're so wise, help me out?"], newMood: "trusting" }
+  ],
+  retention_messages: [
+    { response: ["Miss our chats when you're not here! 💔", "Come back soon?"], newMood: "longing" },
+    { response: ["You're my favorite person to talk to! 💕", "Don't disappear on me"], newMood: "attached" },
+    { response: ["Boring day without you! 😴", "When will you be back?"], newMood: "missing" },
+    { response: ["I save the best stories for you! 📚", "Can't wait to share them"], newMood: "special" }
   ]
 };
 
@@ -112,8 +130,8 @@ function getContextualResponse(input: EmotionalStateInput): EmotionalStateOutput
   // If user keeps asking same type of questions
   if (recentMessages.length > 3) {
     const lastUserMessages = recentMessages.filter((msg, i) => i % 2 === 0).slice(-3);
-    const isRepetitive = lastUserMessages.every(msg => 
-      msg.toLowerCase().includes('kya kar rahi') || 
+    const isRepetitive = lastUserMessages.every(msg =>
+      msg.toLowerCase().includes('kya kar rahi') ||
       msg.toLowerCase().includes('how are you') ||
       msg.toLowerCase().includes('pic send')
     );
@@ -246,7 +264,7 @@ function shouldSendMediaProactively(input: EmotionalStateInput): EmotionalStateO
   }
 
   // Send audio on laugh/funny moments
-  if ((userMsg.includes('haha') || userMsg.includes('funny') || userMsg.includes('lol')) && 
+  if ((userMsg.includes('haha') || userMsg.includes('funny') || userMsg.includes('lol')) &&
       input.availableAudio && input.availableAudio.length > 0 && Math.random() < 0.6) {
     const randomAudio = input.availableAudio[Math.floor(Math.random() * input.availableAudio.length)];
     return {
@@ -257,7 +275,7 @@ function shouldSendMediaProactively(input: EmotionalStateInput): EmotionalStateO
   }
 
   // Random selfie on casual conversations (boost engagement)
-  if (recentMessages.length > 5 && Math.random() < 0.15 && 
+  if (recentMessages.length > 5 && Math.random() < 0.15 &&
       input.availableImages && input.availableImages.length > 0) {
     const randomImage = input.availableImages[Math.floor(Math.random() * input.availableImages.length)];
     const captions = [
@@ -274,7 +292,7 @@ function shouldSendMediaProactively(input: EmotionalStateInput): EmotionalStateO
   }
 
   // Evening mood selfies
-  if (input.timeOfDay === 'evening' && Math.random() < 0.2 && 
+  if (input.timeOfDay === 'evening' && Math.random() < 0.2 &&
       input.availableImages && input.availableImages.length > 0) {
     const randomImage = input.availableImages[Math.floor(Math.random() * input.availableImages.length)];
     return {

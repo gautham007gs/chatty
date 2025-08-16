@@ -9,6 +9,18 @@ interface UserProfile {
   likesImages: boolean;
   likesAudio: boolean;
   lastMediaSent: number;
+  // Advanced profiling for cost reduction
+  predictablePatterns: string[];
+  apiCallsAvoided: number;
+  totalInteractions: number;
+  preferredGreetings: string[];
+  favoriteTopics: string[];
+  responseTimingPreference: 'instant' | 'normal' | 'slow';
+  engagementLevel: 'low' | 'medium' | 'high';
+  lastSeenMessages: string[];
+  repeatUser: boolean;
+  dailyVisitCount: number;
+  totalVisitDays: number;
 }
 
 class UserPersonalization {
@@ -85,15 +97,55 @@ class UserPersonalization {
       mediaInteractions: 0,
       likesImages: false,
       likesAudio: false,
-      lastMediaSent: 0
+      lastMediaSent: 0,
+      predictablePatterns: [],
+      apiCallsAvoided: 0,
+      totalInteractions: 0,
+      preferredGreetings: [],
+      favoriteTopics: [],
+      responseTimingPreference: 'normal',
+      engagementLevel: 'medium',
+      lastSeenMessages: [],
+      repeatUser: false,
+      dailyVisitCount: 0,
+      totalVisitDays: 0
     };
 
-    // Learn user's chat style
+    profile.totalInteractions++;
+
+    // Learn user's chat style with more nuance
     if (message.length > 50) {
       profile.responsePattern = 'long';
     } else if (message.length < 15) {
       profile.responsePattern = 'short';
     }
+
+    // Track predictable patterns for API avoidance
+    const msgLower = message.toLowerCase().trim();
+    if (profile.lastSeenMessages.includes(msgLower)) {
+      profile.predictablePatterns.push(msgLower);
+      profile.predictablePatterns = [...new Set(profile.predictablePatterns)].slice(-20);
+    }
+    profile.lastSeenMessages.push(msgLower);
+    profile.lastSeenMessages = profile.lastSeenMessages.slice(-50);
+
+    // Identify Indian cultural interests for engagement
+    const indianTopics = ['bollywood', 'cricket', 'festival', 'diwali', 'holi', 'food', 'biryani', 'curry', 'family', 'marriage', 'shaadi'];
+    indianTopics.forEach(topic => {
+      if (msgLower.includes(topic)) {
+        profile.favoriteTopics.push(topic);
+        profile.favoriteTopics = [...new Set(profile.favoriteTopics)].slice(-10);
+      }
+    });
+
+    // Track greeting preferences
+    const greetings = ['namaste', 'hi', 'hello', 'hey', 'good morning', 'good night'];
+    greetings.forEach(greeting => {
+      if (msgLower.includes(greeting)) {
+        profile.preferredGreetings.push(greeting);
+        profile.preferredGreetings = [...new Set(profile.preferredGreetings)].slice(-5);
+      }
+    });
 
     // Extract emojis user likes
     const emojis = message.match(/[\u{1F600}-\u{1F64F}]|[\u{1F300}-\u{1F5FF}]|[\u{1F680}-\u{1F6FF}]|[\u{1F1E0}-\u{1F1FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]/gu);
@@ -102,14 +154,57 @@ class UserPersonalization {
       profile.favoriteEmojis = [...new Set(profile.favoriteEmojis)].slice(-10);
     }
 
-    // Track common questions
+    // Track common questions for API reduction
     if (message.includes('?')) {
-      profile.commonQuestions.push(message.toLowerCase().trim());
-      profile.commonQuestions = profile.commonQuestions.slice(-5);
+      profile.commonQuestions.push(msgLower);
+      profile.commonQuestions = profile.commonQuestions.slice(-10);
     }
+
+    // Determine if repeat user (visited multiple days)
+    const today = new Date().toDateString();
+    const lastActive = new Date(profile.lastActiveTime).toDateString();
+    if (lastActive !== today) {
+      profile.totalVisitDays++;
+      profile.dailyVisitCount = 1;
+    } else {
+      profile.dailyVisitCount++;
+    }
+
+    profile.repeatUser = profile.totalVisitDays > 3;
+
+    // Calculate engagement level
+    if (profile.totalInteractions > 100) profile.engagementLevel = 'high';
+    else if (profile.totalInteractions > 30) profile.engagementLevel = 'medium';
+    else profile.engagementLevel = 'low';
 
     profile.lastActiveTime = Date.now();
     this.profiles.set(userId, profile);
+  }
+
+  // Get Indian cultural hook for engagement
+  getIndianHook(userId: string): string | null {
+    const profile = this.profiles.get(userId);
+    if (!profile) return null;
+
+    const hooks = [
+      "Aaj kya special plan hai? 😊",
+      "Tere ghar mein kya khana bana hai today? 🍛",
+      "Weekend pe kya karne ka plan hai? 🎉",
+      "Bollywood movie dekhi koi nayi? 🎬",
+      "Cricket match dekh raha hai? 🏏",
+      "Festival season aa raha hai na! Excited? 🎊",
+      "Ghar pe sab kaise hain? Family kaisi hai? 👨‍👩‍👧‍👦",
+      "Office/college kaisa chal raha hai? 📚",
+      "Monsoon aa gaya, baarish pasand hai? 🌧️",
+      "Chai peeke baat karte hain? ☕"
+    ];
+
+    // Return personalized hook based on favorite topics
+    if (profile.favoriteTopics.includes('cricket')) return "Cricket ka match chal raha hai kya? 🏏 Let's discuss!";
+    if (profile.favoriteTopics.includes('bollywood')) return "Koi nayi movie dekhi? Bollywood gossip share karo! 🎬✨";
+    if (profile.favoriteTopics.includes('food')) return "Kya khaya aaj? Mujhe bhi batao recipe! 😋🍛";
+
+    return hooks[Math.floor(Math.random() * hooks.length)];
   }
 
   getPersonalizedResponse(userId: string, baseResponse: any): any {
@@ -139,16 +234,63 @@ class UserPersonalization {
     const profile = this.profiles.get(userId);
     if (!profile) return true;
 
-    // Use API less for users with predictable patterns
+    const msg = message.toLowerCase().trim();
+
+    // Advanced pattern recognition for API avoidance
+    const isPredictablePattern = profile.predictablePatterns.some(pattern => 
+      msg.includes(pattern) || this.levenshteinDistance(msg, pattern) < 3
+    );
+
+    // Higher API avoidance for repeat users
+    if (profile.repeatUser && profile.totalInteractions > 50) {
+      if (isPredictablePattern && Math.random() < 0.85) {
+        profile.apiCallsAvoided++;
+        return false; // Skip API 85% for veteran users
+      }
+    }
+
+    // Medium avoidance for regular users
+    if (profile.totalInteractions > 20 && isPredictablePattern && Math.random() < 0.75) {
+      profile.apiCallsAvoided++;
+      return false; // Skip API 75% for regular users
+    }
+
+    // Basic avoidance for repetitive patterns
     const isRepetitiveUser = profile.commonQuestions.some(q => 
-      message.toLowerCase().includes(q.substring(0, 10))
+      msg.includes(q.substring(0, 10))
     );
 
     if (isRepetitiveUser && Math.random() < 0.7) {
-      return false; // Skip API call 70% of the time for repetitive users
+      profile.apiCallsAvoided++;
+      return false; // Skip API 70% for repetitive users
     }
 
     return true;
+  }
+
+  // Helper function for fuzzy matching
+  private levenshteinDistance(str1: string, str2: string): number {
+    const matrix = [];
+    for (let i = 0; i <= str2.length; i++) {
+      matrix[i] = [i];
+    }
+    for (let j = 0; j <= str1.length; j++) {
+      matrix[0][j] = j;
+    }
+    for (let i = 1; i <= str2.length; i++) {
+      for (let j = 1; j <= str1.length; j++) {
+        if (str2.charAt(i - 1) === str1.charAt(j - 1)) {
+          matrix[i][j] = matrix[i - 1][j - 1];
+        } else {
+          matrix[i][j] = Math.min(
+            matrix[i - 1][j - 1] + 1,
+            matrix[i][j - 1] + 1,
+            matrix[i - 1][j] + 1
+          );
+        }
+      }
+    }
+    return matrix[str2.length][str1.length];
   }
 
   shouldSendMedia(userId: string, messageCount: number): boolean {
