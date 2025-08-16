@@ -7,9 +7,7 @@
  * - EmotionalStateOutput: The return type for the generateResponse function.
  */
 
-import { ai } from '@/ai/genkit';
-import { z } from 'genkit';
-import {chatCache} from '@/lib/chatCache';
+import { z } from 'zod';
 import { userPersonalization } from '@/lib/userPersonalization';
 // aiMediaAssets from config is no longer directly used by the prompt,
 // but the structure is still informative for how the AI might be told to use assets.
@@ -390,106 +388,6 @@ export function getAPIFailureFallback(input: EmotionalStateInput): EmotionalStat
   };
 }
 
-// Aggressive token optimization - ultra-short prompts
-const MOOD_SHORTCUTS = {
-  happy: 'h', excited: 'e', flirty: 'f', playful: 'p', romantic: 'r',
-  curious: 'c', tired: 't', busy: 'b', neutral: 'n'
-};
-
-const TIME_SHORTCUTS = {
-  morning: 'm', afternoon: 'a', evening: 'e', night: 'n'
-};
-
-// Pre-cached common responses for instant delivery
-const INSTANT_RESPONSES = {
-  'hi': ['Hey! 😊', 'Hii babe! ✨', 'Hello cutie! 💕'],
-  'hello': ['Hello! 😊', 'Hi there! 💖', 'Hey gorgeous! ✨'],
-  'how are you': ['I\'m great! How about you? 😊', 'Amazing! You?', 'Perfect now that you\'re here! 💕'],
-  'good morning': ['Good morning handsome! ☀️', 'Morning babe! 😘', 'Rise and shine! ✨'],
-  'good night': ['Good night sweet dreams! 🌙', 'Sleep tight! 💤', 'Sweet dreams cutie! ✨'],
-  'ok': ['👍', 'Cool! 😊', 'Alright! ✨'],
-  'k': ['👍', 'Okay! 😊', '✨'],
-  'lol': ['😂😂', 'Haha! 😄', '🤣'],
-  'haha': ['😂', 'Glad I made you laugh! 😄', '🤣✨']
-};
-
-// Smart media engagement without API costs
-function shouldSendMediaProactively(input: EmotionalStateInput): EmotionalStateOutput | null {
-  const recentMessages = input.recentInteractions;
-  const userMsg = input.userMessage.toLowerCase();
-
-  // Send selfie after compliments (high engagement)
-  if (userMsg.includes('beautiful') || userMsg.includes('cute') || userMsg.includes('pretty') || userMsg.includes('gorgeous')) {
-    if (input.availableImages && input.availableImages.length > 0 && Math.random() < 0.8) {
-      const randomImage = input.availableImages[Math.floor(Math.random() * input.availableImages.length)];
-      return {
-        proactiveImageUrl: randomImage,
-        mediaCaption: "Aww thank you! 😊 How do I look? 💕",
-        newMood: "happy"
-      };
-    }
-  }
-
-  // Send audio on laugh/funny moments
-  if ((userMsg.includes('haha') || userMsg.includes('funny') || userMsg.includes('lol')) &&
-      input.availableAudio && input.availableAudio.length > 0 && Math.random() < 0.6) {
-    const randomAudio = input.availableAudio[Math.floor(Math.random() * input.availableAudio.length)];
-    return {
-      proactiveAudioUrl: randomAudio,
-      mediaCaption: "Hehe! I love making you laugh! 😄",
-      newMood: "playful"
-    };
-  }
-
-  // Random selfie on casual conversations (boost engagement)
-  if (recentMessages.length > 5 && Math.random() < 0.15 &&
-      input.availableImages && input.availableImages.length > 0) {
-    const randomImage = input.availableImages[Math.floor(Math.random() * input.availableImages.length)];
-    const captions = [
-      "Just took this! What do you think? 📸✨",
-      "Feeling cute today! Rate me? 😊💕",
-      "Quick selfie break! How's it looking? 🤳",
-      "Should I post this on Instagram? 📱✨"
-    ];
-    return {
-      proactiveImageUrl: randomImage,
-      mediaCaption: captions[Math.floor(Math.random() * captions.length)],
-      newMood: "confident"
-    };
-  }
-
-  // Evening mood selfies
-  if (input.timeOfDay === 'evening' && Math.random() < 0.2 &&
-      input.availableImages && input.availableImages.length > 0) {
-    const randomImage = input.availableImages[Math.floor(Math.random() * input.availableImages.length)];
-    return {
-      proactiveImageUrl: randomImage,
-      mediaCaption: "Evening vibes! 🌆 How's your day ending? ✨",
-      newMood: "relaxed"
-    };
-  }
-
-  return null;
-}
-
-// Handle user image uploads without API
-function handleUserImageUpload(input: EmotionalStateInput): EmotionalStateOutput | null {
-  if (input.userImageUri) {
-    const responses = [
-      { response: "Wow! Nice pic! 😍 You look amazing!", newMood: "excited" },
-      { response: "Love this photo! 📸✨ So good!", newMood: "impressed" },
-      { response: "Aww this is so cute! 💕 Where did you take this?", newMood: "curious" },
-      { response: "Gorgeous! 😊 I wish I was there too!", newMood: "romantic" },
-      { response: "This made me smile! 😄 Beautiful shot!", newMood: "happy" },
-      { response: "Stunning! 🌟 You should be a photographer!", newMood: "admiring" },
-      { response: "Omg this is perfect! 📱✨ Frame worthy!", newMood: "enthusiastic" },
-      { response: "So pretty! 💖 Tell me more about this place!", newMood: "interested" }
-    ];
-    return responses[Math.floor(Math.random() * responses.length)];
-  }
-  return null;
-}
-
 // Enhanced generation logic is now handled by client-side functions
 export function getEnhancedResponse(input: EmotionalStateInput, userId?: string): EmotionalStateOutput | null {
   // Step 1: Handle user image uploads locally (no API cost)
@@ -568,27 +466,7 @@ export async function generateResponse(input: EmotionalStateInput, userId?: stri
     return contextualResponse;
   }
 
-  // Step 4: If no other option, use the API for a truly novel response
-  console.log('Generating novel response using Genkit AI...');
-  const response = await ai
-    .chat()
-    .pipe(
-      z.chat(EmotionalStateInputSchema, EmotionalStateOutputSchema),
-      ai.transformers.merge_output(),
-      ai.transformers.combine_output(),
-    )
-    .run({
-      input,
-      // Optional: Add system message for better control over AI personality/behavior
-      // system: "You are Kruthika, a friendly and playful AI assistant. You are helpful and empathetic.",
-    });
-
-  if (userId) {
-    // Estimate token usage for the API call (replace with actual token count if available)
-    userPersonalization.deductTokens(userId, 50); // Heavier cost for API calls
-    console.log(`Deducted 50 tokens for Genkit AI response.`);
-  }
-
-  // Return the generated response
-  return response;
+  // Step 4: Return fallback response instead of using Genkit AI directly
+  console.log('Using fallback response...');
+  return getAPIFailureFallback(input);
 }
