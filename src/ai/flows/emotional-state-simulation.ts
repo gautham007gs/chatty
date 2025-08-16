@@ -12,6 +12,7 @@
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
 import {chatCache} from '@/lib/chatCache';
+import { userPersonalization } from '@/lib/userPersonalization';
 // aiMediaAssets from config is no longer directly used by the prompt,
 // but the structure is still informative for how the AI might be told to use assets.
 
@@ -621,19 +622,7 @@ Reply:`;
     const fallbackResponse = getAPIFailureFallback(input);
     if (userId) userPersonalization.trackTokenUsage(userId, 10); // Minimal tokens for fallback
     return fallbackResponse;
-  } catch (error) {
-    console.error('Error in generateResponse:', error);
-    const fallbackResponse = getAPIFailureFallback(input);
-    if (userId) userPersonalization.trackTokenUsage(userId, 10);
-    return fallbackResponse;
   }
 }
 
-    const fallbackResponse = moodFallbacks[input.mood as keyof typeof moodFallbacks] || moodFallbacks.default;
-
-    return {
-      response: fallbackResponse,
-      newMood: input.mood,
-    };
-  }
-}
+    
