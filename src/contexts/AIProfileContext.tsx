@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
@@ -11,8 +10,8 @@ import { useToast } from '@/hooks/use-toast';
 interface AIProfileContextType {
   aiProfile: AIProfile | null;
   isLoadingAIProfile: boolean;
-  fetchAIProfile: () => Promise<void>; 
-  updateAIProfile: (newProfileData: Partial<AIProfile>) => Promise<void>; 
+  fetchAIProfile: () => Promise<void>;
+  updateAIProfile: (newProfileData: Partial<AIProfile>) => Promise<void>;
 }
 
 // This global variable approach for a setter is not standard React practice and can lead to issues.
@@ -27,7 +26,7 @@ export const AIProfileProvider: React.FC<{ children: ReactNode }> = ({ children 
   const [aiProfile, setAIProfile] = useState<AIProfile | null>(null);
   const [isLoadingAIProfile, setIsLoadingAIProfile] = useState(true);
   const { toast } = useToast();
-  
+
   useEffect(() => {
     // This was for AdminProfilePage to control this context's loading state.
     // It might be simpler for AdminProfilePage to have its own combined loading state.
@@ -64,17 +63,17 @@ export const AIProfileProvider: React.FC<{ children: ReactNode }> = ({ children 
         setAIProfile(defaultAIProfile);
         console.log("[AIProfileContext] fetchAIProfile: Set AI profile to default (Supabase error):", JSON.stringify(defaultAIProfile, null, 2));
       } else if (data && data.settings) {
-        let fetchedProfile = data.settings as Partial<AIProfile>; 
+        let fetchedProfile = data.settings as Partial<AIProfile>;
         console.log("[AIProfileContext] fetchAIProfile: Raw profile settings from Supabase:", JSON.stringify(fetchedProfile, null, 2));
 
         if (!fetchedProfile.avatarUrl || typeof fetchedProfile.avatarUrl !== 'string' || fetchedProfile.avatarUrl.trim() === '' || (!fetchedProfile.avatarUrl.startsWith('http') && !fetchedProfile.avatarUrl.startsWith('data:'))) {
             console.warn(`[AIProfileContext] fetchAIProfile: Fetched avatarUrl ('${fetchedProfile.avatarUrl}') is invalid or empty. Falling back to default AI avatarUrl: ${defaultAIProfile.avatarUrl}`);
             fetchedProfile.avatarUrl = defaultAIProfile.avatarUrl;
         }
-        
-        const mergedProfile: AIProfile = { 
-          ...defaultAIProfile, 
-          ...fetchedProfile 
+
+        const mergedProfile: AIProfile = {
+          ...defaultAIProfile,
+          ...fetchedProfile
         };
 
         setAIProfile(mergedProfile);
@@ -100,15 +99,15 @@ export const AIProfileProvider: React.FC<{ children: ReactNode }> = ({ children 
       toast({ title: "Supabase Error", description: "Supabase client not available. Cannot save AI profile.", variant: "destructive" });
       return;
     }
-    
+
     console.log("[AIProfileContext] updateAIProfile: Received newProfileData:", JSON.stringify(newProfileData, null, 2));
 
     const currentProfileForUpdate = aiProfile || defaultAIProfile;
-    
+
     // Prepare avatarUrl: if explicitly cleared (empty string) make it undefined,
     // otherwise use the new value or keep the current one.
-    let processedAvatarUrl = newProfileData.hasOwnProperty('avatarUrl') 
-        ? (newProfileData.avatarUrl?.trim() === '' ? undefined : newProfileData.avatarUrl) 
+    let processedAvatarUrl = newProfileData.hasOwnProperty('avatarUrl')
+        ? (newProfileData.avatarUrl?.trim() === '' ? undefined : newProfileData.avatarUrl)
         : currentProfileForUpdate.avatarUrl;
 
     // Validate and fallback to default if the processed URL is still invalid or undefined
@@ -120,10 +119,10 @@ export const AIProfileProvider: React.FC<{ children: ReactNode }> = ({ children 
 
     const optimisticProfile: AIProfile = {
       ...currentProfileForUpdate,
-      ...newProfileData, 
-      avatarUrl: processedAvatarUrl, 
+      ...newProfileData,
+      avatarUrl: processedAvatarUrl,
     };
-    
+
     console.log("[AIProfileContext] updateAIProfile: Optimistic profile for UI update:", JSON.stringify(optimisticProfile, null, 2));
     setAIProfile(optimisticProfile); // Optimistic UI update
 
@@ -140,22 +139,22 @@ export const AIProfileProvider: React.FC<{ children: ReactNode }> = ({ children 
         toast({ title: "Error Saving AI Profile", description: `Could not save AI profile to Supabase. ${upsertError.message || ''}. Reverting optimistic update.`, variant: "destructive" });
         setAIProfile(currentProfileForUpdate); // Revert optimistic update on error
         await fetchAIProfile(); // Re-fetch from DB to ensure consistency
-        return; 
+        return;
       }
-      
+
       console.log("[AIProfileContext] updateAIProfile: AI Profile successfully saved to Supabase.");
       toast({ title: "AI Profile Saved!", description: "Kruthika's profile has been saved globally to Supabase." });
-      
+
       // Re-fetch after successful save to ensure UI reflects DB state, though optimistic update helps.
       await fetchAIProfile();
-      
+
     } catch (error: any) {
       console.error("[AIProfileContext] updateAIProfile: Unexpected error during Supabase save:", error);
       toast({ title: "Error Saving AI Profile", description: `Unexpected error. ${error.message || ''}. Reverting optimistic update.`, variant: "destructive" });
       setAIProfile(currentProfileForUpdate); // Revert optimistic update
       await fetchAIProfile(); // Re-fetch from DB
     }
-  }, [toast, aiProfile, fetchAIProfile]); 
+  }, [toast, aiProfile, fetchAIProfile]);
 
   useEffect(() => {
     fetchAIProfile();
@@ -186,5 +185,3 @@ export const setExternalIsLoadingAIProfile = (isLoading: boolean) => {
   //   setIsLoadingContextAIProfileExternal(isLoading);
   // }
 };
-
-    

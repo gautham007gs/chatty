@@ -1,46 +1,93 @@
-
 // src/app/api/ai-profile/route.ts
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-// import { db } from '@/lib/firebase'; // Example: if you were to use Firestore
-// import { doc, getDoc, setDoc } from 'firebase/firestore';
-// import type { AIProfile } from '@/types';
+import { supabase } from '@/lib/supabaseClient';
+import { defaultAIProfile } from '@/config/ai';
 
-// This is a placeholder API route.
-// Currently, the AI profile on the admin page (/admin/profile)
-// is saved to and loaded from localStorage.
+// In-memory cache for AI profile
+let profileCache: { data: any; timestamp: number } | null = null;
+const CACHE_DURATION = 60 * 60 * 1000; // 1 hour in milliseconds
 
-// If you want to persist the AI profile to a backend (e.g., Firestore),
-// you would implement that logic here.
+export async function GET() {
+  try {
+    // Check in-memory cache first
+    if (profileCache && (Date.now() - profileCache.timestamp) < CACHE_DURATION) {
+      console.log('Serving AI profile from memory cache');
+      const response = NextResponse.json(profileCache.data);
+      // Set cache headers for edge caching
+      response.headers.set('Cache-Control', 'public, max-age=3600, must-revalidate');
+      response.headers.set('X-Cache', 'HIT');
+      return response;
+    }
 
-// Example: GET request to fetch the profile (not implemented)
-export async function GET(request: NextRequest) {
-  // TODO: Implement logic to fetch AI profile from a backend data store if needed.
-  // For now, returns a placeholder.
-  // const profileRef = doc(db, 'config', 'aiProfile');
-  // const profileSnap = await getDoc(profileRef);
-  // if (profileSnap.exists()) {
-  //   return NextResponse.json(profileSnap.data() as AIProfile);
-  // } else {
-  //   return NextResponse.json({ message: 'AI Profile not found in backend.' }, { status: 404 });
-  // }
-  return NextResponse.json({ message: 'AI Profile API endpoint. GET not implemented for backend storage yet.' });
+    if (!supabase) {
+      console.log('Using default AI profile (no Supabase)');
+      profileCache = { data: defaultAIProfile, timestamp: Date.now() };
+      const response = NextResponse.json(defaultAIProfile);
+      response.headers.set('Cache-Control', 'public, max-age=3600, must-revalidate');
+      return response;
+    }
+
+    const { data, error } = await supabase
+      .from('app_configurations')
+      .select('settings')
+      .eq('id', 'ai_profile')
+      .single();
+
+    if (error) {
+      console.error('Supabase error fetching AI profile:', error);
+      profileCache = { data: defaultAIProfile, timestamp: Date.now() };
+      const response = NextResponse.json(defaultAIProfile);
+      response.headers.set('Cache-Control', 'public, max-age=3600, must-revalidate');
+      return response;
+    }
+
+    const profile = data?.settings || defaultAIProfile;
+
+    // Update memory cache
+    profileCache = { data: profile, timestamp: Date.now() };
+
+    console.log('Serving fresh AI profile from Supabase');
+    const response = NextResponse.json(profile);
+    response.headers.set('Cache-Control', 'public, max-age=3600, must-revalidate');
+    response.headers.set('X-Cache', 'MISS');
+    return response;
+  } catch (error) {
+    console.error('Error in AI profile API:', error);
+    const response = NextResponse.json(defaultAIProfile);
+    response.headers.set('Cache-Control', 'public, max-age=300, must-revalidate'); // Shorter cache on error
+    return response;
+  }
 }
 
-// Example: POST request to update the profile (not implemented)
 export async function POST(request: NextRequest) {
-  // try {
-  //   const body = await request.json() as Partial<AIProfile>;
-  //   // TODO: Implement logic to save AI profile to a backend data store.
-  //   // const profileRef = doc(db, 'config', 'aiProfile');
-  //   // await setDoc(profileRef, body, { merge: true });
-  //   return NextResponse.json({ message: 'AI Profile update received. Backend storage not implemented yet.', data: body });
-  // } catch (error) {
-  //   let message = 'Failed to process request.';
-  //   if (error instanceof Error) {
-  //       message = error.message;
-  //   }
-  //   return NextResponse.json({ message }, { status: 500 });
-  // }
-  return NextResponse.json({ message: 'AI Profile API endpoint. POST not implemented for backend storage yet.' });
+  try {
+    const body = await request.json();
+
+    if (!supabase) {
+      return NextResponse.json({ error: 'Supabase not available' }, { status: 500 });
+    }
+
+    const { error } = await supabase
+      .from('app_configurations')
+      .upsert({
+        id: 'ai_profile',
+        settings: body,
+        updated_at: new Date().toISOString()
+      });
+
+    if (error) {
+      console.error('Error updating AI profile:', error);
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+
+    // Invalidate cache when profile is updated
+    profileCache = null;
+    console.log('AI profile updated and cache invalidated');
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error('Error in AI profile POST:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  }
 }

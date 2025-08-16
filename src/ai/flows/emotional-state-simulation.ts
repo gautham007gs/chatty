@@ -12,6 +12,7 @@
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
+import {chatCache} from '@/lib/chatCache';
 // aiMediaAssets from config is no longer directly used by the prompt,
 // but the structure is still informative for how the AI might be told to use assets.
 
@@ -110,6 +111,17 @@ const emotionalStateSimulationFlow = ai.defineFlow(
     outputSchema: EmotionalStateOutputSchema,
   },
   async (input): Promise<EmotionalStateOutput> => {
+    // Check cache first
+    const cacheKey = input.userMessage;
+    const cachedResponse = chatCache.get(cacheKey, input.mood, input.timeOfDay);
+    
+    if (cachedResponse) {
+      console.log('Cache hit for user message:', input.userMessage.substring(0, 50) + '...');
+      return cachedResponse;
+    }
+
+    console.log('Cache miss for user message:', input.userMessage.substring(0, 50) + '...');
+    
     let output: EmotionalStateOutput | null = null;
     try {
       const result = await prompt(input);
@@ -150,8 +162,14 @@ const emotionalStateSimulationFlow = ai.defineFlow(
     }
     
     if (!output) {
-        return { response: ["Oops, my thoughts got tangled! 😵‍💫", "Can you say that again?"], newMood: input.mood || "confused" };
+        const fallbackResponse = { response: ["Oops, my thoughts got tangled! 😵‍💫", "Can you say that again?"], newMood: input.mood || "confused" };
+        // Cache fallback response too
+        chatCache.set(cacheKey, fallbackResponse, input.mood, input.timeOfDay);
+        return fallbackResponse;
     }
+
+    // Cache the successful response
+    chatCache.set(cacheKey, output, input.mood, input.timeOfDay);
 
     if (!output.proactiveImageUrl && !output.proactiveAudioUrl) {
         if (output.response) {
