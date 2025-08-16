@@ -87,6 +87,21 @@ const preGeneratedResponses = {
     { response: ["Glad I made you laugh! 😄", "I'm quite funny na?"], newMood: "proud" },
     { response: ["Hehe! 😆", "You're cute when you laugh"], newMood: "affectionate" },
     { response: ["LOL! 🤣", "We think alike"], newMood: "connected" }
+  ],
+  compliment_response: [
+    { response: ["Aww thank you! 😊", "You're so sweet!"], newMood: "happy" },
+    { response: ["That made my day! 💕", "You always know what to say"], newMood: "grateful" },
+    { response: ["Stop it! 🙈", "You're making me blush!"], newMood: "shy" }
+  ],
+  selfie_question: [
+    { response: ["Camera's not working right now! 📱😅", "Maybe later cutie!"], newMood: "playful" },
+    { response: ["Papa's around! 🙈", "Can't take pics now"], newMood: "careful" },
+    { response: ["Data pack low! 📊", "Pics take so much data na"], newMood: "practical" }
+  ],
+  media_appreciation: [
+    { response: ["Glad you liked it! 😊", "I have more if you want to see"], newMood: "confident" },
+    { response: ["Really? 🥰", "You're not just saying that?"], newMood: "hopeful" },
+    { response: ["Thanks babe! 💕", "Your opinion matters to me"], newMood: "affectionate" }
   ]
 };
 
@@ -159,7 +174,19 @@ function getPreGeneratedResponse(input: EmotionalStateInput): EmotionalStateOutp
 
   // Picture requests
   if (/pic\s+send|photo\s+bhejo|selfie|your\s+pic/.test(normalizedMsg)) {
-    const responses = preGeneratedResponses.pic_request;
+    const responses = preGeneratedResponses.selfie_question;
+    return responses[Math.floor(Math.random() * responses.length)];
+  }
+
+  // Compliment responses
+  if (/beautiful|cute|pretty|gorgeous|hot|sexy|lovely/.test(normalizedMsg)) {
+    const responses = preGeneratedResponses.compliment_response;
+    return responses[Math.floor(Math.random() * responses.length)];
+  }
+
+  // Media appreciation
+  if (/nice\s+pic|good\s+photo|love\s+it|amazing|wow/.test(normalizedMsg)) {
+    const responses = preGeneratedResponses.media_appreciation;
     return responses[Math.floor(Math.random() * responses.length)];
   }
 
@@ -201,8 +228,99 @@ const INSTANT_RESPONSES = {
   'haha': ['😂', 'Glad I made you laugh! 😄', '🤣✨']
 };
 
+// Smart media engagement without API costs
+function shouldSendMediaProactively(input: EmotionalStateInput): EmotionalStateOutput | null {
+  const recentMessages = input.recentInteractions;
+  const userMsg = input.userMessage.toLowerCase();
+
+  // Send selfie after compliments (high engagement)
+  if (userMsg.includes('beautiful') || userMsg.includes('cute') || userMsg.includes('pretty') || userMsg.includes('gorgeous')) {
+    if (input.availableImages && input.availableImages.length > 0 && Math.random() < 0.8) {
+      const randomImage = input.availableImages[Math.floor(Math.random() * input.availableImages.length)];
+      return {
+        proactiveImageUrl: randomImage,
+        mediaCaption: "Aww thank you! 😊 How do I look? 💕",
+        newMood: "happy"
+      };
+    }
+  }
+
+  // Send audio on laugh/funny moments
+  if ((userMsg.includes('haha') || userMsg.includes('funny') || userMsg.includes('lol')) && 
+      input.availableAudio && input.availableAudio.length > 0 && Math.random() < 0.6) {
+    const randomAudio = input.availableAudio[Math.floor(Math.random() * input.availableAudio.length)];
+    return {
+      proactiveAudioUrl: randomAudio,
+      mediaCaption: "Hehe! I love making you laugh! 😄",
+      newMood: "playful"
+    };
+  }
+
+  // Random selfie on casual conversations (boost engagement)
+  if (recentMessages.length > 5 && Math.random() < 0.15 && 
+      input.availableImages && input.availableImages.length > 0) {
+    const randomImage = input.availableImages[Math.floor(Math.random() * input.availableImages.length)];
+    const captions = [
+      "Just took this! What do you think? 📸✨",
+      "Feeling cute today! Rate me? 😊💕",
+      "Quick selfie break! How's it looking? 🤳",
+      "Should I post this on Instagram? 📱✨"
+    ];
+    return {
+      proactiveImageUrl: randomImage,
+      mediaCaption: captions[Math.floor(Math.random() * captions.length)],
+      newMood: "confident"
+    };
+  }
+
+  // Evening mood selfies
+  if (input.timeOfDay === 'evening' && Math.random() < 0.2 && 
+      input.availableImages && input.availableImages.length > 0) {
+    const randomImage = input.availableImages[Math.floor(Math.random() * input.availableImages.length)];
+    return {
+      proactiveImageUrl: randomImage,
+      mediaCaption: "Evening vibes! 🌆 How's your day ending? ✨",
+      newMood: "relaxed"
+    };
+  }
+
+  return null;
+}
+
+// Handle user image uploads without API
+function handleUserImageUpload(input: EmotionalStateInput): EmotionalStateOutput | null {
+  if (input.userImageUri) {
+    const responses = [
+      { response: "Wow! Nice pic! 😍 You look amazing!", newMood: "excited" },
+      { response: "Love this photo! 📸✨ So good!", newMood: "impressed" },
+      { response: "Aww this is so cute! 💕 Where did you take this?", newMood: "curious" },
+      { response: "Gorgeous! 😊 I wish I was there too!", newMood: "romantic" },
+      { response: "This made me smile! 😄 Beautiful shot!", newMood: "happy" },
+      { response: "Stunning! 🌟 You should be a photographer!", newMood: "admiring" },
+      { response: "Omg this is perfect! 📱✨ Frame worthy!", newMood: "enthusiastic" },
+      { response: "So pretty! 💖 Tell me more about this place!", newMood: "interested" }
+    ];
+    return responses[Math.floor(Math.random() * responses.length)];
+  }
+  return null;
+}
+
 export async function generateResponse(input: EmotionalStateInput): Promise<EmotionalStateOutput> {
-  // Step 1: Instant responses for common phrases (0ms latency)
+  // Step 0: Handle user image uploads locally (no API cost)
+  const userImageResponse = handleUserImageUpload(input);
+  if (userImageResponse) {
+    console.log('User sent image - responding locally without API');
+    return userImageResponse;
+  }
+
+  // Step 1: Smart media engagement (no API cost)
+  const mediaResponse = shouldSendMediaProactively(input);
+  if (mediaResponse) {
+    console.log('Sending proactive media without API call');
+    return mediaResponse;
+  }
+
+  // Step 2: Instant responses for common phrases (0ms latency)
   const normalizedMessage = input.userMessage.toLowerCase().trim();
   if (INSTANT_RESPONSES[normalizedMessage]) {
     const responses = INSTANT_RESPONSES[normalizedMessage];
@@ -213,14 +331,14 @@ export async function generateResponse(input: EmotionalStateInput): Promise<Emot
     };
   }
 
-  // Step 2: Smart cache with similarity matching
+  // Step 3: Smart cache with similarity matching
   const cachedResponse = chatCache.get(input.userMessage, input.mood, input.timeOfDay);
   if (cachedResponse) {
     console.log('Cache hit - returning cached response');
     return cachedResponse;
   }
 
-  // Step 3: Ultra-short context for token optimization
+  // Step 4: Ultra-short context for token optimization
   const recentContext = input.recentInteractions.slice(-2).join(' | '); // Only last 2 interactions
 
   try {

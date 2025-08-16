@@ -418,7 +418,7 @@ const KruthikaChatPage: NextPage = () => {
     const currentEffectiveAIProfile = globalAIProfile || defaultAIProfile;
 
     if (!text.trim() && !currentImageUri) return;
-    
+
     // Skip loading checks for better performance - use defaults if needed
     resetInactivityTimer();
 
@@ -491,23 +491,21 @@ const KruthikaChatPage: NextPage = () => {
     setTimeout(() => setIsAiTyping(true), typingAppearDelay);
 
     try {
-      const currentMediaConfig = mediaAssetsConfig || defaultAIMediaAssetsConfig;
-      const availableImages = currentMediaConfig.assets.filter(a => a.type === 'image').map(a => a.url);
-      const availableAudio = currentMediaConfig.assets.filter(a => a.type === 'audio').map(a => a.url);
+      // Get available media from database/config
+      const availableImages = (mediaAssetsConfig?.assets?.filter(asset => asset.type === 'image') || []).map(asset => asset.url);
+      const availableAudio = (mediaAssetsConfig?.assets?.filter(asset => asset.type === 'audio') || []).map(asset => asset.url);
 
-      const aiInput: EmotionalStateInput = {
+      const aiResponse = await generateResponse({
         userMessage: text,
         userImageUri: currentImageUri,
         timeOfDay: getTimeOfDay(),
         mood: aiMood,
         recentInteractions: updatedRecentInteractions,
-        availableImages: availableImages,
-        availableAudio: availableAudio,
-      };
+        availableImages,
+        availableAudio,
+      });
 
-      const aiResult: EmotionalStateOutput = await generateResponse(aiInput);
-
-      if (aiResult.proactiveImageUrl || aiResult.proactiveAudioUrl) {
+      if (aiResponse.proactiveImageUrl || aiResponse.proactiveAudioUrl) {
         if (adSettings && adSettings.adsEnabledGlobally) {
             tryShowAdAndMaybeInterstitial(`Loading ${currentEffectiveAIProfile.name}'s share...`);
         }
@@ -578,30 +576,30 @@ const KruthikaChatPage: NextPage = () => {
 
       setIsAiTyping(true);
 
-      if (aiResult.proactiveImageUrl && aiResult.mediaCaption) {
-        await processAiMediaMessage('image', aiResult.proactiveImageUrl, aiResult.mediaCaption);
-      } else if (aiResult.proactiveAudioUrl && aiResult.mediaCaption) {
-        await processAiMediaMessage('audio', aiResult.proactiveAudioUrl, aiResult.mediaCaption);
-      } else if (aiResult.response) {
-        if (Array.isArray(aiResult.response)) {
-          for (let i = 0; i < aiResult.response.length; i++) {
-            const part = aiResult.response[i];
+      if (aiResponse.proactiveImageUrl && aiResponse.mediaCaption) {
+        await processAiMediaMessage('image', aiResponse.proactiveImageUrl, aiResponse.mediaCaption);
+      } else if (aiResponse.proactiveAudioUrl && aiResponse.mediaCaption) {
+        await processAiMediaMessage('audio', aiResponse.proactiveAudioUrl, aiResponse.mediaCaption);
+      } else if (aiResponse.response) {
+        if (Array.isArray(aiResponse.response)) {
+          for (let i = 0; i < aiResponse.response.length; i++) {
+            const part = aiResponse.response[i];
             if (part.trim() === '') continue;
             if (i > 0) setIsAiTyping(true);
             await processAiTextMessage(part, `_part${i}`);
             setIsAiTyping(false);
-            if (i < aiResult.response.length - 1) {
+            if (i < aiResponse.response.length - 1) {
               const interMessageDelay = 500 + Math.random() * 500;
               await new Promise(resolve => setTimeout(resolve, interMessageDelay));
             }
           }
-        } else if (aiResult.response.trim() !== '') {
-          await processAiTextMessage(aiResult.response);
+        } else if (aiResponse.response.trim() !== '') {
+          await processAiTextMessage(aiResponse.response);
         }
       }
 
       setIsAiTyping(false);
-      if (aiResult.newMood) setAiMood(aiResult.newMood);
+      if (aiResponse.newMood) setAiMood(aiResponse.newMood);
 
       if (imageAttemptedAndAllowed && currentImageUri) {
           const todayStr = new Date().toDateString();

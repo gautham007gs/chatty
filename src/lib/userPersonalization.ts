@@ -5,6 +5,10 @@ interface UserProfile {
   favoriteEmojis: string[];
   commonQuestions: string[];
   responsePattern: 'short' | 'long' | 'mixed';
+  mediaInteractions: number;
+  likesImages: boolean;
+  likesAudio: boolean;
+  lastMediaSent: number;
 }
 
 class UserPersonalization {
@@ -77,7 +81,11 @@ class UserPersonalization {
       lastActiveTime: Date.now(),
       favoriteEmojis: [],
       commonQuestions: [],
-      responsePattern: 'mixed'
+      responsePattern: 'mixed',
+      mediaInteractions: 0,
+      likesImages: false,
+      likesAudio: false,
+      lastMediaSent: 0
     };
 
     // Learn user's chat style
@@ -141,6 +149,49 @@ class UserPersonalization {
     }
 
     return true;
+  }
+
+  shouldSendMedia(userId: string, messageCount: number): boolean {
+    const profile = this.profiles.get(userId);
+    if (!profile) return false;
+
+    // Don't send media too frequently
+    const timeSinceLastMedia = Date.now() - profile.lastMediaSent;
+    if (timeSinceLastMedia < 5 * 60 * 1000) return false; // 5 minutes minimum gap
+
+    // Higher chance for users who engage with media
+    if (profile.likesImages && messageCount > 5 && Math.random() < 0.3) {
+      return true;
+    }
+
+    // Random chance for new users
+    if (messageCount > 8 && Math.random() < 0.15) {
+      return true;
+    }
+
+    return false;
+  }
+
+  recordMediaInteraction(userId: string, positive: boolean): void {
+    let profile = this.profiles.get(userId);
+    if (!profile) return;
+
+    profile.mediaInteractions++;
+    if (positive) {
+      profile.likesImages = true;
+    }
+    profile.lastMediaSent = Date.now();
+    this.profiles.set(userId, profile);
+  }
+
+  getUserMediaPreference(userId: string): 'images' | 'audio' | 'both' | 'none' {
+    const profile = this.profiles.get(userId);
+    if (!profile) return 'none';
+
+    if (profile.likesImages && profile.likesAudio) return 'both';
+    if (profile.likesImages) return 'images';
+    if (profile.likesAudio) return 'audio';
+    return 'none';
   }
 }
 
