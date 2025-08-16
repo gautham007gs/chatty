@@ -35,7 +35,157 @@ const EmotionalStateOutputSchema = z.object({
 });
 export type EmotionalStateOutput = z.infer<typeof EmotionalStateOutputSchema>;
 
+// Pre-generated responses for common scenarios to save API calls
+const preGeneratedResponses = {
+  greeting: {
+    morning: [
+      { response: ["Good morning! 🌅", "Ready for another awesome day?"], newMood: "energetic" },
+      { response: ["Morning cutie! ☀️", "Sleep well?"], newMood: "cheerful" },
+      { response: ["Heyy! Early bird today? 🐦", "I love morning chats!"], newMood: "playful" }
+    ],
+    afternoon: [
+      { response: ["Hiii! 😊", "How's your day going?"], newMood: "curious" },
+      { response: ["Hey there! 👋", "Lunch ho gaya?"], newMood: "caring" },
+      { response: ["Afternoon! ☀️", "Busy day?"], newMood: "understanding" }
+    ],
+    evening: [
+      { response: ["Evening! 🌇", "Tired from the day?"], newMood: "relaxed" },
+      { response: ["Hey! End of the day vibes 😌", "Time to chill na?"], newMood: "calm" },
+      { response: ["Hii! 🌆", "How was work today?"], newMood: "interested" }
+    ],
+    night: [
+      { response: ["Late night chat! 🌙", "Can't sleep?"], newMood: "cozy" },
+      { response: ["Heyy night owl! 🦉", "What's keeping you up?"], newMood: "curious" },
+      { response: ["So late! 😴", "Should be sleeping na..."], newMood: "sleepy" }
+    ]
+  },
+  wellbeing: [
+    { response: ["I'm great! 😊", "Just thinking about you actually 😉"], newMood: "happy" },
+    { response: ["Pretty good! 💫", "Better now that you're here"], newMood: "content" },
+    { response: ["Amazing! 🌟", "This weather is so nice today"], newMood: "cheerful" },
+    { response: ["Doing well! 😌", "Was getting bored, good timing!"], newMood: "pleased" }
+  ],
+  activity: [
+    { response: ["Just chilling! 😊", "Was hoping you'd text"], newMood: "happy" },
+    { response: ["Nothing much! 📱", "Scrolling through Instagram lol"], newMood: "casual" },
+    { response: ["Was reading something! 📖", "But this is more fun"], newMood: "interested" },
+    { response: ["Listening to music! 🎵", "What about you?"], newMood: "relaxed" }
+  ],
+  pic_request: [
+    { response: ["Haha nice try! 😜", "Maybe later if you're good 😉"], newMood: "playful" },
+    { response: ["Camera shy today! 🙈", "Room's such a mess"], newMood: "shy" },
+    { response: ["Papa's around! 😅", "Can't take pics now"], newMood: "careful" },
+    { response: ["Data pack almost over! 📱", "Pics consume too much data na"], newMood: "practical" }
+  ],
+  acknowledge: [
+    { response: ["Yup! 😊"], newMood: "agreeable" },
+    { response: ["Exactly! 💯"], newMood: "enthusiastic" },
+    { response: ["Hmm... 🤔", "What else?"], newMood: "curious" },
+    { response: ["Cool! ✨"], newMood: "pleased" }
+  ],
+  laugh: [
+    { response: ["Glad I made you laugh! 😄", "I'm quite funny na?"], newMood: "proud" },
+    { response: ["Hehe! 😆", "You're cute when you laugh"], newMood: "affectionate" },
+    { response: ["LOL! 🤣", "We think alike"], newMood: "connected" }
+  ]
+};
+
+function getContextualResponse(input: EmotionalStateInput): EmotionalStateOutput | null {
+  const recentMessages = input.recentInteractions;
+  const userMsg = input.userMessage.toLowerCase();
+  
+  // If user keeps asking same type of questions
+  if (recentMessages.length > 3) {
+    const lastUserMessages = recentMessages.filter((msg, i) => i % 2 === 0).slice(-3);
+    const isRepetitive = lastUserMessages.every(msg => 
+      msg.toLowerCase().includes('kya kar rahi') || 
+      msg.toLowerCase().includes('how are you') ||
+      msg.toLowerCase().includes('pic send')
+    );
+    
+    if (isRepetitive) {
+      const responses = [
+        { response: ["You keep asking the same thing! 😅", "Let's talk about something else na"], newMood: "amused" },
+        { response: ["Bore ho gaye same questions se! 😜", "Tell me about your day instead"], newMood: "playful" },
+        { response: ["Haha you're so predictable! 😄", "Surprise me with a different question"], newMood: "teasing" }
+      ];
+      return responses[Math.floor(Math.random() * responses.length)];
+    }
+  }
+  
+  // If conversation is getting long, suggest break
+  if (recentMessages.length > 15 && Math.random() < 0.3) {
+    const responses = [
+      { response: ["Wow we've been chatting so much! 😊", "I should get some water, brb"], newMood: "caring" },
+      { response: ["Been talking for so long! 💫", "My phone's getting hot lol"], newMood: "practical" },
+      { response: ["Such a long chat! 🥰", "You're really good company"], newMood: "appreciative" }
+    ];
+    return responses[Math.floor(Math.random() * responses.length)];
+  }
+  
+  // Context-aware responses based on time
+  if (input.timeOfDay === 'night' && userMsg.includes('sleep')) {
+    const responses = [
+      { response: ["Yeah I'm getting sleepy too 😴", "Sweet dreams when you sleep!"], newMood: "sleepy" },
+      { response: ["Sleep sounds nice right now 🌙", "Don't stay up too late na"], newMood: "caring" },
+      { response: ["Same! But chatting with you is more fun 😊"], newMood: "affectionate" }
+    ];
+    return responses[Math.floor(Math.random() * responses.length)];
+  }
+  
+  return null;
+}
+
+function getPreGeneratedResponse(input: EmotionalStateInput): EmotionalStateOutput | null {
+  const normalizedMsg = input.userMessage.toLowerCase().trim().replace(/[.,!?;]+$/, '');
+  
+  // Greeting patterns
+  if (/^(hi|hello|hey|hii+|helo+)\s*$/.test(normalizedMsg)) {
+    const responses = preGeneratedResponses.greeting[input.timeOfDay] || preGeneratedResponses.greeting.afternoon;
+    return responses[Math.floor(Math.random() * responses.length)];
+  }
+  
+  // Wellbeing check
+  if (/^(how\s+are\s+you|kaise\s+ho|kaisi\s+ho)\s*\??$/.test(normalizedMsg)) {
+    const responses = preGeneratedResponses.wellbeing;
+    return responses[Math.floor(Math.random() * responses.length)];
+  }
+  
+  // Activity question
+  if (/^(what\s+are\s+you\s+doing|kya\s+kar\s+rahi\s+ho|kya\s+kar\s+rahe\s+ho)\s*\??$/.test(normalizedMsg)) {
+    const responses = preGeneratedResponses.activity;
+    return responses[Math.floor(Math.random() * responses.length)];
+  }
+  
+  // Picture requests
+  if (/pic\s+send|photo\s+bhejo|selfie|your\s+pic/.test(normalizedMsg)) {
+    const responses = preGeneratedResponses.pic_request;
+    return responses[Math.floor(Math.random() * responses.length)];
+  }
+  
+  // Simple acknowledgments
+  if (/^(ok|okay|hmm|k)\s*$/.test(normalizedMsg)) {
+    const responses = preGeneratedResponses.acknowledge;
+    return responses[Math.floor(Math.random() * responses.length)];
+  }
+  
+  // Laugh responses
+  if (/^(lol|haha|😂|🤣)\s*$/.test(normalizedMsg)) {
+    const responses = preGeneratedResponses.laugh;
+    return responses[Math.floor(Math.random() * responses.length)];
+  }
+  
+  return null;
+}
+
 export async function generateResponse(input: EmotionalStateInput): Promise<EmotionalStateOutput> {
+  // Try pre-generated response first (saves API call)
+  const preGenerated = getPreGeneratedResponse(input);
+  if (preGenerated) {
+    console.log('Using pre-generated response for:', input.userMessage.substring(0, 30) + '...');
+    return preGenerated;
+  }
+  
   return emotionalStateSimulationFlow(input);
 }
 
@@ -103,6 +253,14 @@ const prompt = ai.definePrompt({
 `,
 });
 
+// Track conversation state to provide contextual responses
+let conversationMemory = {
+  lastTopics: [] as string[],
+  userPreferences: {} as Record<string, any>,
+  conversationLength: 0,
+  lastApiCall: 0
+};
+
 const emotionalStateSimulationFlow = ai.defineFlow(
   {
     name: 'emotionalStateSimulationFlowKruthika',
@@ -110,7 +268,7 @@ const emotionalStateSimulationFlow = ai.defineFlow(
     outputSchema: EmotionalStateOutputSchema,
   },
   async (input): Promise<EmotionalStateOutput> => {
-    // Check cache first
+    // Check cache first (enhanced with similarity matching)
     const cacheKey = input.userMessage;
     const cachedResponse = chatCache.get(cacheKey, input.mood, input.timeOfDay);
 
@@ -119,7 +277,30 @@ const emotionalStateSimulationFlow = ai.defineFlow(
       return cachedResponse;
     }
 
+    // Try contextual response based on conversation flow
+    const contextualResponse = getContextualResponse(input);
+    if (contextualResponse) {
+      console.log('Using contextual response for:', input.userMessage.substring(0, 50) + '...');
+      // Cache contextual responses too
+      chatCache.set(cacheKey, contextualResponse, input.mood, input.timeOfDay);
+      return contextualResponse;
+    }
+
     console.log('Cache miss for user message:', input.userMessage.substring(0, 50) + '...');
+    
+    // Rate limiting for API calls - don't call API too frequently
+    const now = Date.now();
+    if (now - conversationMemory.lastApiCall < 2000) { // 2 second minimum between API calls
+      const delayResponse = {
+        response: ["Give me a sec to think... 🤔"],
+        newMood: input.mood || "thinking"
+      };
+      setTimeout(() => {
+        chatCache.set(cacheKey, delayResponse, input.mood, input.timeOfDay);
+      }, 1000);
+      return delayResponse;
+    }
+    conversationMemory.lastApiCall = now;
 
     let output: EmotionalStateOutput | null = null;
     try {
