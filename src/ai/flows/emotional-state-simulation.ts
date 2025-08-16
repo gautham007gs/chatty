@@ -1,5 +1,3 @@
-'use server';
-
 /**
  * @fileOverview This file defines a Genkit flow for simulating emotional states in an AI chat application for Kruthika.
  *
@@ -493,6 +491,7 @@ function handleUserImageUpload(input: EmotionalStateInput): EmotionalStateOutput
 }
 
 export async function generateResponse(input: EmotionalStateInput, userId?: string): Promise<EmotionalStateOutput> {
+  'use server';
   // Step 0: Check token limits first (if userId provided)
   if (userId) {
     const tokenStatus = userPersonalization.getTokenUsageStatus(userId);

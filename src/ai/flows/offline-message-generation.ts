@@ -1,5 +1,5 @@
 
-'use server';
+
 
 /**
  * @fileOverview Generates offline messages to encourage users to return to the app to chat with Kruthika.
@@ -30,6 +30,7 @@ const OfflineMessageOutputSchema = z.object({
 export type OfflineMessageOutput = z.infer<typeof OfflineMessageOutputSchema>;
 
 export async function generateOfflineMessage(input: OfflineMessageInput): Promise<OfflineMessageOutput> {
+  'use server';
   return generateOfflineMessageFlow(input);
 }
 
