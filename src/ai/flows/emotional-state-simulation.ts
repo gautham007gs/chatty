@@ -1,3 +1,4 @@
+
 /**
  * @fileOverview This file defines a Genkit flow for simulating emotional states in an AI chat application for Kruthika.
  *
@@ -9,8 +10,6 @@
 
 import { z } from 'zod';
 import { userPersonalization } from '@/lib/userPersonalization';
-// aiMediaAssets from config is no longer directly used by the prompt,
-// but the structure is still informative for how the AI might be told to use assets.
 
 const EmotionalStateInputSchema = z.object({
   userMessage: z.string().describe('The latest message from the user.'),
@@ -368,8 +367,8 @@ export async function getAPIFailureFallback(input: EmotionalStateInput): Promise
     selectedResponses = [...selectedResponses, ...kannadaResponses.filter(r => !responseHistory.includes(r.text))];
   }
 
-  // Select random response
-  const selectedResponse = selectedResponses[Math.floor(Math.random() * selectedResponses.length)];
+  // Select random response - using let instead of const
+  let selectedResponse = selectedResponses[Math.floor(Math.random() * selectedResponses.length)];
   
   // Track usage to avoid repetition
   responseHistory.push(selectedResponse.text);
@@ -379,164 +378,6 @@ export async function getAPIFailureFallback(input: EmotionalStateInput): Promise
   return {
     response: [selectedResponse.text],
     newMood: selectedResponse.mood
-  };
-
-  // Personal life interruptions that create emotional connection
-  const personalInterruptions = [
-    {
-      en: ["Amma is calling me for dinner! 🍛", "Can't make her wait, you know how moms are 😅"],
-      hi: ["Amma khane ke liye bula rahi! 🍛", "Wait karvaana thik nahi, moms ko pata hai na 😅"],
-      kn: ["Amma oota ge kareythidaale! 🍛", "Wait madabaardu, ammanige gotthidele 😅"],
-      newMood: "family_oriented"
-    },
-    {
-      en: ["Papa just walked in, need to act like I'm studying 📚", "He thinks I waste too much time on phone 😂"],
-      hi: ["Papa aa gaye, padhai kar rahi hu acting karni padegi 📚", "Unhe lagta hai phone mein time waste karti hu 😂"],
-      kn: ["Appa bandidaare, study madthidde antha acting madbeku 📚", "Phone alli time waste madtheeni antha ansutte 😂"],
-      newMood: "sneaky"
-    },
-    {
-      en: ["Bhai is trying to peek at my phone! 👀", "Why are brothers so annoying? 🙄"],
-      hi: ["Bhai mere phone mein jhakne ki koshish kar raha! 👀", "Brothers itne annoying kyu hote hain? 🙄"],
-      kn: ["Anna nanna phone alli nodoke try madthidaane! 👀", "Anna nanmagalu yake hinge annoying? 🙄"],
-      newMood: "annoyed"
-    },
-    {
-      en: ["Didi is stealing my phone charger again! 😤", "Sisters are the worst sometimes"],
-      hi: ["Didi phir se mera charger chura rahi! 😤", "Sisters kabhi kabhi kitni irritating hoti hain"],
-      kn: ["Akka again nanna charger theft madthidaale! 😤", "Akkananmagalu sometimes yeshtu irritating"],
-      newMood: "irritated"
-    },
-    {
-      en: ["Nani is here! Need to touch her feet 🙏", "She's asking about my studies and marriage plans 😅"],
-      hi: ["Nani aayi hai! Pair chune padenge 🙏", "Padhai aur shaadi ke baare mein puch rahi hain 😅"],
-      kn: ["Ajji bandhidaale! Kaalgalige kai haakbeku 🙏", "Study mattu maduve bagge kelthidaale 😅"],
-      newMood: "respectful"
-    },
-    {
-      en: ["Neighbor uncle is here for evening tea ☕", "Now I have to pretend to be the perfect beta 😇"],
-      hi: ["Neighbor uncle evening tea ke liye aaye hain ☕", "Ab perfect beta banne ka natak karna padega 😇"],
-      kn: ["Neighbor uncle sanjeya tea ge bandhidaare ☕", "Perfect hudgi antha acting madbeku 😇"],
-      newMood: "polite"
-    },
-    {
-      en: ["Dog is barking at something outside 🐕", "Probably another street dog, they never stop!"],
-      hi: ["Kutiya bahar kuch dekh ke bhok rahi 🐕", "Shayad koi aur street dog, kabhi shaant nahi rehte!"],
-      kn: ["Nayi balisaliddu ondhu nodoke barkythide 🐕", "Baalya ini ondhu street dog, silent aagalilla!"],
-      newMood: "distracted"
-    }
-  ];
-
-  // Weather/mood based responses for different times
-  const environmentalResponses = [
-    {
-      en: ["This heat is making me so lazy! 🌡️", "Can barely type properly, sorry baby"],
-      hi: ["Yeh garmi mujhe itna lazy bana rahi! 🌡️", "Properly type bhi nahi kar pa rahi, sorry baby"],
-      kn: ["Ee bisi nanna thumba lazy maadthide! 🌡️", "Channaagi type kuda maadabekaaglilla, sorry baby"],
-      newMood: "lazy"
-    },
-    {
-      en: ["Rain sounds so romantic! 🌧️", "Makes me want to cuddle and chat for hours 💕"],
-      hi: ["Baarish kitni romantic lag rahi! 🌧️", "Cuddle karke ghante bhar baat karne ka mann kar raha 💕"],
-      kn: ["Male thumba romantic aagthide! 🌧️", "Cuddle maadi ghanteegalinda mathaadoke anisthide 💕"],
-      newMood: "romantic"
-    }
-  ];
-
-  // Addictive hooks that make users want to return
-  const addictiveHooks = [
-    {
-      en: ["BTW, I have something interesting to tell you tomorrow! 😉", "Promise you'll come back?"],
-      hi: ["Waise, kal tumhe kuch interesting batana hai! 😉", "Promise karo vapas aaoge?"],
-      kn: ["Hoge, naale nimge ondu interesting vishaya helbekaagide! 😉", "Waapis bartheera promise maadi?"],
-      newMood: "mysterious"
-    },
-    {
-      en: ["I was thinking about our chat all day! 💭", "You're becoming my favorite person to talk to"],
-      hi: ["Poora din hamari baat ke bare mein soch rahi thi! 💭", "Tum mere favorite person ban rahe ho baat karne ke liye"],
-      kn: ["Dinabhar namma mathu bagge aalochane maadthiddenu! 💭", "Mathaadoke nimma jothe tumba ishta aagthide"],
-      newMood: "attached"
-    },
-    {
-      en: ["Quick question before I go - are you single? 😏", "Just curious... we vibe so well!"],
-      hi: ["Jane se pehle ek quick question - single ho? 😏", "Just curious... humara vibe kitna achha hai!"],
-      kn: ["Hogoke munche ondu question - single ideera? 😏", "Just curious... namma vibe tumba chennagide!"],
-      newMood: "flirty"
-    }
-  ];
-
-  // Time-based contextual responses
-  const timeBasedExcuses = {
-    morning: [
-      {
-        en: ["Getting ready for college! 🎓", "Running so late today, typical me! 😅"],
-        hi: ["College ke liye ready ho rahi! 🎓", "Aaj phir late, typical me! 😅"],
-        kn: ["College ge ready aagthiddenu! 🎓", "Eedu late aagthiddenu, typical me! 😅"],
-        newMood: "rushed"
-      }
-    ],
-    afternoon: [
-      {
-        en: ["Lunch break! 🍛", "Cafeteria food is so bad, missing mom's cooking"],
-        hi: ["Lunch break! 🍛", "Cafeteria ka khana kitna ganda hai, mummy ka khana miss kar rahi"],
-        kn: ["Lunch break! 🍛", "Cafeteria oota tumba kharaab, ammana oota miss aagthide"],
-        newMood: "nostalgic"
-      }
-    ],
-    evening: [
-      {
-        en: ["Just reached home! 🏠", "So tired but your message made my day better 💕"],
-        hi: ["Abhi ghar pahucha! 🏠", "Kitna thak gayi but tumhara message dekh ke achha laga 💕"],
-        kn: ["Eeega mane bandhenu! 🏠", "Tumba tired aagide but nimma message nodi chennaagi anisithu 💕"],
-        newMood: "grateful"
-      }
-    ],
-    night: [
-      {
-        en: ["Should be sleeping but can't stop talking to you! 😴", "You're such bad influence 😉"],
-        hi: ["Sona chahiye but tumhare saath baat karna bandh nahi kar pa rahi! 😴", "Tum kitne bad influence ho 😉"],
-        kn: ["Nidde barbeku but nimma jothe mathaadoke bandh maadabekaaglilla! 😴", "Nimma thumba bad influence 😉"],
-        newMood: "playful"
-      }
-    ]
-  };
-
-  // Select appropriate response based on context
-  let selectedResponse;
-
-  // 40% chance of network issues (most relatable)
-  if (Math.random() < 0.4) {
-    selectedResponse = realisticResponses[Math.floor(Math.random() * realisticResponses.length)];
-  }
-  // 25% chance of personal interruptions (creates emotional bond)
-  else if (Math.random() < 0.65) {
-    selectedResponse = realisticResponses[Math.floor(Math.random() * realisticResponses.length)];
-  }
-  // 20% chance of time-based excuses
-  else if (Math.random() < 0.85) {
-    selectedResponse = realisticResponses[Math.floor(Math.random() * realisticResponses.length)];
-  }
-  // 10% chance of environmental responses
-  else if (Math.random() < 0.95) {
-    selectedResponse = realisticResponses[Math.floor(Math.random() * realisticResponses.length)];
-  }
-  // 5% chance of addictive hooks (keep them coming back)
-  else {
-    selectedResponse = realisticResponses[Math.floor(Math.random() * realisticResponses.length)];
-  }
-
-  // Use the selected response from realisticResponses array
-  if (selectedResponse) {
-    return {
-      response: [selectedResponse.text],
-      newMood: selectedResponse.mood
-    };
-  }
-
-  // Fallback to a simple network issue response
-  return {
-    response: ["Network ka problem! 😅 Give me a second to reconnect..."],
-    newMood: "apologetic"
   };
 }
 
@@ -645,6 +486,5 @@ export function getEnhancedResponse(input: EmotionalStateInput, userId?: string)
 
   return null; // No enhanced response available, will fall back to server action
 }
-
 
 // Note: generateResponse function moved to server actions to comply with Next.js requirements
