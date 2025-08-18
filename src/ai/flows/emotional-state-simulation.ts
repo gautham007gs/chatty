@@ -610,8 +610,6 @@ export async function getAPIFailureFallback(input: EmotionalStateInput, userId: 
     };
   }
 
-  const currentMessageCount = conversationState.messageCount;
-
   // Handle ongoing realistic error/problem flows
   if (conversationState.currentSituation && realisticErrorHandlingFlows[conversationState.currentSituation as keyof typeof realisticErrorHandlingFlows]) {
     const flow = realisticErrorHandlingFlows[conversationState.currentSituation as keyof typeof realisticErrorHandlingFlows];
