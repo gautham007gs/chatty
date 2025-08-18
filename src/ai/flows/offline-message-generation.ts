@@ -22,9 +22,7 @@ export type OfflineMessageInput = z.z.infer<typeof OfflineMessageInputSchema>;
 export type OfflineMessageOutput = z.z.infer<typeof OfflineMessageOutputSchema>;
 
 // Note: generateOfflineMessage function moved to server actions to comply with Next.js requirements
-export { generateOfflineMessageFlow };
-
-async function generateOfflineMessageFlow(input: OfflineMessageInput): Promise<OfflineMessageOutput> {
+export async function generateOfflineMessageFlow(input: OfflineMessageInput): Promise<OfflineMessageOutput> {
   // Generate offline message based on time of day and context
   const messages = {
     morning: [

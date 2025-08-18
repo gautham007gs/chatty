@@ -1,4 +1,3 @@
-
 # Supabase Database Setup Instructions
 
 This document provides complete setup instructions for your AI chatbot application's Supabase database.
@@ -11,17 +10,14 @@ Run the following SQL commands in your Supabase SQL Editor:
 ```sql
 -- Create messages_log table for storing chat messages
 CREATE TABLE IF NOT EXISTS messages_log (
-    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    id BIGSERIAL PRIMARY KEY,
     message_id TEXT NOT NULL,
-    user_id TEXT, -- Made nullable for anonymous users
     sender_type TEXT NOT NULL CHECK (sender_type IN ('user', 'ai')),
-    chat_id TEXT NOT NULL,
+    chat_id TEXT NOT NULL DEFAULT 'kruthika_chat',
+    user_id TEXT,
     text_content TEXT,
     has_image BOOLEAN DEFAULT FALSE,
-    image_url TEXT,
-    audio_url TEXT,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW())
 );
 
 -- Create index for better performance

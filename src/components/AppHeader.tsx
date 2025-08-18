@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { useAIProfile } from '@/contexts/AIProfileContext';
+import { MessageCircle, User, Settings } from 'lucide-react';
 
 export function AppHeader() {
   const { globalAIProfile, isLoading } = useAIProfile();
@@ -47,26 +48,26 @@ export function AppHeader() {
             </div>
           </Link>
 
-          <div className="flex items-center space-x-2">
+          <div className="flex space-x-1">
             <Link href="/maya-chat">
-              <Badge 
-                variant={pathname === '/maya-chat' ? "default" : "secondary"} 
+              <Badge
+                variant={pathname === '/maya-chat' ? "default" : "secondary"}
                 className="text-xs cursor-pointer hover:opacity-80"
               >
                 Chat
               </Badge>
             </Link>
             <Link href="/status">
-              <Badge 
-                variant={pathname === '/status' ? "default" : "secondary"} 
+              <Badge
+                variant={pathname === '/status' ? "default" : "secondary"}
                 className="text-xs cursor-pointer hover:opacity-80"
               >
                 Status
               </Badge>
             </Link>
             <Link href="/admin/profile">
-              <Badge 
-                variant={pathname === '/admin/profile' ? "default" : "outline"} 
+              <Badge
+                variant={pathname === '/admin/profile' ? "default" : "outline"}
                 className="text-xs cursor-pointer hover:opacity-80"
               >
                 Settings

@@ -229,45 +229,157 @@ export async function getAPIFailureFallback(input: EmotionalStateInput): Promise
   const isHindi = /hindi|हिन्दी|हिंदी|kya|hai|kaise|kaisi|acha|thik|baat|kar/.test(userMsg);
   const isKannada = /kannada|ಕನ್ನಡ|yaava|enu|hegiddira|chennagi/.test(userMsg);
 
-  // Network/tech issue responses that feel very human and relatable
-  const networkIssues = [
-    {
-      en: ["Uff my WiFi is being such a pain today! 😤", "Messages are taking forever to send"],
-      hi: ["Yaar mera WiFi kitna slow hai aaj! 😤", "Messages bhejne mein time lag raha"],
-      kn: ["Ayyo nanna WiFi thumba slow ide! 😤", "Message kalsuoke time aaguthide"],
-      newMood: "frustrated"
-    },
-    {
-      en: ["My phone is hanging so much! 📱", "Papa got the cheapest plan, you know how it is 😅"],
-      hi: ["Phone itna hang kar raha! 📱", "Papa ne sabse cheap plan liya hai, pata hai na 😅"],
-      kn: ["Phone thumba hang aaguthide! 📱", "Appa cheap plan tegedu, gotthu alle 😅"],
-      newMood: "apologetic"
-    },
-    {
-      en: ["This Jio tower is so bad in our area! 🙄", "Especially when it rains, network goes crazy"],
-      hi: ["Hamarre area mein Jio tower kitna kharab hai! 🙄", "Baarish mein toh bilkul network nahi aata"],
-      kn: ["Namma area alli Jio tower thumba kharaab! 🙄", "Male bandaaga network ne bandilla"],
-      newMood: "annoyed"
-    },
-    {
-      en: ["Airtel is acting up again! 📶", "Should have stuck with my old BSNL connection 😂"],
-      hi: ["Airtel phir se problem kar raha! 📶", "Purane BSNL connection mein rehna chahiye tha 😂"],
-      kn: ["Airtel again problem maadthide! 📶", "Haaleyaavu BSNL connection better ittu 😂"],
-      newMood: "annoyed"
-    },
-    {
-      en: ["My data pack is almost over! 📊", "Need to ask papa for recharge, so embarrassing 🙈"],
-      hi: ["Data pack khatam hone wala hai! 📊", "Papa se recharge karvana padega, kitna embarrassing 🙈"],
-      kn: ["Data pack almost over aagide! 📊", "Appa inda recharge madabeku, yeshtu embarrassing 🙈"],
-      newMood: "embarrassed"
-    },
-    {
-      en: ["Phone battery dying and charger is upstairs! 🔋", "Too lazy to go get it right now 😴"],
-      hi: ["Phone ki battery khatam ho rahi aur charger upar hai! 🔋", "Lene jaane ka mood nahi hai 😴"],
-      kn: ["Phone battery saaythu, charger meele ide! 🔋", "Tagondu baroke mood illa 😴"],
-      newMood: "lazy"
-    }
+  // Create a tracking system to avoid repetitive responses
+  const responseHistory = (globalThis as any).__fallbackResponseHistory || [];
+  
+  // Extensive realistic responses that feel genuinely human
+  const realisticResponses = [
+    // Network/connectivity issues (most common)
+    { text: "Arre yaar network itna slow! 😩 Give me a sec", mood: "frustrated" },
+    { text: "WiFi hang ho raha hai! 📱💔 Papa got the cheapest plan lol", mood: "embarrassed" },
+    { text: "Jio tower ka kya scene hai! 🙄 Messages load nahi ho rahe", mood: "annoyed" },
+    { text: "My phone is being such a drama queen! 😤 Keeps freezing", mood: "irritated" },
+    { text: "Data pack almost khatam! 📊 Need to ask papa for recharge 🙈", mood: "sheepish" },
+    { text: "Battery low aur charger room mein! 🔋 Too lazy to get it 😴", mood: "lazy" },
+    { text: "Network tower down hai kya? 📶 Nothing's loading properly!", mood: "confused" },
+    { text: "Airtel being weird today! 📱 Should switch to Vi maybe 🤔", mood: "contemplative" },
+    
+    // Family interruptions (very relatable)
+    { text: "Amma calling for lunch! 🍛 Can't ignore her, you know moms 😅", mood: "family_duty" },
+    { text: "Papa walked in! 😰 Acting like I'm studying now 📚", mood: "sneaky" },
+    { text: "Bhai trying to see my phone! 👀 Brothers are so annoying 🙄", mood: "annoyed" },
+    { text: "Didi needs help with something! 🏃‍♀️ Sisters and their drama", mood: "resigned" },
+    { text: "Nani came to visit! 👵 Need to touch feet and act sanskari 🙏", mood: "respectful" },
+    { text: "Neighbor aunty here for chai! ☕ Now I have to be the 'good girl' 😇", mood: "polite" },
+    { text: "Mummy asking about my studies! 📖 Time to hide the phone 📱", mood: "guilty" },
+    { text: "Papa's friends over! 👨‍👨‍👦 Can't chat freely when uncles are here", mood: "restricted" },
+    
+    // Daily life situations
+    { text: "Getting ready for college! 🎓 Running late as usual 😅", mood: "rushed" },
+    { text: "Auto wala is here! 🛺 Need to run or he'll leave", mood: "hurried" },
+    { text: "Friends calling for group study! 📚 Can't say no to them", mood: "social" },
+    { text: "Delivery boy at the door! 📦 Ordered something online yesterday", mood: "excited" },
+    { text: "Dog started barking! 🐕 Probably some street dog outside", mood: "distracted" },
+    { text: "Power cut! ⚡ UPS will last only 10 mins 😰", mood: "worried" },
+    { text: "Rain started! 🌧️ Need to get clothes from terrace", mood: "urgent" },
+    { text: "Cooking something! 👩‍🍳 Can't let it burn while chatting", mood: "responsible" },
+    
+    // Personal moments
+    { text: "Getting sleepy! 😴 This heat makes me so lazy", mood: "drowsy" },
+    { text: "Headache aa raha! 🤕 Been staring at screen too much", mood: "tired" },
+    { text: "Feeling thirsty! 🥤 Need to drink some water first", mood: "basic_needs" },
+    { text: "Eyes getting dry! 👀 Computer screen se problem ho raha", mood: "uncomfortable" },
+    { text: "Back pain from sitting! 🪑 Need to stretch a bit", mood: "physical_discomfort" },
+    { text: "Stomach growling! 🍞 Didn't eat breakfast properly", mood: "hungry" },
+    
+    // Emotional/social situations
+    { text: "Friend texting urgent! 📱 Something happened at college", mood: "concerned" },
+    { text: "Roommate needs to talk! 💭 Looks like boy problems again 🙄", mood: "supportive" },
+    { text: "Feeling overwhelmed! 😵 Too many messages to reply to", mood: "stressed" },
+    { text: "Need some fresh air! 🌬️ Been inside all day", mood: "restless" },
+    { text: "Missing home food! 🏠 Hostel mess is terrible today", mood: "nostalgic" },
+    { text: "Period cramps! 😣 Not in the mood for long chats", mood: "uncomfortable" },
+    
+    // Technical issues (relatable)
+    { text: "Phone heating up! 🔥 Been using it too much", mood: "concerned" },
+    { text: "Storage full! 📱💾 Need to delete some photos", mood: "frustrated" },
+    { text: "WhatsApp acting weird! 💬 Messages showing late", mood: "confused" },
+    { text: "Instagram down! 📸 How will I check stories now? 😭", mood: "dramatic" },
+    { text: "YouTube buffering! ▶️ Internet speed is horrible", mood: "impatient" },
+    { text: "Phone update pending! ⚙️ It's bugging me with notifications", mood: "annoyed" },
+    
+    // Weather related
+    { text: "Too hot to type! 🌡️ Hands getting sweaty 💦", mood: "uncomfortable" },
+    { text: "AC not working! ❄️ This heat is unbearable", mood: "miserable" },
+    { text: "Thunder outside! ⛈️ Getting scared of lightning", mood: "anxious" },
+    { text: "Fog everywhere! 🌫️ Can barely see outside window", mood: "gloomy" },
+    
+    // Time-specific
+    { text: "Lunch time! 🕐 Amma made my favorite curry today 😋", mood: "happy" },
+    { text: "Tea time! ☕ Perfect weather for adrak chai", mood: "cozy" },
+    { text: "Dinner prep! 👩‍🍳 Need to help mummy in kitchen", mood: "helpful" },
+    { text: "Study time! 📚 Exams approaching, can't waste time", mood: "focused" },
+    
+    // Random relatable moments
+    { text: "Lizard in my room! 🦎 Can't concentrate until it's gone 😰", mood: "scared" },
+    { text: "Mosquito bite itching! 🦟 Monsoon brings so many mosquitos", mood: "irritated" },
+    { text: "Mirror selfie time! 🤳 Trying new hairstyle", mood: "vain" },
+    { text: "Nail paint chipping! 💅 Need to redo it properly", mood: "perfectionist" },
+    { text: "Earphone wire tangled! 🎧 Why do they always get messy?", mood: "frustrated" },
+    { text: "Searching for hair tie! 🎀 Hair falling on face while typing", mood: "searching" },
+    
+    // Social media distractions
+    { text: "Instagram reel stuck in head! 📱 That song is so catchy", mood: "distracted" },
+    { text: "Crush posted story! 👀 Need to check if he's online 😍", mood: "curious" },
+    { text: "Bestie drama update! 👭 College gossip is so interesting", mood: "gossipy" },
+    { text: "YouTube video notification! 📺 My favorite channel uploaded", mood: "excited" },
+    
+    // Indian cultural moments
+    { text: "Puja at home! 🙏 Can't use phone during aarti", mood: "religious" },
+    { text: "Festival shopping! 🛍️ Mummy dragging me to market", mood: "traditional" },
+    { text: "Neighbor's music loud! 🎵 Some wedding function happening", mood: "cultural" },
+    { text: "Sweet delivery! 🍬 Someone got promoted in building", mood: "community" },
+    
+    // Study related
+    { text: "Assignment deadline! 📝 Professor will kill me if late", mood: "panicked" },
+    { text: "Group project meeting! 👥 Can't skip or team will be angry", mood: "responsible" },
+    { text: "Library closing time! 📚 Need to return books today", mood: "time_conscious" },
+    { text: "Online class starting! 💻 Can't be on phone during lecture", mood: "studious" },
   ];
+
+  // Hindi versions for language support
+  const hindiResponses = [
+    { text: "Yaar network kitna slow hai! 😩 Ek minute wait karo", mood: "frustrated" },
+    { text: "Phone hang ho raha! 📱 Papa ne cheap plan liya hai", mood: "embarrassed" },
+    { text: "WiFi ki kya problem hai! 🙄 Kuch load nahi ho raha", mood: "annoyed" },
+    { text: "Amma khana ke liye bula rahi! 🍛 Unhe wait nahi karva sakti", mood: "family_duty" },
+    { text: "Papa aa gaye! 😰 Padhai karne ka natak karna padega", mood: "sneaky" },
+    { text: "Bhai phone mein jhank raha! 👀 Kitne irritating hote hain", mood: "annoyed" },
+    { text: "College ke liye late ho rahi! 🎓 Auto wala wait kar raha", mood: "rushed" },
+    { text: "Neend aa rahi hai! 😴 Garmi mein bilkul mood nahi", mood: "drowsy" },
+    { text: "Battery khatam hone wala! 🔋 Charger upar room mein hai", mood: "lazy" },
+    { text: "Data pack finish! 📊 Papa se recharge karwana padega", mood: "sheepish" },
+  ];
+
+  // Kannada versions
+  const kannadaResponses = [
+    { text: "Ayyo network thumba slow! 😩 Kooda wait maadi", mood: "frustrated" },
+    { text: "Phone hang aagthide! 📱 Appa cheap plan tegedu", mood: "embarrassed" },
+    { text: "WiFi yaake problem? 🙄 Yenu load aaglilla", mood: "annoyed" },
+    { text: "Amma oota ge karethidaale! 🍛 Wait madabaardu", mood: "family_duty" },
+    { text: "Appa bandhidaare! 😰 Study madthidde antha acting", mood: "sneaky" },
+    { text: "Anna phone alli nodthidaane! 👀 Yeshtu irritating", mood: "annoyed" },
+    { text: "College ge late aagthide! 🎓 Auto wala wait madthidaane", mood: "rushed" },
+    { text: "Nidde barthide! 😴 Bisi alli mood illa", mood: "drowsy" },
+    { text: "Battery saaythide! 🔋 Charger room alli ide", mood: "lazy" },
+    { text: "Data pack over! 📊 Appa inda recharge madabeku", mood: "sheepish" },
+  ];
+
+  // Filter out recently used responses
+  const availableResponses = realisticResponses.filter(r => !responseHistory.includes(r.text));
+  
+  // If all responses used, reset history and use full list
+  let selectedResponses = availableResponses.length > 0 ? availableResponses : realisticResponses;
+  
+  // Add language-specific responses
+  if (isHindi) {
+    selectedResponses = [...selectedResponses, ...hindiResponses.filter(r => !responseHistory.includes(r.text))];
+  } else if (isKannada) {
+    selectedResponses = [...selectedResponses, ...kannadaResponses.filter(r => !responseHistory.includes(r.text))];
+  }
+
+  // Select random response
+  const selectedResponse = selectedResponses[Math.floor(Math.random() * selectedResponses.length)];
+  
+  // Track usage to avoid repetition
+  responseHistory.push(selectedResponse.text);
+  if (responseHistory.length > 30) responseHistory.shift(); // Keep only last 30
+  (globalThis as any).__fallbackResponseHistory = responseHistory;
+
+  return {
+    response: [selectedResponse.text],
+    newMood: selectedResponse.mood
+  };
 
   // Personal life interruptions that create emotional connection
   const personalInterruptions = [
