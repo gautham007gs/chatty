@@ -575,7 +575,7 @@ export async function getAPIFailureFallback(input: EmotionalStateInput, userId: 
 
   if (currentMessageCount >= 5) {
     // Warning about connection issues
-    conversationStateManager.updateState(userId, { 
+    conversationStateManager.updateState(userId, {
       messageCount: currentMessageCount + 1,
       currentSituation: 'connection_warning'
     });
@@ -593,7 +593,7 @@ export async function getAPIFailureFallback(input: EmotionalStateInput, userId: 
 
   if (currentMessageCount >= 3) {
     // First signs of trouble
-    conversationStateManager.updateState(userId, { 
+    conversationStateManager.updateState(userId, {
       messageCount: currentMessageCount + 1,
       currentSituation: 'minor_issues'
     });
@@ -619,8 +619,8 @@ export async function getAPIFailureFallback(input: EmotionalStateInput, userId: 
         const responses = timelineItem.responses;
         const selectedResponse = responses[Math.floor(Math.random() * responses.length)];
 
-        conversationStateManager.updateState(userId, { 
-          messageCount: currentMessageCount + 1 
+        conversationStateManager.updateState(userId, {
+          messageCount: currentMessageCount + 1
         });
 
         // If we've reached the end of the error flow, transition to goodbye
@@ -646,15 +646,15 @@ export async function getAPIFailureFallback(input: EmotionalStateInput, userId: 
     const timeElapsed = Math.floor((Date.now() - conversationState.situationStartTime) / (60 * 1000));
 
     for (const timelineItem of flow.timeline) {
-      if (currentMessageCount >= timelineItem.messageIndex && 
-          timeElapsed >= timelineItem.minDelay && 
+      if (currentMessageCount >= timelineItem.messageIndex &&
+          timeElapsed >= timelineItem.minDelay &&
           timeElapsed <= timelineItem.maxDelay + 5) {
 
         const responses = timelineItem.responses;
         const selectedResponse = responses[Math.floor(Math.random() * responses.length)];
 
-        conversationStateManager.updateState(userId, { 
-          messageCount: currentMessageCount + 1 
+        conversationStateManager.updateState(userId, {
+          messageCount: currentMessageCount + 1
         });
 
         if (timelineItem === flow.timeline[flow.timeline.length - 1]) {
@@ -706,8 +706,8 @@ export async function getAPIFailureFallback(input: EmotionalStateInput, userId: 
 
   const selectedResponse = earlyResponses[Math.floor(Math.random() * earlyResponses.length)];
 
-  conversationStateManager.updateState(userId, { 
-    messageCount: currentMessageCount + 1 
+  conversationStateManager.updateState(userId, {
+    messageCount: currentMessageCount + 1
   });
 
   return {

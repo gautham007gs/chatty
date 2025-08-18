@@ -1,4 +1,3 @@
-
 import React, { memo } from 'react';
 import Image from 'next/image';
 import type { Message } from '@/types';
@@ -14,6 +13,7 @@ interface MessageBubbleProps {
 
 const MessageBubble = memo(({ message, aiAvatarUrl, aiName = "AI", onImageClick, onTriggerAd }: MessageBubbleProps) => {
   const isAi = message.sender === 'ai';
+  const isUser = message.sender === 'user'; // Added isUser flag
 
   const handleBubbleClick = () => {
     if (onTriggerAd && Math.random() < 0.1) { // 10% chance on message click
@@ -36,7 +36,7 @@ const MessageBubble = memo(({ message, aiAvatarUrl, aiName = "AI", onImageClick,
           />
         </div>
       )}
-      
+
       <div
         className={cn(
           "rounded-2xl px-4 py-2 max-w-full break-words cursor-pointer transition-colors",
@@ -49,7 +49,7 @@ const MessageBubble = memo(({ message, aiAvatarUrl, aiName = "AI", onImageClick,
         {message.text && (
           <p className="text-sm leading-relaxed whitespace-pre-wrap">{message.text}</p>
         )}
-        
+
         {message.userImageUrl && (
           <div className="mt-2">
             <Image
@@ -63,7 +63,7 @@ const MessageBubble = memo(({ message, aiAvatarUrl, aiName = "AI", onImageClick,
             />
           </div>
         )}
-        
+
         {message.aiImageUrl && (
           <div className="mt-2">
             <Image
@@ -78,7 +78,7 @@ const MessageBubble = memo(({ message, aiAvatarUrl, aiName = "AI", onImageClick,
             />
           </div>
         )}
-        
+
         {message.audioUrl && (
           <div className="mt-2">
             <audio
@@ -91,13 +91,13 @@ const MessageBubble = memo(({ message, aiAvatarUrl, aiName = "AI", onImageClick,
             </audio>
           </div>
         )}
-        
+
         <div className="flex justify-end mt-1">
           <span className="text-xs opacity-70">
-            {message.timestamp.toLocaleTimeString([], { 
-              hour: '2-digit', 
+            {message.timestamp.toLocaleTimeString([], {
+              hour: '2-digit',
               minute: '2-digit',
-              hour12: true 
+              hour12: true
             })}
           </span>
         </div>

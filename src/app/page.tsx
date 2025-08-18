@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { MessageCircle, Users, Settings, Camera } from 'lucide-react';
+import { MessageCircle, Users, Settings, Camera, Search, MoreVertical } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { useAIProfile } from '@/contexts/AIProfileContext';
@@ -52,142 +52,124 @@ export default function HomePage() {
       <SocialBarAdDisplay />
       
       <div className="flex flex-col h-screen max-w-3xl mx-auto bg-background">
+        {/* Header Ad */}
+        <BannerAdDisplay 
+          adType="standard" 
+          placementKey="home-header" 
+          className="w-full"
+        />
+
         {/* Header */}
-        <div className="bg-primary text-primary-foreground p-4 shadow-md">
+        <div className="bg-[#075E54] text-white p-4 shadow-md">
           <div className="flex items-center justify-between">
-            <h1 className="text-xl font-bold">KruthikaChat</h1>
-            <div className="text-sm">
-              {currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+            <h1 className="text-xl font-bold">WhatsApp</h1>
+            <div className="flex items-center space-x-4">
+              <Search className="h-5 w-5" />
+              <MoreVertical className="h-5 w-5" />
             </div>
           </div>
         </div>
 
-        {/* Ad Space - Top Banner */}
-        <BannerAdDisplay 
-          adType="standard" 
-          placementKey="home-top" 
-          className="my-2"
-        />
+        {/* Navigation Tabs */}
+        <div className="bg-[#075E54] text-white">
+          <div className="flex">
+            <Button 
+              variant="ghost" 
+              className="flex-1 text-white hover:bg-white/10 rounded-none border-b-2 border-white py-3"
+            >
+              CHATS
+            </Button>
+            <Button 
+              variant="ghost" 
+              className="flex-1 text-white/70 hover:bg-white/10 rounded-none py-3"
+              onClick={handleStatusClick}
+            >
+              STATUS
+            </Button>
+            <Button 
+              variant="ghost" 
+              className="flex-1 text-white/70 hover:bg-white/10 rounded-none py-3"
+            >
+              CALLS
+            </Button>
+          </div>
+        </div>
 
         {/* Main Content */}
-        <div className="flex-grow overflow-y-auto bg-secondary/10">
+        <div className="flex-grow overflow-y-auto bg-white">
           {/* Chat List */}
-          <div className="bg-background">
-            <div 
-              className="flex items-center p-4 hover:bg-secondary/50 cursor-pointer border-b border-border transition-colors"
-              onClick={handleChatClick}
-            >
-              <Avatar className="h-14 w-14 ring-2 ring-primary/20">
-                <AvatarImage 
-                  src={effectiveProfile.avatarUrl} 
-                  alt={effectiveProfile.name}
-                  className="object-cover"
-                />
-                <AvatarFallback>
-                  {effectiveProfile.name.charAt(0).toUpperCase()}
-                </AvatarFallback>
-              </Avatar>
-              
-              <div className="ml-4 flex-grow">
-                <div className="flex items-center justify-between">
-                  <h2 className="font-semibold text-lg">{effectiveProfile.name}</h2>
-                  <span className="text-xs text-muted-foreground">
-                    {currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                  </span>
-                </div>
-                <p className="text-muted-foreground text-sm truncate">
-                  {effectiveProfile.status}
-                </p>
+          <div 
+            className="flex items-center p-4 hover:bg-gray-50 cursor-pointer border-b border-gray-100 transition-colors"
+            onClick={handleChatClick}
+          >
+            <Avatar className="h-12 w-12">
+              <AvatarImage 
+                src={effectiveProfile.avatarUrl} 
+                alt={effectiveProfile.name}
+                className="object-cover"
+              />
+              <AvatarFallback className="bg-[#075E54] text-white">
+                {effectiveProfile.name.charAt(0).toUpperCase()}
+              </AvatarFallback>
+            </Avatar>
+            
+            <div className="ml-4 flex-grow">
+              <div className="flex items-center justify-between">
+                <h2 className="font-medium text-gray-900">{effectiveProfile.name}</h2>
+                <span className="text-xs text-gray-500">
+                  {currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                </span>
               </div>
+              <p className="text-gray-500 text-sm truncate">
+                {effectiveProfile.status}
+              </p>
             </div>
           </div>
 
-          {/* Ad Space - Native Banner */}
+          {/* Native Ad */}
           <BannerAdDisplay 
             adType="native" 
             placementKey="home-middle" 
-            className="my-4"
+            className="mx-4 my-2"
           />
 
-          {/* Quick Actions */}
-          <div className="p-4 space-y-3">
-            <h3 className="text-sm font-medium text-muted-foreground mb-3">QUICK ACTIONS</h3>
-            
-            <div 
-              className="flex items-center p-3 bg-card rounded-lg hover:bg-secondary/50 cursor-pointer transition-colors border"
-              onClick={handleStatusClick}
-            >
-              <div className="bg-primary/10 p-2 rounded-full">
-                <Camera className="h-5 w-5 text-primary" />
-              </div>
-              <div className="ml-3">
-                <h4 className="font-medium">Status Updates</h4>
-                <p className="text-sm text-muted-foreground">View and share status</p>
-              </div>
-            </div>
-
-            <div 
-              className="flex items-center p-3 bg-card rounded-lg hover:bg-secondary/50 cursor-pointer transition-colors border"
-              onClick={handleChatClick}
-            >
-              <div className="bg-green-500/10 p-2 rounded-full">
-                <MessageCircle className="h-5 w-5 text-green-500" />
-              </div>
-              <div className="ml-3">
-                <h4 className="font-medium">Start Chat</h4>
-                <p className="text-sm text-muted-foreground">Chat with Kruthika</p>
+          {/* Additional chat items for better UX */}
+          <div className="space-y-1">
+            <div className="flex items-center p-4 opacity-50">
+              <Avatar className="h-12 w-12">
+                <AvatarFallback className="bg-gray-300 text-gray-600">A</AvatarFallback>
+              </Avatar>
+              <div className="ml-4 flex-grow">
+                <div className="flex items-center justify-between">
+                  <h2 className="font-medium text-gray-400">Add more contacts</h2>
+                  <span className="text-xs text-gray-400">--:--</span>
+                </div>
+                <p className="text-gray-400 text-sm">Tap to invite friends</p>
               </div>
             </div>
           </div>
 
-          {/* Ad Space - Bottom Banner */}
+          {/* Another Ad Space */}
           <BannerAdDisplay 
             adType="standard" 
-            placementKey="home-bottom" 
-            className="my-2"
+            placementKey="home-content" 
+            className="mx-4 my-4"
           />
         </div>
 
-        {/* Bottom Navigation */}
-        <div className="bg-background border-t border-border p-2">
-          <div className="flex justify-around items-center">
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              className="flex-1 flex flex-col items-center py-3"
-            >
-              <MessageCircle className="h-5 w-5 mb-1" />
-              <span className="text-xs">Chats</span>
-            </Button>
-            
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              className="flex-1 flex flex-col items-center py-3"
-              onClick={handleStatusClick}
-            >
-              <Users className="h-5 w-5 mb-1" />
-              <span className="text-xs">Status</span>
-            </Button>
-            
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              className="flex-1 flex flex-col items-center py-3"
-              onClick={() => router.push('/admin/profile')}
-            >
-              <Settings className="h-5 w-5 mb-1" />
-              <span className="text-xs">Settings</span>
-            </Button>
-          </div>
-        </div>
+        {/* Footer Ad */}
+        <BannerAdDisplay 
+          adType="standard" 
+          placementKey="home-footer" 
+          className="w-full"
+        />
 
         {/* Floating Action Button */}
         <Button
-          className="fixed bottom-6 right-6 rounded-full w-14 h-14 shadow-lg z-50"
+          className="fixed bottom-6 right-6 rounded-full w-14 h-14 shadow-lg bg-[#25D366] hover:bg-[#20B858] z-50"
           onClick={handleChatClick}
         >
-          <MessageCircle className="h-6 w-6" />
+          <MessageCircle className="h-6 w-6 text-white" />
         </Button>
       </div>
     </>

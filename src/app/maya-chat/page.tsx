@@ -16,7 +16,7 @@ import { userPersonalization } from '@/lib/userPersonalization';
 import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { MessageSquare, Phone, Video, Info, X, ArrowLeft } from 'lucide-react';
+import { MessageSquare, Phone, Video, Info, X, ArrowLeft, Camera, MoreVertical } from 'lucide-react';
 import SimulatedAdPlaceholder from '@/components/chat/SimulatedAdPlaceholder';
 import BannerAdDisplay from '@/components/chat/BannerAdDisplay';
 import { supabase } from '@/lib/supabaseClient';
@@ -26,6 +26,7 @@ import { useAIProfile } from '@/contexts/AIProfileContext';
 import { useAIMediaAssets } from '@/contexts/AIMediaAssetsContext';
 import SocialBarAdDisplay from '@/components/SocialBarAdDisplay';
 import GlobalAdScripts from '@/components/GlobalAdScripts';
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 const AI_DISCLAIMER_SHOWN_KEY = 'ai_disclaimer_shown_kruthika_chat_v2';
 const AI_DISCLAIMER_DURATION = 2000;
@@ -858,7 +859,7 @@ const KruthikaChatPage: NextPage = () => {
   const displayAIProfile = globalAIProfile || defaultAIProfile;
 
   if (isLoadingAIProfile || !globalAIProfile || isLoadingAdSettings || isLoadingMediaAssets || isLoadingChatState ) {
-    return <div className="flex justify-center items-center h-screen bg-chat-bg-default text-foreground">Loading Kruthika's Chat...</div>;
+    return <div className="flex justify-center items-center h-screen bg-chat-bg-default text-foreground">Loading Whatapp...</div>;
   }
 
   return (
@@ -867,15 +868,30 @@ const KruthikaChatPage: NextPage = () => {
       <SocialBarAdDisplay />
 
       <div className="flex flex-col h-screen max-w-3xl mx-auto bg-chat-bg-default shadow-2xl">
-        <ChatHeader
-          aiName={displayAIProfile.name}
-          aiAvatarUrl={displayAIProfile.avatarUrl}
-          onlineStatus={onlineStatus}
-          onAvatarClick={handleOpenAvatarZoom}
-          onCallClick={handleCallVideoClick}
-          onVideoClick={handleCallVideoClick}
-          tokenUsage={tokenUsageStatus}
-        />
+        {/* Updated ChatHeader to WhatsApp style */}
+        <div className="bg-[#075E54] text-white p-4 shadow-md sticky top-0 z-50">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <Avatar className="h-10 w-10 cursor-pointer" onClick={handleOpenAvatarZoom}>
+                <AvatarImage
+                  src={displayAIProfile.avatarUrl}
+                  alt={displayAIProfile.name}
+                />
+                <AvatarFallback className="bg-white text-[#075E54]">
+                  {displayAIProfile.name.charAt(0)}
+                </AvatarFallback>
+              </Avatar>
+              <div>
+                <h1 className="text-lg font-semibold">{displayAIProfile.name}</h1>
+                <p className="text-sm text-green-100">{onlineStatus}</p>
+              </div>
+            </div>
+            <div className="flex items-center space-x-4">
+              <Camera className="h-5 w-5 cursor-pointer text-gray-300 hover:text-white" onClick={handleCallVideoClick} />
+              <MoreVertical className="h-5 w-5 cursor-pointer text-gray-300 hover:text-white" onClick={() => alert("More options not implemented yet.")} />
+            </div>
+          </div>
+        </div>
 
         {/* Ad Space - Top of Chat */}
         <BannerAdDisplay
