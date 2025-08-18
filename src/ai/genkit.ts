@@ -11,29 +11,21 @@ import {googleAI} from '@genkit-ai/googleai';
 const MIN_API_KEY_LENGTH = 30; // Most Google API keys are around 39 characters.
 
 const getApiKey = (): string | undefined => {
-  // Check multiple possible environment variable names for Gemini API key
-const possibleApiKeyNames = [
-  'GEMINI_API_KEY',
-  'GOOGLE_API_KEY',
-  'GEMINI_API_KEY_1',
-  'GEMINI_API_KEY_2',
-  'GEMINI_API_KEY_3',
-  'GEMINI_API_KEY_4',
-  'GEMINI_API_KEY_5'
-];
+  // Check for various possible Gemini API key environment variable names
+  let apiKey: string | undefined;
+  const possibleKeys = ['GEMINI_API_KEY', 'GOOGLE_API_KEY', 'GEMINI_API_KEY_1', 'GEMINI_API_KEY_2', 'GEMINI_API_KEY_3'];
 
-let geminiApiKey: string | undefined;
-for (const keyName of possibleApiKeyNames) {
-  console.log(`Genkit: Checking environment variable: ${keyName}`);
-  const keyValue = process.env[keyName];
-  if (keyValue && keyValue.trim() !== '' && keyValue.length > 10 && !keyValue.toLowerCase().includes('your') && !keyValue.toLowerCase().includes('api') && !keyValue.toLowerCase().includes('key')) {
-    geminiApiKey = keyValue.trim();
-    console.log(`Genkit: Found valid API key in ${keyName}`);
-    break;
-  } else {
-    console.log(`Genkit: Environment variable ${keyName} is not set.`);
+  for (const keyName of possibleKeys) {
+    const key = process.env[keyName];
+    console.log(`Genkit: Checking environment variable: ${keyName}`);
+    if (key && key.trim() !== '' && key.length > 10 && !key.toLowerCase().includes('your_') && !key.toLowerCase().includes('placeholder')) {
+      apiKey = key.trim();
+      console.log(`Genkit: Valid API key found in ${keyName}`);
+      break;
+    } else {
+      console.log(`Genkit: Environment variable ${keyName} is not set.`);
+    }
   }
-}
 
   // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   // !!! HEY! IF YOU ARE IN FIREBASE STUDIO AND process.env ISN'T WORKING  !!!
@@ -43,7 +35,7 @@ for (const keyName of possibleApiKeyNames) {
   // !!! REMOVE IT OR COMMENT IT OUT BEFORE PUSHING TO GITHUB/VERCEL!        !!!
   // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   const studioDevApiKey = "YOUR_GEMINI_API_KEY_HERE_FOR_STUDIO_TESTING"; // <<<<<<< REPLACE THIS WITH YOUR ACTUAL KEY FOR STUDIO
-  if (!geminiApiKey && studioDevApiKey && studioDevApiKey !== "YOUR_GEMINI_API_KEY_HERE_FOR_STUDIO_TESTING" && studioDevApiKey.length >= MIN_API_KEY_LENGTH) {
+  if (!apiKey && studioDevApiKey && studioDevApiKey !== "YOUR_GEMINI_API_KEY_HERE_FOR_STUDIO_TESTING" && studioDevApiKey.length >= MIN_API_KEY_LENGTH) {
       console.warn("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
       console.warn("!!! Genkit: WARNING! Using TEMPORARY hardcoded API key for Firebase Studio testing.        !!!");
       console.warn("!!! This is NOT secure for production. REMOVE before committing or deploying!              !!!");
@@ -51,7 +43,7 @@ for (const keyName of possibleApiKeyNames) {
       return studioDevApiKey;
   }
 
-  if (!geminiApiKey) {
+  if (!apiKey) {
       console.error(
         "CRITICAL Genkit Error: No valid Gemini API Key found for initialization. " +
         "All checked environment variables (GEMINI_API_KEY, GOOGLE_API_KEY, etc.) " +
@@ -61,7 +53,7 @@ for (const keyName of possibleApiKeyNames) {
       );
   }
 
-  return geminiApiKey;
+  return apiKey;
 };
 
 const activeApiKey = getApiKey();

@@ -414,6 +414,36 @@ export async function getAPIFailureFallback(input: EmotionalStateInput): Promise
     selectedResponse = addictiveHooks[Math.floor(Math.random() * addictiveHooks.length)];
   }
 
+  // Choose response type based on various factors
+  let response = '';
+  const rand = Math.random();
+
+  // Use mood-based responses for certain times
+  if (timeOfDay === 'morning' && Math.random() < 0.4) {
+    const morningResponses = realisticFallbackResponses.mood_based.morning;
+    response = morningResponses[Math.floor(Math.random() * morningResponses.length)];
+  } else if (timeOfDay === 'afternoon' && Math.random() < 0.3) {
+    const afternoonResponses = realisticFallbackResponses.mood_based.afternoon;
+    response = afternoonResponses[Math.floor(Math.random() * afternoonResponses.length)];
+  } else if (timeOfDay === 'evening' && Math.random() < 0.3) {
+    const eveningResponses = realisticFallbackResponses.mood_based.evening;
+    response = eveningResponses[Math.floor(Math.random() * eveningResponses.length)];
+  } else if (timeOfDay === 'night' && Math.random() < 0.4) {
+    const nightResponses = realisticFallbackResponses.mood_based.night;
+    response = nightResponses[Math.floor(Math.random() * nightResponses.length)];
+  } else {
+    // Choose from general response categories
+    let responseCategory = 'network_issues';
+    if (rand < 0.25) responseCategory = 'processing_delay';
+    else if (rand < 0.5) responseCategory = 'distraction';
+    else if (rand < 0.75) responseCategory = 'technical_hiccup';
+
+    const categoryResponses = realisticFallbackResponses[responseCategory as keyof typeof realisticFallbackResponses];
+    if (Array.isArray(categoryResponses)) {
+      response = categoryResponses[Math.floor(Math.random() * categoryResponses.length)];
+    }
+  }
+
   // Choose language based on user input
   let responseText;
   if (isHindi && selectedResponse.hi) {

@@ -705,10 +705,25 @@ const KruthikaChatPage: NextPage = () => {
       else if (typeof error === 'string') errorDescription += ` Details: ${error}`;
       else errorDescription += ` An unknown error occurred. Please check console logs.`;
 
-      toast({ title: "Error", description: errorDescription, variant: "destructive" });
+      // Don't show error toast to user - keep it natural
+      console.error('Full error details:', error);
+      
+      // Use realistic fallback response instead of showing technical error
+      const { getAPIFailureFallback } = await import('@/ai/flows/emotional-state-simulation');
+      const fallbackInput = {
+        userMessage: text,
+        userImageUri: currentImageUri,
+        timeOfDay: getTimeOfDay(),
+        mood: aiMood,
+        recentInteractions: updatedRecentInteractions,
+        availableImages: [],
+        availableAudio: [],
+      };
+      const fallbackResponse = await getAPIFailureFallback(fallbackInput);
+      
       const errorAiMessage: Message = {
         id: (Date.now() + 1).toString(),
-        text: "Uff, my brain's a bit fuzzy right now. Try again in a bit? 😓",
+        text: fallbackResponse.response,
         sender: 'ai',
         timestamp: new Date(),
         status: 'read',
