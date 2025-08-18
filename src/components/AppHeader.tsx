@@ -1,21 +1,39 @@
+
 "use client";
 
 import React from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { useAIProfile } from '@/contexts/AIProfileContext';
-import { MessageCircle, User, Settings } from 'lucide-react';
+import { MessageCircle, User, Settings, ArrowLeft, Users } from 'lucide-react';
 
-export function AppHeader() {
-  const { globalAIProfile, isLoading } = useAIProfile();
+interface AppHeaderProps {
+  title?: string;
+  showBackButton?: boolean;
+}
+
+export default function AppHeader({ title, showBackButton = true }: AppHeaderProps) {
+  const { aiProfile: globalAIProfile, isLoadingAIProfile } = useAIProfile();
   const pathname = usePathname();
+  const router = useRouter();
 
-  if (isLoading) {
+  const handleBackClick = () => {
+    if (pathname === '/status') {
+      router.push('/maya-chat');
+    } else if (pathname === '/admin/profile') {
+      router.push('/maya-chat');
+    } else {
+      router.push('/maya-chat');
+    }
+  };
+
+  if (isLoadingAIProfile) {
     return (
       <header className="bg-white/80 backdrop-blur-sm border-b border-gray-200 sticky top-0 z-50">
-        <div className="max-w-md mx-auto px-4 py-3">
+        <div className="max-w-3xl mx-auto px-4 py-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
               <div className="w-10 h-10 bg-gray-200 rounded-full animate-pulse" />
@@ -32,46 +50,74 @@ export function AppHeader() {
 
   return (
     <header className="bg-white/80 backdrop-blur-sm border-b border-gray-200 sticky top-0 z-50">
-      <div className="max-w-md mx-auto px-4 py-3">
+      <div className="max-w-3xl mx-auto px-4 py-3">
         <div className="flex items-center justify-between">
-          <Link href="/maya-chat" className="flex items-center space-x-3 hover:opacity-80 transition-opacity">
-            <Avatar className="w-10 h-10">
-              <AvatarImage src={globalAIProfile?.avatarUrl} alt={globalAIProfile?.name} />
-              <AvatarFallback>{globalAIProfile?.name?.[0] || 'AI'}</AvatarFallback>
-            </Avatar>
+          <div className="flex items-center space-x-3">
+            {showBackButton && pathname !== '/maya-chat' && (
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                onClick={handleBackClick}
+                className="h-9 w-9"
+              >
+                <ArrowLeft className="h-5 w-5" />
+              </Button>
+            )}
+            
+            {globalAIProfile && (
+              <Avatar className="h-10 w-10">
+                <AvatarImage 
+                  src={globalAIProfile.avatarUrl} 
+                  alt={globalAIProfile.name}
+                  data-ai-hint="profile woman"
+                />
+                <AvatarFallback>
+                  {globalAIProfile.name.charAt(0)}
+                </AvatarFallback>
+              </Avatar>
+            )}
+            
             <div>
-              <h1 className="font-semibold text-gray-900">{globalAIProfile?.name || 'AI Chat'}</h1>
-              <div className="flex items-center space-x-2">
-                <div className="w-2 h-2 bg-green-500 rounded-full" />
-                <span className="text-xs text-gray-500">Online</span>
-              </div>
+              <h1 className="text-lg font-semibold text-gray-900">
+                {title || globalAIProfile?.name || 'Kruthika Chat'}
+              </h1>
+              <p className="text-sm text-gray-500">
+                {pathname === '/status' ? 'Status Updates' : 
+                 pathname === '/admin/profile' ? 'Admin Profile' : 
+                 'AI Companion'}
+              </p>
             </div>
-          </Link>
-
-          <div className="flex space-x-1">
+          </div>
+          
+          <div className="flex items-center space-x-2">
             <Link href="/maya-chat">
-              <Badge
-                variant={pathname === '/maya-chat' ? "default" : "secondary"}
-                className="text-xs cursor-pointer hover:opacity-80"
+              <Button 
+                variant={pathname === '/maya-chat' ? 'default' : 'ghost'} 
+                size="icon"
+                className="h-9 w-9"
               >
-                Chat
-              </Badge>
+                <MessageCircle className="h-5 w-5" />
+              </Button>
             </Link>
+            
             <Link href="/status">
-              <Badge
-                variant={pathname === '/status' ? "default" : "secondary"}
-                className="text-xs cursor-pointer hover:opacity-80"
+              <Button 
+                variant={pathname === '/status' ? 'default' : 'ghost'} 
+                size="icon"
+                className="h-9 w-9"
               >
-                Status
-              </Badge>
+                <Users className="h-5 w-5" />
+              </Button>
             </Link>
+            
             <Link href="/admin/profile">
-              <Badge
-                variant={pathname === '/admin/profile' ? "default" : "outline"}
-                className="text-xs cursor-pointer hover:opacity-80"
+              <Button 
+                variant={pathname === '/admin/profile' ? 'default' : 'ghost'} 
+                size="icon"
+                className="h-9 w-9"
               >
-                Settings
-              </Badge>
+                <Settings className="h-5 w-5" />
+              </Button>
             </Link>
           </div>
         </div>
@@ -79,3 +125,5 @@ export function AppHeader() {
     </header>
   );
 }
+
+export { AppHeader };

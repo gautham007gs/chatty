@@ -37,6 +37,10 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
 }) => {
   const router = useRouter();
 
+  const handleBackClick = () => {
+    router.push('/');
+  };
+
   let avatarUrlToUse = aiAvatarUrl; 
   if (!avatarUrlToUse || typeof avatarUrlToUse !== 'string' || avatarUrlToUse.trim() === '' || (!avatarUrlToUse.startsWith('http') && !avatarUrlToUse.startsWith('data:'))) {
     avatarUrlToUse = defaultAIProfile.avatarUrl;
@@ -71,8 +75,8 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
       <Button 
         variant="ghost" 
         size="icon" 
-        onClick={() => router.push('/')} 
-        className="text-inherit hover:bg-accent/10 mr-2" 
+        className="text-inherit hover:bg-accent/10 mr-2"
+        onClick={handleBackClick}
         aria-label="Go back"
       >
         <ArrowLeft className="h-6 w-6" />
