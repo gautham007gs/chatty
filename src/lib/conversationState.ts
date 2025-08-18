@@ -10,6 +10,7 @@ interface ConversationState {
   lastResponse: string | null;
   situationStartTime: number;
   userId: string | null;
+  lastActiveTime: number;
 }
 
 class ConversationStateManager {
@@ -22,7 +23,8 @@ class ConversationStateManager {
       hasStartedGoodbye: false,
       lastResponse: null,
       situationStartTime: Date.now(),
-      userId: null
+      userId: null,
+      lastActiveTime: Date.now()
     };
   }
 
@@ -35,7 +37,11 @@ class ConversationStateManager {
 
   updateState(userId: string = 'default', updates: Partial<ConversationState>): void {
     const currentState = this.getState(userId);
-    this.states.set(userId, { ...currentState, ...updates });
+    this.states.set(userId, { 
+      ...currentState, 
+      ...updates,
+      lastActiveTime: Date.now()
+    });
   }
 
   resetState(userId: string = 'default'): void {
@@ -45,10 +51,10 @@ class ConversationStateManager {
   // Clean up old states to prevent memory leaks
   cleanupOldStates(): void {
     const now = Date.now();
-    const ONE_HOUR = 60 * 60 * 1000;
+    const FOUR_HOURS = 4 * 60 * 60 * 1000; // Extended cleanup time
     
     for (const [userId, state] of this.states.entries()) {
-      if (now - state.situationStartTime > ONE_HOUR) {
+      if (now - state.lastActiveTime > FOUR_HOURS) {
         this.states.delete(userId);
       }
     }
@@ -72,8 +78,11 @@ class ConversationStateManager {
   // Check if enough time has passed to come back online
   shouldComeBackOnline(userId: string = 'default'): boolean {
     const state = this.getState(userId);
-    const OFFLINE_DURATION = 5 * 60 * 1000; // 5 minutes offline
-    return state.hasStartedGoodbye && (Date.now() - state.situationStartTime > OFFLINE_DURATION);
+    const OFFLINE_DURATION = 8 * 60 * 1000; // 8 minutes offline for more realistic timing
+    const timePassed = Date.now() - state.situationStartTime;
+    
+    // Only come back online if user was actually offline and enough time has passed
+    return state.hasStartedGoodbye && timePassed > OFFLINE_DURATION;
   }
 
   // Bring user back online
@@ -85,13 +94,36 @@ class ConversationStateManager {
       situationStartTime: Date.now()
     });
   }
+
+  // Get time elapsed in current situation (in minutes)
+  getTimeElapsedInSituation(userId: string = 'default'): number {
+    const state = this.getState(userId);
+    return Math.floor((Date.now() - state.situationStartTime) / (60 * 1000));
+  }
+
+  // Check if situation should naturally progress
+  shouldProgressSituation(userId: string = 'default'): boolean {
+    const timeElapsed = this.getTimeElapsedInSituation(userId);
+    const state = this.getState(userId);
+    
+    // Different situations have different natural durations
+    const situationDurations: Record<string, number> = {
+      'studySession': 20, // 20 minutes
+      'familyTime': 15,   // 15 minutes  
+      'gettingReady': 12, // 12 minutes
+      'householdWork': 18 // 18 minutes
+    };
+    
+    const expectedDuration = situationDurations[state.currentSituation || ''] || 15;
+    return timeElapsed >= expectedDuration;
+  }
 }
 
 export const conversationStateManager = new ConversationStateManager();
 
-// Clean up old states every hour
+// Clean up old states every 2 hours
 if (typeof window !== 'undefined') {
   setInterval(() => {
     conversationStateManager.cleanupOldStates();
-  }, 60 * 60 * 1000); // Every hour
+  }, 2 * 60 * 60 * 1000); // Every 2 hours
 }

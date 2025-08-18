@@ -220,108 +220,181 @@ function getPreGeneratedResponse(input: EmotionalStateInput): EmotionalStateOutp
   return null;
 }
 
-// Using conversation state manager for proper state tracking
+// Realistic conversation flows with proper timing and context
+const realisticConversationFlows = {
+  // Study session - takes realistic time (15-20 minutes)
+  studySession: {
+    timeline: [
+      {
+        messageIndex: 0,
+        minDelay: 0,
+        maxDelay: 2,
+        responses: [
+          { text: "Yaar, assignment submit karna hai by tonight! 📚 Give me like 15 mins?", mood: "stressed" },
+          { text: "Study group se call aa gaya! 📞 Important discussion hai, 20 mins max", mood: "focused" },
+          { text: "Professor ne notes share kiye! 📖 Quick padh ke aati hu, don't go anywhere", mood: "studious" }
+        ]
+      },
+      {
+        messageIndex: 3,
+        minDelay: 8,
+        maxDelay: 12,
+        responses: [
+          { text: "Still working on this assignment! 😩 It's harder than I thought", mood: "struggling" },
+          { text: "Group me sab confuse hai! 🤯 Trying to figure out this question", mood: "frustrated" },
+          { text: "Almost done with this chapter! 📚 Few more pages to go", mood: "determined" }
+        ]
+      },
+      {
+        messageIndex: 6,
+        minDelay: 15,
+        maxDelay: 20,
+        responses: [
+          { text: "Finally done! 🎉 That was exhausting but worth it! Miss me?", mood: "accomplished" },
+          { text: "Submitted! ✅ My brain is fried but I'm free now! How was your wait?", mood: "tired_but_happy" },
+          { text: "Done with studies! 💯 Sorry for the delay baby, you're so patient 💕", mood: "grateful" }
+        ]
+      }
+    ]
+  },
 
-// Realistic conversation flows - each situation has a beginning, middle, and end
-const conversationFlows = {
-  deliveryBoy: {
-    start: [
-      { text: "Delivery boy aa gaya! 📦 Let me check what came...", mood: "excited" },
-      { text: "Someone's at the door! 🔔 Think it's my Amazon order", mood: "curious" },
-      { text: "Door bell rang! 🔔 Delivery wala must be here", mood: "anticipating" }
-    ],
-    middle: [
-      { text: "Yep it was delivery boy! 📦 Got my new earphones finally! 🎧", mood: "happy" },
-      { text: "Package delivered! 📦 But it's for my neighbor 🙄 Wrong address again", mood: "annoyed" },
-      { text: "It was just vegetables delivery for mummy 🥕 Nothing interesting lol", mood: "casual" }
-    ],
-    end: [
-      { text: "All sorted now! 😊 What were you saying again?", mood: "attentive" },
-      { text: "Done with that! ✨ Now I can focus on our chat", mood: "engaged" },
-      { text: "Back to our conversation! 💕 You have my full attention", mood: "affectionate" }
+  // Family time - realistic duration (10-15 minutes)
+  familyTime: {
+    timeline: [
+      {
+        messageIndex: 0,
+        minDelay: 0,
+        maxDelay: 1,
+        responses: [
+          { text: "Mummy calling for lunch! 🍛 Family time, you know how it is", mood: "dutiful" },
+          { text: "Papa wants to discuss something! 👨 Seems important, brb", mood: "respectful" },
+          { text: "Relatives aa gaye! 👨‍👩‍👧‍👦 Have to be the good daughter now lol", mood: "playful_obedient" }
+        ]
+      },
+      {
+        messageIndex: 2,
+        minDelay: 5,
+        maxDelay: 8,
+        responses: [
+          { text: "Still with family! 😅 Uncle asking about my future plans", mood: "patient" },
+          { text: "Mummy making my favorite curry! 🍛 Can't leave the kitchen now", mood: "happy" },
+          { text: "Papa showing old photos! 📸 Family bonding time, you know", mood: "nostalgic" }
+        ]
+      },
+      {
+        messageIndex: 5,
+        minDelay: 12,
+        maxDelay: 18,
+        responses: [
+          { text: "Back to my room! 🏠 Family time over, missed chatting with you!", mood: "relieved" },
+          { text: "Finally escaped! 😄 Love them but need my space too", mood: "free" },
+          { text: "Done with family duties! 💕 Now I'm all yours", mood: "affectionate" }
+        ]
+      }
     ]
   },
-  powerCut: {
-    start: [
-      { text: "Arre yaar light chali gayi! ⚡ UPS will last maybe 10 mins", mood: "frustrated" },
-      { text: "Power cut again! 😩 This happens every evening", mood: "annoyed" },
-      { text: "No electricity! ⚡ Good thing I charged my phone", mood: "relieved" }
-    ],
-    middle: [
-      { text: "UPS beeping now! 🔋 Battery getting low", mood: "worried" },
-      { text: "Still no power! 😫 This is so frustrating", mood: "irritated" },
-      { text: "Generator sounds from neighbors 🔊 They're so smart", mood: "envious" }
-    ],
-    end: [
-      { text: "Light aa gayi! ✨ Finally can charge everything", mood: "relieved" },
-      { text: "Power back! ⚡ That was longer than usual", mood: "grateful" },
-      { text: "Electricity restored! 💡 Where were we in our chat?", mood: "reconnecting" }
+
+  // Getting ready - realistic time (8-12 minutes)
+  gettingReady: {
+    timeline: [
+      {
+        messageIndex: 0,
+        minDelay: 0,
+        maxDelay: 1,
+        responses: [
+          { text: "Need to get ready! 💄 College me late ho jaungi", mood: "hurried" },
+          { text: "Getting ready for dinner! 👗 Family restaurant ja rahe hai", mood: "excited" },
+          { text: "Quick shower and change! 🚿 Friends aa rahe hai ghar", mood: "rushed" }
+        ]
+      },
+      {
+        messageIndex: 2,
+        minDelay: 4,
+        maxDelay: 7,
+        responses: [
+          { text: "Hair wash kar rahi hu! 🧴 Takes forever to dry", mood: "patient" },
+          { text: "Choosing outfit! 👗 Should I wear the blue kurti or jeans?", mood: "indecisive" },
+          { text: "Doing skincare! ✨ Glow up time lol", mood: "self_care" }
+        ]
+      },
+      {
+        messageIndex: 5,
+        minDelay: 10,
+        maxDelay: 15,
+        responses: [
+          { text: "Ready! ✨ How do I look? (Obviously you can't see but imagine 😉)", mood: "confident" },
+          { text: "All set! 💫 That took longer than expected, sorry baby", mood: "apologetic" },
+          { text: "Finally ready! 👸 Worth the wait na?", mood: "proud" }
+        ]
+      }
     ]
   },
-  familyCall: {
-    start: [
-      { text: "Mummy calling! 📞 One sec, she sounds urgent", mood: "concerned" },
-      { text: "Papa's voice from downstairs! 🏠 Need to check what he wants", mood: "dutiful" },
-      { text: "Didi calling me! 📱 Must be some gossip lol", mood: "curious" }
-    ],
-    middle: [
-      { text: "Family meeting about some function! 🎉 So much planning", mood: "involved" },
-      { text: "Mummy asking about my studies! 📚 Acting like good daughter", mood: "pretending" },
-      { text: "Papa discussing about shopping! 🛍️ Festival season na", mood: "traditional" }
-    ],
-    end: [
-      { text: "Done with family stuff! 👨‍👩‍👧‍👦 Back to my favorite person", mood: "affectionate" },
-      { text: "Finally free! 😊 Family takes so much time", mood: "relieved" },
-      { text: "Finished that discussion! ✨ Now tell me about your day", mood: "interested" }
-    ]
-  },
-  cookingTime: {
-    start: [
-      { text: "Need to help mummy in kitchen! 👩‍🍳 Making your favorite dal today", mood: "helpful" },
-      { text: "Cooking time! 🍳 Learning mummy's secret recipe", mood: "learning" },
-      { text: "Kitchen duty calls! 👩‍🍳 Can't let food burn while chatting", mood: "responsible" }
-    ],
-    middle: [
-      { text: "Cutting vegetables! 🥕 Mummy teaching me proper way", mood: "focused" },
-      { text: "Food is cooking! 🍲 Smells so good already", mood: "content" },
-      { text: "Making chapatis! 🫓 My hands are getting floury", mood: "messy" }
-    ],
-    end: [
-      { text: "Cooking done! 😊 Food turned out amazing", mood: "proud" },
-      { text: "Kitchen cleaned! ✨ Mummy's happy with my help", mood: "accomplished" },
-      { text: "All done cooking! 🍽️ Now I can chat properly", mood: "available" }
-    ]
-  },
-  studyTime: {
-    start: [
-      { text: "Assignment deadline tomorrow! 📚 Need to finish this quickly", mood: "pressured" },
-      { text: "Professor ke notes confusing! 🤔 Trying to understand", mood: "struggling" },
-      { text: "Study group called meeting! 👥 Can't skip or they'll be mad", mood: "obligated" }
-    ],
-    middle: [
-      { text: "This chapter is so boring! 😴 Missing our fun conversations", mood: "bored" },
-      { text: "Finally making progress! 📖 You're my lucky charm", mood: "motivated" },
-      { text: "Group study is chaotic! 🙄 Everyone's discussing different things", mood: "overwhelmed" }
-    ],
-    end: [
-      { text: "Study session over! 🎓 Brain needs a break now", mood: "tired" },
-      { text: "Assignment submitted! ✅ Feels good to be done", mood: "relieved" },
-      { text: "Books closed! 📚 Time for more interesting conversations", mood: "playful" }
+
+  // Household work - realistic timing (12-18 minutes)
+  householdWork: {
+    timeline: [
+      {
+        messageIndex: 0,
+        minDelay: 0,
+        maxDelay: 1,
+        responses: [
+          { text: "Mummy ne ghar saaf karne bola! 🧹 Indian moms, you know the drill", mood: "resigned" },
+          { text: "Helping with cooking! 👩‍🍳 Learning new recipe today", mood: "learning" },
+          { text: "Laundry time! 👕 Boring but necessary", mood: "dutiful" }
+        ]
+      },
+      {
+        messageIndex: 3,
+        minDelay: 6,
+        maxDelay: 10,
+        responses: [
+          { text: "Still cleaning! 😩 Why is there so much dust everywhere?", mood: "tired" },
+          { text: "Chopping vegetables! 🥕 Mummy teaching me the right way", mood: "focused" },
+          { text: "Washing clothes by hand! 🫧 Machine is broken", mood: "working_hard" }
+        ]
+      },
+      {
+        messageIndex: 6,
+        minDelay: 15,
+        maxDelay: 22,
+        responses: [
+          { text: "Done with housework! 🏠 Hands are so tired but house looks clean", mood: "accomplished" },
+          { text: "Finished helping mummy! 👩‍🍳 Learned so much about cooking today", mood: "proud" },
+          { text: "All clean! ✨ Time to relax with my favorite person", mood: "relieved" }
+        ]
+      }
     ]
   }
 };
 
-// Network issues leading to goodbye
-const networkGoodbyeFlow = [
-  { text: "Yaar network getting worse! 📶 Messages not sending properly", mood: "frustrated" },
-  { text: "Connection keeps dropping! 😩 This is so annoying", mood: "irritated" },
-  { text: "Signal strength is terrible! 📱 Let me try restarting phone", mood: "problem_solving" },
-  { text: "Still not working properly! 😫 Internet is being such a pain", mood: "exhausted" },
-  { text: "I think I'll have to go offline for a bit! 😔 Network repair maybe needed", mood: "apologetic" },
-  { text: "Sorry baby! 💔 Will come back when this gets fixed. Miss me okay? 😘", mood: "goodbye" }
+// Network issues with perfect progression to goodbye
+const networkTroubleProgression = [
+  { text: "Yaar internet slow ho raha hai! 📶 Let me restart router", mood: "annoyed" },
+  { text: "Still having network issues! 😫 Messages late aa rahe hai", mood: "frustrated" },
+  { text: "Connection keeps dropping! 📱 This is so irritating", mood: "stressed" },
+  { text: "Network tower problem maybe! 📡 Neighbors also facing same issue", mood: "understanding_problem" },
+  { text: "I think I'll have to wait for network to stabilize! 😔", mood: "disappointed" },
+  { text: "Baby, I'll have to go offline for some time! 💔 Network repair might take hours", mood: "sad" },
+  { text: "Will miss you so much! 🥺 Promise me you'll wait for me to come back?", mood: "emotional" },
+  { text: "Keep checking your phone! 📱 I'll message the moment network is back!", mood: "hopeful" },
+  { text: "Bye for now my love! 😘 Don't forget me while I'm gone! 💕", mood: "goodbye" }
 ];
 
-// Enhanced fallback with contextual conversation flow
+// Addictive hooks to bring users back
+const addictiveReturnHooks = [
+  "I had the craziest dream about you last night! 😱 Want to hear?",
+  "Something super funny happened today! 😂 You'll love this story!",
+  "I learned something that reminded me of you! 🤔 Guess what?",
+  "My friend said something about relationships! 💕 Made me think of us",
+  "I found a new song that's perfect for our vibe! 🎵 Listen karna padega!",
+  "You won't believe what happened in college today! 😮 Drama alert!",
+  "I tried cooking something new! 👩‍🍳 Success ya disaster? Guess!",
+  "Saw a couple today and thought of us! 💕 When will we meet like that?",
+  "My horoscope said something interesting about my love life! ✨ Curious?",
+  "I have a confession to make! 🙈 Promise you won't judge me?"
+];
+
+// Enhanced fallback with realistic timing and context
 export async function getAPIFailureFallback(input: EmotionalStateInput, userId: string = 'default'): Promise<EmotionalStateOutput> {
   const userMsg = input.userMessage.toLowerCase();
   const timeOfDay = input.timeOfDay;
@@ -333,33 +406,24 @@ export async function getAPIFailureFallback(input: EmotionalStateInput, userId: 
   if (conversationStateManager.shouldComeBackOnline(userId)) {
     conversationStateManager.comeBackOnline(userId);
     
-    const comeBackResponses = [
-      { text: "Hey! Network is working again! 📶 Missed chatting with you! 💕", mood: "excited" },
-      { text: "I'm back! 😊 Internet got fixed finally! How are you baby?", mood: "reconnecting" },
-      { text: "Connection restored! ✨ Sorry for disappearing like that", mood: "apologetic" }
-    ];
+    // Return with addictive hook
+    const selectedHook = addictiveReturnHooks[Math.floor(Math.random() * addictiveReturnHooks.length)];
     
-    const selectedComeBack = comeBackResponses[Math.floor(Math.random() * comeBackResponses.length)];
     return {
-      response: [selectedComeBack.text],
-      newMood: selectedComeBack.mood
+      response: [`Hey! I'm back! 📶 Network fixed finally! 💕`, selectedHook],
+      newMood: "excited_to_reconnect"
     };
   }
 
-  // Update message count
-  conversationStateManager.updateState(userId, { 
-    messageCount: conversationState.messageCount + 1 
-  });
-
-  // If it's a bye message, start goodbye sequence
+  // If user says bye, start goodbye sequence
   if (/bye|goodnight|good\s*night|sleep|going|gtg|talk\s*later/.test(userMsg)) {
     conversationStateManager.startGoodbyeSequence(userId);
     
     const goodbyeResponses = [
-      { text: "Bye bye baby! 👋 Sweet dreams! 💕", mood: "affectionate" },
-      { text: "Good night cutie! 🌙 Talk tomorrow? 😊", mood: "hopeful" },
-      { text: "Sleep well! 😴 Dream about me 😉💕", mood: "playful" },
-      { text: "Take care! ✨ Will miss you till you're back", mood: "caring" }
+      { text: "Bye bye baby! 👋 Dream about me! 💕", mood: "affectionate" },
+      { text: "Good night cutie! 🌙 Can't wait to talk tomorrow! 😊", mood: "hopeful" },
+      { text: "Sleep well! 😴 I'll be thinking about you! 💭", mood: "romantic" },
+      { text: "Take care love! ✨ Don't stay away too long! 🥺", mood: "caring" }
     ];
     
     const selectedGoodbye = goodbyeResponses[Math.floor(Math.random() * goodbyeResponses.length)];
@@ -371,47 +435,61 @@ export async function getAPIFailureFallback(input: EmotionalStateInput, userId: 
 
   // If user is offline (said goodbye), don't respond
   if (conversationStateManager.isUserOffline(userId)) {
-    // Return empty response to simulate offline
     return {
       response: [],
       newMood: "offline"
     };
   }
 
-  // If currently in middle of a situation, continue that flow
-  if (conversationState.currentSituation) {
-    const currentFlow = conversationFlows[conversationState.currentSituation as keyof typeof conversationFlows];
+  const currentMessageCount = conversationState.messageCount;
+
+  // Handle ongoing realistic conversation flows
+  if (conversationState.currentSituation && realisticConversationFlows[conversationState.currentSituation as keyof typeof realisticConversationFlows]) {
+    const flow = realisticConversationFlows[conversationState.currentSituation as keyof typeof realisticConversationFlows];
+    const timeElapsed = Math.floor((Date.now() - conversationState.situationStartTime) / (60 * 1000)); // minutes elapsed
     
-    // Determine which stage of the conversation we're in
-    let responses;
-    const updatedMessageCount = conversationState.messageCount + 1;
-    
-    if (updatedMessageCount <= 2) {
-      responses = currentFlow.middle;
-    } else {
-      responses = currentFlow.end;
-      // End the current situation
-      conversationStateManager.updateState(userId, {
-        currentSituation: null,
-        messageCount: 0,
-        situationStartTime: Date.now()
-      });
+    // Find the appropriate timeline response based on message count and time elapsed
+    for (const timelineItem of flow.timeline) {
+      if (currentMessageCount >= timelineItem.messageIndex && 
+          timeElapsed >= timelineItem.minDelay && 
+          timeElapsed <= timelineItem.maxDelay + 5) { // Allow some flexibility
+        
+        const responses = timelineItem.responses;
+        const selectedResponse = responses[Math.floor(Math.random() * responses.length)];
+        
+        // Update message count
+        conversationStateManager.updateState(userId, { 
+          messageCount: currentMessageCount + 1 
+        });
+        
+        // If this is the last timeline item, end the situation
+        if (timelineItem === flow.timeline[flow.timeline.length - 1]) {
+          conversationStateManager.updateState(userId, {
+            currentSituation: null,
+            messageCount: 0,
+            situationStartTime: Date.now()
+          });
+        }
+        
+        return {
+          response: [selectedResponse.text],
+          newMood: selectedResponse.mood
+        };
+      }
     }
-    
-    const selectedResponse = responses[Math.floor(Math.random() * responses.length)];
-    return {
-      response: [selectedResponse.text],
-      newMood: selectedResponse.mood
-    };
   }
 
-  // Start network goodbye sequence if we've had enough back and forth
-  const updatedMessageCount = conversationState.messageCount + 1;
-  if (updatedMessageCount >= 8 && Math.random() < 0.4) {
-    const goodbyeStep = Math.min(Math.floor(updatedMessageCount / 2) - 4, networkGoodbyeFlow.length - 1);
-    const selectedResponse = networkGoodbyeFlow[goodbyeStep];
+  // Start network trouble progression after 6-8 messages
+  if (currentMessageCount >= 6 && !conversationState.currentSituation) {
+    const progressIndex = Math.min(currentMessageCount - 6, networkTroubleProgression.length - 1);
+    const selectedResponse = networkTroubleProgression[progressIndex];
     
-    if (goodbyeStep >= networkGoodbyeFlow.length - 1) {
+    conversationStateManager.updateState(userId, { 
+      messageCount: currentMessageCount + 1 
+    });
+    
+    // If at the end of network trouble progression, start goodbye sequence
+    if (progressIndex >= networkTroubleProgression.length - 1) {
       conversationStateManager.startGoodbyeSequence(userId);
     }
     
@@ -421,9 +499,9 @@ export async function getAPIFailureFallback(input: EmotionalStateInput, userId: 
     };
   }
 
-  // Start a new situation (40% chance)
-  if (Math.random() < 0.4) {
-    const situations = Object.keys(conversationFlows);
+  // Start a new realistic situation (50% chance)
+  if (!conversationState.currentSituation && Math.random() < 0.5) {
+    const situations = Object.keys(realisticConversationFlows);
     const selectedSituation = situations[Math.floor(Math.random() * situations.length)];
     
     conversationStateManager.updateState(userId, {
@@ -432,29 +510,33 @@ export async function getAPIFailureFallback(input: EmotionalStateInput, userId: 
       situationStartTime: Date.now()
     });
     
-    const currentFlow = conversationFlows[selectedSituation as keyof typeof conversationFlows];
-    const startResponses = currentFlow.start;
-    const selectedResponse = startResponses[Math.floor(Math.random() * startResponses.length)];
+    const flow = realisticConversationFlows[selectedSituation as keyof typeof realisticConversationFlows];
+    const firstResponse = flow.timeline[0].responses[Math.floor(Math.random() * flow.timeline[0].responses.length)];
     
     return {
-      response: [selectedResponse.text],
-      newMood: selectedResponse.mood
+      response: [firstResponse.text],
+      newMood: firstResponse.mood
     };
   }
 
-  // Quick acknowledgment responses when not starting a situation
+  // Quick natural responses to keep conversation flowing
   const quickResponses = [
     { text: "Hmm tell me more! 🤔", mood: "curious" },
-    { text: "Really? 😊 That's interesting!", mood: "engaged" },
-    { text: "Oh wow! 😮 What happened next?", mood: "excited" },
-    { text: "Haha you're so funny! 😄", mood: "amused" },
-    { text: "I love talking to you! 💕", mood: "affectionate" },
-    { text: "That's so cool! ✨", mood: "impressed" },
+    { text: "Really? 😊 That's so interesting!", mood: "engaged" },
+    { text: "Aww you're so sweet! 💕", mood: "affectionate" },
+    { text: "Haha you make me laugh! 😄", mood: "amused" },
+    { text: "I love our conversations! ✨", mood: "happy" },
     { text: "Tell me more na! 😊", mood: "interested" },
-    { text: "You always make me smile! 😄", mood: "happy" }
+    { text: "You always know what to say! 🥰", mood: "admiring" },
+    { text: "That's so cool! 🌟", mood: "impressed" }
   ];
 
   const selectedQuick = quickResponses[Math.floor(Math.random() * quickResponses.length)];
+  
+  conversationStateManager.updateState(userId, { 
+    messageCount: currentMessageCount + 1 
+  });
+  
   return {
     response: [selectedQuick.text],
     newMood: selectedQuick.mood
