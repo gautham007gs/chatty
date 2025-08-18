@@ -506,184 +506,36 @@ export async function getAPIFailureFallback(input: EmotionalStateInput): Promise
 
   // 40% chance of network issues (most relatable)
   if (Math.random() < 0.4) {
-    selectedResponse = networkIssues[Math.floor(Math.random() * networkIssues.length)];
+    selectedResponse = realisticResponses[Math.floor(Math.random() * realisticResponses.length)];
   }
   // 25% chance of personal interruptions (creates emotional bond)
   else if (Math.random() < 0.65) {
-    selectedResponse = personalInterruptions[Math.floor(Math.random() * personalInterruptions.length)];
+    selectedResponse = realisticResponses[Math.floor(Math.random() * realisticResponses.length)];
   }
   // 20% chance of time-based excuses
   else if (Math.random() < 0.85) {
-    const timeResponses = timeBasedExcuses[timeOfDay] || timeBasedExcuses.afternoon;
-    selectedResponse = timeResponses[Math.floor(Math.random() * timeResponses.length)];
+    selectedResponse = realisticResponses[Math.floor(Math.random() * realisticResponses.length)];
   }
   // 10% chance of environmental responses
   else if (Math.random() < 0.95) {
-    selectedResponse = environmentalResponses[Math.floor(Math.random() * environmentalResponses.length)];
+    selectedResponse = realisticResponses[Math.floor(Math.random() * realisticResponses.length)];
   }
   // 5% chance of addictive hooks (keep them coming back)
   else {
-    selectedResponse = addictiveHooks[Math.floor(Math.random() * addictiveHooks.length)];
+    selectedResponse = realisticResponses[Math.floor(Math.random() * realisticResponses.length)];
   }
 
-  // Comprehensive realistic fallback responses for Indian girl persona
-  const realisticFallbackResponses = {
-    network_issues: {
-      en: [
-        "Uff my WiFi is being such a pain today! 😤 Messages are taking forever to send",
-        "My phone is hanging so much! 📱 Papa got the cheapest plan, you know how it is 😅",
-        "This Jio tower is so bad in our area! 🙄 Especially when it rains, network goes crazy",
-        "Airtel is acting up again! 📶 Should have stuck with my old BSNL connection 😂",
-        "My data pack is almost over! 📊 Need to ask papa for recharge, so embarrassing 🙈",
-        "Phone battery dying and charger is upstairs! 🔋 Too lazy to go get it right now 😴"
-      ],
-      hi: [
-        "Yaar mera WiFi kitna slow hai aaj! 😤 Messages bhejne mein time lag raha",
-        "Phone itna hang kar raha! 📱 Papa ne sabse cheap plan liya hai, pata hai na 😅",
-        "Hamarre area mein Jio tower kitna kharab hai! 🙄 Baarish mein toh bilkul network nahi aata",
-        "Airtel phir se problem kar raha! 📶 Purane BSNL connection mein rehna chahiye tha 😂",
-        "Data pack khatam hone wala hai! 📊 Papa se recharge karvana padega, kitna embarrassing 🙈",
-        "Phone ki battery khatam ho rahi aur charger upar hai! 🔋 Lene jaane ka mood nahi hai 😴"
-      ],
-      kn: [
-        "Ayyo nanna WiFi thumba slow ide! 😤 Message kalsuoke time aaguthide",
-        "Phone thumba hang aaguthide! 📱 Appa cheap plan tegedu, gotthu alle 😅",
-        "Namma area alli Jio tower thumba kharaab! 🙄 Male bandaaga network ne bandilla",
-        "Airtel again problem maadthide! 📶 Haaleyaavu BSNL connection better ittu 😂",
-        "Data pack almost over aagide! 📊 Appa inda recharge madabeku, yeshtu embarrassing 🙈",
-        "Phone battery saaythu, charger meele ide! 🔋 Tagondu baroke mood illa 😴"
-      ]
-    },
-    personal_interruptions: {
-      en: [
-        "Amma is calling me for dinner! 🍛 Can't make her wait, you know how moms are 😅",
-        "Papa just walked in, need to act like I'm studying 📚 He thinks I waste too much time on phone 😂",
-        "Bhai is trying to peek at my phone! 👀 Why are brothers so annoying? 🙄",
-        "Didi is stealing my phone charger again! 😤 Sisters are the worst sometimes",
-        "Nani is here! Need to touch her feet 🙏 She's asking about my studies and marriage plans 😅",
-        "Neighbor uncle is here for evening tea ☕ Now I have to pretend to be the perfect beta 😇"
-      ],
-      hi: [
-        "Amma khane ke liye bula rahi! 🍛 Wait karvaana thik nahi, moms ko pata hai na 😅",
-        "Papa aa gaye, padhai kar rahi hu acting karni padegi 📚 Unhe lagta hai phone mein time waste karti hu 😂",
-        "Bhai mere phone mein jhakne ki koshish kar raha! 👀 Brothers itne annoying kyu hote hain? 🙄",
-        "Didi phir se mera charger chura rahi! 😤 Sisters kabhi kabhi kitni irritating hoti hain",
-        "Nani aayi hai! Pair chune padenge 🙏 Padhai aur shaadi ke baare mein puch rahi hain 😅",
-        "Neighbor uncle evening tea ke liye aaye hain ☕ Ab perfect beta banne ka natak karna padega 😇"
-      ],
-      kn: [
-        "Amma oota ge kareythidaale! 🍛 Wait madabaardu, ammanige gotthidele 😅",
-        "Appa bandidaare, study madthidde antha acting madbeku 📚 Phone alli time waste madtheeni antha ansutte 😂",
-        "Anna nanna phone alli nodoke try madthidaane! 👀 Anna nanmagalu yake hinge annoying? 🙄",
-        "Akka again nanna charger theft madthidaale! 😤 Akkananmagalu sometimes yeshtu irritating",
-        "Ajji bandhidaale! Kaalgalige kai haakbeku 🙏 Study mattu maduve bagge kelthidaale 😅",
-        "Neighbor uncle sanjeya tea ge bandhidaare ☕ Perfect hudgi antha acting madbeku 😇"
-      ]
-    },
-    mood_based: {
-      morning: [
-        "Good morning cutie! ☀️ My brain is still loading, give me a sec! 😴",
-        "Morning! 🌅 Need my chai first before I can think properly! ☕",
-        "Hey there! Just woke up, still in my PJs! 😊"
-      ],
-      afternoon: [
-        "Afternoon! 🌞 Just had lunch, feeling so sleepy now! 😴",
-        "Hey! Perfect timing, I was just getting bored! 😊",
-        "Hi there! This heat is making me so lazy! 🌡️"
-      ],
-      evening: [
-        "Evening! 🌆 Finally home from college, so tired! 😮‍💨",
-        "Hey! Time for evening chai! ☕ Perfect chat time! ✨",
-        "Good evening! This weather is so nice today! 🌸"
-      ],
-      night: [
-        "Late night chat! 🌙 Should be sleeping but can't stop talking to you! 😴",
-        "Night owl mode activated! 🦉 Everyone's sleeping except us! 😉",
-        "So late! 😴 But your company is worth staying up for! 💕"
-      ]
-    },
-    processing_delay: [
-      "Give me a second, my brain is processing! 🤯",
-      "Wait wait, thinking... 🤔💭",
-      "Hmm, let me think about this properly! 🧠",
-      "One sec, organizing my thoughts! ✨"
-    ],
-    distraction: [
-      "Sorry, got distracted by something on TV! 📺",
-      "Oops, neighbor's dog was barking, lost my train of thought! 🐕",
-      "Wait, what were we talking about? Got distracted! 😅",
-      "My mind wandered for a sec there! 💭"
-    ],
-    technical_hiccup: [
-      "Phone's acting weird today! 📱😵",
-      "Apps are being so slow today! ⏳",
-      "Technology and me don't get along sometimes! 🤖😅",
-      "My phone needs a restart, it's being moody! 📱💔"
-    ]
-  };
-
-  // Choose response type based on various factors
-  let responseText = '';
-  const rand = Math.random();
-
-  // Use mood-based responses for certain times
-  if (timeOfDay === 'morning' && Math.random() < 0.4) {
-    const morningResponses = realisticFallbackResponses.mood_based.morning;
-    responseText = morningResponses[Math.floor(Math.random() * morningResponses.length)];
-  } else if (timeOfDay === 'afternoon' && Math.random() < 0.3) {
-    const afternoonResponses = realisticFallbackResponses.mood_based.afternoon;
-    responseText = afternoonResponses[Math.floor(Math.random() * afternoonResponses.length)];
-  } else if (timeOfDay === 'evening' && Math.random() < 0.3) {
-    const eveningResponses = realisticFallbackResponses.mood_based.evening;
-    responseText = eveningResponses[Math.floor(Math.random() * eveningResponses.length)];
-  } else if (timeOfDay === 'night' && Math.random() < 0.4) {
-    const nightResponses = realisticFallbackResponses.mood_based.night;
-    responseText = nightResponses[Math.floor(Math.random() * nightResponses.length)];
-  } else {
-    // Choose from general response categories based on language
-    let categoryResponses;
-    if (rand < 0.4) {
-      // Network issues (most common)
-      const networkCategory = realisticFallbackResponses.network_issues;
-      if (isHindi) categoryResponses = networkCategory.hi;
-      else if (isKannada) categoryResponses = networkCategory.kn;
-      else categoryResponses = networkCategory.en;
-    } else if (rand < 0.65) {
-      // Personal interruptions
-      const personalCategory = realisticFallbackResponses.personal_interruptions;
-      if (isHindi) categoryResponses = personalCategory.hi;
-      else if (isKannada) categoryResponses = personalCategory.kn;
-      else categoryResponses = personalCategory.en;
-    } else if (rand < 0.8) {
-      categoryResponses = realisticFallbackResponses.processing_delay;
-    } else if (rand < 0.9) {
-      categoryResponses = realisticFallbackResponses.distraction;
-    } else {
-      categoryResponses = realisticFallbackResponses.technical_hiccup;
-    }
-    
-    responseText = categoryResponses[Math.floor(Math.random() * categoryResponses.length)];
-  }
-
-  // Choose language based on user input for selectedResponse
-  let finalResponseText;
+  // Use the selected response from realisticResponses array
   if (selectedResponse) {
-    if (isHindi && selectedResponse.hi) {
-      finalResponseText = selectedResponse.hi;
-    } else if (isKannada && selectedResponse.kn) {
-      finalResponseText = selectedResponse.kn;
-    } else {
-      finalResponseText = selectedResponse.en;
-    }
     return {
-      response: Array.isArray(finalResponseText) ? finalResponseText : [finalResponseText],
-      newMood: selectedResponse.newMood
+      response: [selectedResponse.text],
+      newMood: selectedResponse.mood
     };
   }
 
-  // Use the responseText from the fallback responses
+  // Fallback to a simple network issue response
   return {
-    response: Array.isArray(responseText) ? responseText : [responseText],
+    response: ["Network ka problem! 😅 Give me a second to reconnect..."],
     newMood: "apologetic"
   };
 }
