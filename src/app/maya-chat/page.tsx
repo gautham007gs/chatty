@@ -481,7 +481,7 @@ const KruthikaChatPage: NextPage = () => {
 
     if (currentImageUri) {
         const todayStr = new Date().toDateString();
-        const lastUploadDate = localStorage.getItem(USER_IMAGE_UPLOAD_LAST_DATE_KEY_KRUTHIKA);
+        const lastUploadDate = localStorage.getItem(USER_IMAGE_UPLOAD_LAST_DATE_KRUTHIKA);
         let currentUploadCount = parseInt(localStorage.getItem(USER_IMAGE_UPLOAD_COUNT_KEY_KRUTHIKA) || '0', 10);
 
         if (lastUploadDate !== todayStr) {
@@ -682,14 +682,14 @@ const KruthikaChatPage: NextPage = () => {
       if (imageAttemptedAndAllowed && currentImageUri) {
           const todayStr = new Date().toDateString();
           let currentUploadCount = parseInt(localStorage.getItem(USER_IMAGE_UPLOAD_COUNT_KEY_KRUTHIKA) || '0', 10);
-          const lastUploadDate = localStorage.getItem(USER_IMAGE_UPLOAD_LAST_DATE_KEY_KRUTHIKA);
+          const lastUploadDate = localStorage.getItem(USER_IMAGE_UPLOAD_LAST_DATE_KRUTHIKA);
 
           if (lastUploadDate !== todayStr) {
               currentUploadCount = 0;
           }
           currentUploadCount++;
           localStorage.setItem(USER_IMAGE_UPLOAD_COUNT_KEY_KRUTHIKA, currentUploadCount.toString());
-          localStorage.setItem(USER_IMAGE_UPLOAD_LAST_DATE_KEY_KRUTHIKA, todayStr);
+          localStorage.setItem(USER_IMAGE_UPLOAD_LAST_DATE_KRUTHIKA, todayStr);
       }
 
 

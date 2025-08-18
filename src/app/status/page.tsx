@@ -312,12 +312,14 @@ const StatusPage: React.FC = () => {
 
       </div>
 
-      {/* Ad Space - Bottom of Status */}
-      <BannerAdDisplay
-        adType="standard"
-        placementKey="status-bottom"
-        className="mx-2 mb-2"
-      />
+        {/* Bottom Banner Ad */}
+        <div className="mt-auto">
+          <BannerAdDisplay
+            adType="standard"
+            placementKey="status-footer"
+            className="w-full"
+          />
+        </div>
 
       <div className="p-4 border-t border-border flex justify-end">
         <Button variant="default" size="lg" className="rounded-full p-4 shadow-lg" onClick={() => alert("Camera access for status - not implemented")}>
@@ -327,5 +329,4 @@ const StatusPage: React.FC = () => {
     </div>
     </>
   );
-};
-export default StatusPage;
+}
