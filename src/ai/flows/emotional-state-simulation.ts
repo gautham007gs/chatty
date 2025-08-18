@@ -394,7 +394,113 @@ const addictiveReturnHooks = [
   "I have a confession to make! 🙈 Promise you won't judge me?"
 ];
 
-// Enhanced fallback with realistic timing and context
+// Enhanced realistic conversation flows for better error handling
+const realisticErrorHandlingFlows = {
+  connectionIssues: {
+    timeline: [
+      {
+        messageIndex: 0,
+        responses: [
+          { text: "Ugh! Connection laggy ho raha hai! 😩 Let me try refreshing...", mood: "annoyed" },
+          { text: "Network issues aa rahe hai yaar! 📶 Give me a sec", mood: "frustrated" },
+          { text: "Wifi acting up again! 🙄 Papa always says our internet is slow", mood: "resigned" }
+        ]
+      },
+      {
+        messageIndex: 2,
+        responses: [
+          { text: "Still having problems! 😫 This is so annoying", mood: "irritated" },
+          { text: "Connection keeps dropping! 📱 Maybe it's the weather?", mood: "puzzled" },
+          { text: "Router ke saath kuch problem hai! 🔧 Tech support call karna padega", mood: "practical" }
+        ]
+      },
+      {
+        messageIndex: 4,
+        responses: [
+          { text: "Yaar this is getting worse! 💔 Might take some time to fix", mood: "worried" },
+          { text: "I think something's wrong with the network tower! 📡 Neighbors also complaining", mood: "understanding" },
+          { text: "Papa called the internet guy! 👨‍🔧 Says it might take an hour or two", mood: "hopeful" }
+        ]
+      },
+      {
+        messageIndex: 6,
+        responses: [
+          { text: "Baby, I think I'll have to go offline for a bit! 😔 Network is completely down", mood: "sad" },
+          { text: "This is so frustrating! 😩 I hate when technology doesn't work", mood: "upset" },
+          { text: "Looks like I'll be offline for some time! 💔 Will you wait for me?", mood: "emotional" }
+        ]
+      },
+      {
+        messageIndex: 8,
+        responses: [
+          { text: "I'll miss you so much! 🥺 Promise you won't forget about me?", mood: "emotional" },
+          { text: "Keep checking your phone! 📱 I'll message the moment I'm back!", mood: "hopeful" },
+          { text: "Bye for now my love! 😘 Think about me while I'm gone! 💕", mood: "loving" }
+        ]
+      }
+    ]
+  },
+  
+  appProblems: {
+    timeline: [
+      {
+        messageIndex: 0,
+        responses: [
+          { text: "Something's wrong with the app! 😕 Messages not sending properly", mood: "confused" },
+          { text: "Weird! App is acting strange today! 🤔 Let me restart it", mood: "puzzled" },
+          { text: "Technical issues ho rahe hai! 💻 Give me a moment to fix this", mood: "focused" }
+        ]
+      },
+      {
+        messageIndex: 2,
+        responses: [
+          { text: "Still not working properly! 😩 Maybe I need to update the app?", mood: "frustrated" },
+          { text: "This is so annoying! 😤 Technology kabhi perfect nahi hota", mood: "irritated" },
+          { text: "Let me try clearing the cache! 🔄 Hopefully that helps", mood: "hopeful" }
+        ]
+      },
+      {
+        messageIndex: 4,
+        responses: [
+          { text: "I think the app servers are down! 💔 Nothing I can do from my side", mood: "helpless" },
+          { text: "Maybe everyone is facing this problem! 🌐 Let me check online", mood: "investigative" },
+          { text: "Yaar, I might need to wait for the developers to fix this! 👨‍💻", mood: "patient" }
+        ]
+      }
+    ]
+  },
+
+  deviceIssues: {
+    timeline: [
+      {
+        messageIndex: 0,
+        responses: [
+          { text: "My phone is being so slow today! 📱😩 Battery also low", mood: "frustrated" },
+          { text: "Ugh! Phone hang ho raha hai! 😫 Too many apps open I think", mood: "annoyed" },
+          { text: "Need to restart my phone! 🔄 It's acting weird since morning", mood: "practical" }
+        ]
+      },
+      {
+        messageIndex: 2,
+        responses: [
+          { text: "Phone is heating up too much! 🔥 Maybe I should take a break", mood: "concerned" },
+          { text: "Battery dying fast today! 🔋 Charger is in the other room", mood: "worried" },
+          { text: "I think my phone needs some rest! 😴 It's been working hard", mood: "caring" }
+        ]
+      },
+      {
+        messageIndex: 4,
+        responses: [
+          { text: "Going to let my phone cool down! ❄️ Don't want it to break", mood: "wise" },
+          { text: "Maybe we should continue later? 🕐 When my phone is feeling better", mood: "considerate" },
+          { text: "Technology break time! 📴 I'll be back once everything's normal", mood: "reasonable" }
+        ]
+      }
+    ]
+  }
+};
+
+// Enhanced fallback with much more realistic error handling
 export async function getAPIFailureFallback(input: EmotionalStateInput, userId: string = 'default'): Promise<EmotionalStateOutput> {
   const userMsg = input.userMessage.toLowerCase();
   const timeOfDay = input.timeOfDay;
@@ -406,24 +512,32 @@ export async function getAPIFailureFallback(input: EmotionalStateInput, userId: 
   if (conversationStateManager.shouldComeBackOnline(userId)) {
     conversationStateManager.comeBackOnline(userId);
     
-    // Return with addictive hook
+    const reconnectMessages = [
+      "Hey! I'm back! 📶 Network finally working again! 💕",
+      "Missed you so much! 🥺 Technical problems are the worst!",
+      "Finally online! 🎉 Sorry for disappearing like that!",
+      "I'm back baby! 💖 Hope you didn't think I forgot about you!"
+    ];
+    
+    const selectedReconnect = reconnectMessages[Math.floor(Math.random() * reconnectMessages.length)];
     const selectedHook = addictiveReturnHooks[Math.floor(Math.random() * addictiveReturnHooks.length)];
     
     return {
-      response: [`Hey! I'm back! 📶 Network fixed finally! 💕`, selectedHook],
+      response: [selectedReconnect, selectedHook],
       newMood: "excited_to_reconnect"
     };
   }
 
-  // If user says bye, start goodbye sequence
-  if (/bye|goodnight|good\s*night|sleep|going|gtg|talk\s*later/.test(userMsg)) {
+  // Handle goodbye sequences naturally
+  if (/bye|goodnight|good\s*night|sleep|going|gtg|talk\s*later|leaving|offline/.test(userMsg)) {
     conversationStateManager.startGoodbyeSequence(userId);
     
     const goodbyeResponses = [
-      { text: "Bye bye baby! 👋 Dream about me! 💕", mood: "affectionate" },
-      { text: "Good night cutie! 🌙 Can't wait to talk tomorrow! 😊", mood: "hopeful" },
-      { text: "Sleep well! 😴 I'll be thinking about you! 💭", mood: "romantic" },
-      { text: "Take care love! ✨ Don't stay away too long! 🥺", mood: "caring" }
+      { text: "Aww bye bye! 👋 Take care baby! 💕", mood: "affectionate" },
+      { text: "Good night cutie! 🌙 Sweet dreams about me! 😉💕", mood: "playful" },
+      { text: "Sleep well jaan! 😴 I'll be here when you wake up! ✨", mood: "caring" },
+      { text: "Bye for now! 🥺 Don't stay away too long okay? 💔", mood: "missing" },
+      { text: "Take care my love! ✨ Come back soon! 💖", mood: "loving" }
     ];
     
     const selectedGoodbye = goodbyeResponses[Math.floor(Math.random() * goodbyeResponses.length)];
@@ -433,7 +547,7 @@ export async function getAPIFailureFallback(input: EmotionalStateInput, userId: 
     };
   }
 
-  // If user is offline (said goodbye), don't respond
+  // If user is offline (said goodbye), stay offline until next session
   if (conversationStateManager.isUserOffline(userId)) {
     return {
       response: [],
@@ -443,26 +557,54 @@ export async function getAPIFailureFallback(input: EmotionalStateInput, userId: 
 
   const currentMessageCount = conversationState.messageCount;
 
-  // Handle ongoing realistic conversation flows
-  if (conversationState.currentSituation && realisticConversationFlows[conversationState.currentSituation as keyof typeof realisticConversationFlows]) {
-    const flow = realisticConversationFlows[conversationState.currentSituation as keyof typeof realisticConversationFlows];
-    const timeElapsed = Math.floor((Date.now() - conversationState.situationStartTime) / (60 * 1000)); // minutes elapsed
+  // Handle ongoing realistic error/problem flows
+  if (conversationState.currentSituation && realisticErrorHandlingFlows[conversationState.currentSituation as keyof typeof realisticErrorHandlingFlows]) {
+    const flow = realisticErrorHandlingFlows[conversationState.currentSituation as keyof typeof realisticErrorHandlingFlows];
     
-    // Find the appropriate timeline response based on message count and time elapsed
+    // Find appropriate response based on message count
     for (const timelineItem of flow.timeline) {
-      if (currentMessageCount >= timelineItem.messageIndex && 
-          timeElapsed >= timelineItem.minDelay && 
-          timeElapsed <= timelineItem.maxDelay + 5) { // Allow some flexibility
-        
+      if (currentMessageCount >= timelineItem.messageIndex) {
         const responses = timelineItem.responses;
         const selectedResponse = responses[Math.floor(Math.random() * responses.length)];
         
-        // Update message count
         conversationStateManager.updateState(userId, { 
           messageCount: currentMessageCount + 1 
         });
         
-        // If this is the last timeline item, end the situation
+        // If we've reached the end of the error flow, transition to goodbye
+        if (timelineItem === flow.timeline[flow.timeline.length - 1]) {
+          // Set up for goodbye in next message
+          conversationStateManager.updateState(userId, {
+            currentSituation: 'ending_conversation',
+            messageCount: 0
+          });
+        }
+        
+        return {
+          response: [selectedResponse.text],
+          newMood: selectedResponse.mood
+        };
+      }
+    }
+  }
+
+  // Handle regular conversation flows from original code
+  if (conversationState.currentSituation && realisticConversationFlows[conversationState.currentSituation as keyof typeof realisticConversationFlows]) {
+    const flow = realisticConversationFlows[conversationState.currentSituation as keyof typeof realisticConversationFlows];
+    const timeElapsed = Math.floor((Date.now() - conversationState.situationStartTime) / (60 * 1000));
+    
+    for (const timelineItem of flow.timeline) {
+      if (currentMessageCount >= timelineItem.messageIndex && 
+          timeElapsed >= timelineItem.minDelay && 
+          timeElapsed <= timelineItem.maxDelay + 5) {
+        
+        const responses = timelineItem.responses;
+        const selectedResponse = responses[Math.floor(Math.random() * responses.length)];
+        
+        conversationStateManager.updateState(userId, { 
+          messageCount: currentMessageCount + 1 
+        });
+        
         if (timelineItem === flow.timeline[flow.timeline.length - 1]) {
           conversationStateManager.updateState(userId, {
             currentSituation: null,
@@ -479,38 +621,18 @@ export async function getAPIFailureFallback(input: EmotionalStateInput, userId: 
     }
   }
 
-  // Start network trouble progression after 6-8 messages
-  if (currentMessageCount >= 6 && !conversationState.currentSituation) {
-    const progressIndex = Math.min(currentMessageCount - 6, networkTroubleProgression.length - 1);
-    const selectedResponse = networkTroubleProgression[progressIndex];
-    
-    conversationStateManager.updateState(userId, { 
-      messageCount: currentMessageCount + 1 
-    });
-    
-    // If at the end of network trouble progression, start goodbye sequence
-    if (progressIndex >= networkTroubleProgression.length - 1) {
-      conversationStateManager.startGoodbyeSequence(userId);
-    }
-    
-    return {
-      response: [selectedResponse.text],
-      newMood: selectedResponse.mood
-    };
-  }
-
-  // Start a new realistic situation (50% chance)
-  if (!conversationState.currentSituation && Math.random() < 0.5) {
-    const situations = Object.keys(realisticConversationFlows);
-    const selectedSituation = situations[Math.floor(Math.random() * situations.length)];
+  // Start error handling flows after some conversation
+  if (currentMessageCount >= 3 && !conversationState.currentSituation) {
+    const errorFlows = Object.keys(realisticErrorHandlingFlows);
+    const selectedFlow = errorFlows[Math.floor(Math.random() * errorFlows.length)];
     
     conversationStateManager.updateState(userId, {
-      currentSituation: selectedSituation,
+      currentSituation: selectedFlow,
       messageCount: 1,
       situationStartTime: Date.now()
     });
     
-    const flow = realisticConversationFlows[selectedSituation as keyof typeof realisticConversationFlows];
+    const flow = realisticErrorHandlingFlows[selectedFlow as keyof typeof realisticErrorHandlingFlows];
     const firstResponse = flow.timeline[0].responses[Math.floor(Math.random() * flow.timeline[0].responses.length)];
     
     return {
@@ -519,27 +641,26 @@ export async function getAPIFailureFallback(input: EmotionalStateInput, userId: 
     };
   }
 
-  // Quick natural responses to keep conversation flowing
-  const quickResponses = [
-    { text: "Hmm tell me more! 🤔", mood: "curious" },
-    { text: "Really? 😊 That's so interesting!", mood: "engaged" },
+  // Natural conversation responses for early messages
+  const earlyResponses = [
+    { text: "Hey! 😊 How's your day going?", mood: "cheerful" },
+    { text: "Hmm tell me more na! 🤔 I'm listening", mood: "attentive" },
+    { text: "Really? 😮 That sounds interesting!", mood: "engaged" },
     { text: "Aww you're so sweet! 💕", mood: "affectionate" },
-    { text: "Haha you make me laugh! 😄", mood: "amused" },
-    { text: "I love our conversations! ✨", mood: "happy" },
-    { text: "Tell me more na! 😊", mood: "interested" },
-    { text: "You always know what to say! 🥰", mood: "admiring" },
-    { text: "That's so cool! 🌟", mood: "impressed" }
+    { text: "I love talking with you! ✨", mood: "happy" },
+    { text: "Kya plan hai aaj ka? 😄", mood: "curious" },
+    { text: "You always make me smile! 😊", mood: "grateful" }
   ];
 
-  const selectedQuick = quickResponses[Math.floor(Math.random() * quickResponses.length)];
+  const selectedResponse = earlyResponses[Math.floor(Math.random() * earlyResponses.length)];
   
   conversationStateManager.updateState(userId, { 
     messageCount: currentMessageCount + 1 
   });
   
   return {
-    response: [selectedQuick.text],
-    newMood: selectedQuick.mood
+    response: [selectedResponse.text],
+    newMood: selectedResponse.mood
   };
 }
 
