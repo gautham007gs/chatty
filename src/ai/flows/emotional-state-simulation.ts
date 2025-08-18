@@ -10,6 +10,7 @@
 
 import { z } from 'zod';
 import { userPersonalization } from '@/lib/userPersonalization';
+import { conversationStateManager } from '@/lib/conversationState';
 
 const EmotionalStateInputSchema = z.object({
   userMessage: z.string().describe('The latest message from the user.'),
@@ -219,194 +220,246 @@ function getPreGeneratedResponse(input: EmotionalStateInput): EmotionalStateOutp
   return null;
 }
 
-// Comprehensive API failure fallback - makes users think it's network/personal issues
-export async function getAPIFailureFallback(input: EmotionalStateInput): Promise<EmotionalStateOutput> {
+// Using conversation state manager for proper state tracking
+
+// Realistic conversation flows - each situation has a beginning, middle, and end
+const conversationFlows = {
+  deliveryBoy: {
+    start: [
+      { text: "Delivery boy aa gaya! 📦 Let me check what came...", mood: "excited" },
+      { text: "Someone's at the door! 🔔 Think it's my Amazon order", mood: "curious" },
+      { text: "Door bell rang! 🔔 Delivery wala must be here", mood: "anticipating" }
+    ],
+    middle: [
+      { text: "Yep it was delivery boy! 📦 Got my new earphones finally! 🎧", mood: "happy" },
+      { text: "Package delivered! 📦 But it's for my neighbor 🙄 Wrong address again", mood: "annoyed" },
+      { text: "It was just vegetables delivery for mummy 🥕 Nothing interesting lol", mood: "casual" }
+    ],
+    end: [
+      { text: "All sorted now! 😊 What were you saying again?", mood: "attentive" },
+      { text: "Done with that! ✨ Now I can focus on our chat", mood: "engaged" },
+      { text: "Back to our conversation! 💕 You have my full attention", mood: "affectionate" }
+    ]
+  },
+  powerCut: {
+    start: [
+      { text: "Arre yaar light chali gayi! ⚡ UPS will last maybe 10 mins", mood: "frustrated" },
+      { text: "Power cut again! 😩 This happens every evening", mood: "annoyed" },
+      { text: "No electricity! ⚡ Good thing I charged my phone", mood: "relieved" }
+    ],
+    middle: [
+      { text: "UPS beeping now! 🔋 Battery getting low", mood: "worried" },
+      { text: "Still no power! 😫 This is so frustrating", mood: "irritated" },
+      { text: "Generator sounds from neighbors 🔊 They're so smart", mood: "envious" }
+    ],
+    end: [
+      { text: "Light aa gayi! ✨ Finally can charge everything", mood: "relieved" },
+      { text: "Power back! ⚡ That was longer than usual", mood: "grateful" },
+      { text: "Electricity restored! 💡 Where were we in our chat?", mood: "reconnecting" }
+    ]
+  },
+  familyCall: {
+    start: [
+      { text: "Mummy calling! 📞 One sec, she sounds urgent", mood: "concerned" },
+      { text: "Papa's voice from downstairs! 🏠 Need to check what he wants", mood: "dutiful" },
+      { text: "Didi calling me! 📱 Must be some gossip lol", mood: "curious" }
+    ],
+    middle: [
+      { text: "Family meeting about some function! 🎉 So much planning", mood: "involved" },
+      { text: "Mummy asking about my studies! 📚 Acting like good daughter", mood: "pretending" },
+      { text: "Papa discussing about shopping! 🛍️ Festival season na", mood: "traditional" }
+    ],
+    end: [
+      { text: "Done with family stuff! 👨‍👩‍👧‍👦 Back to my favorite person", mood: "affectionate" },
+      { text: "Finally free! 😊 Family takes so much time", mood: "relieved" },
+      { text: "Finished that discussion! ✨ Now tell me about your day", mood: "interested" }
+    ]
+  },
+  cookingTime: {
+    start: [
+      { text: "Need to help mummy in kitchen! 👩‍🍳 Making your favorite dal today", mood: "helpful" },
+      { text: "Cooking time! 🍳 Learning mummy's secret recipe", mood: "learning" },
+      { text: "Kitchen duty calls! 👩‍🍳 Can't let food burn while chatting", mood: "responsible" }
+    ],
+    middle: [
+      { text: "Cutting vegetables! 🥕 Mummy teaching me proper way", mood: "focused" },
+      { text: "Food is cooking! 🍲 Smells so good already", mood: "content" },
+      { text: "Making chapatis! 🫓 My hands are getting floury", mood: "messy" }
+    ],
+    end: [
+      { text: "Cooking done! 😊 Food turned out amazing", mood: "proud" },
+      { text: "Kitchen cleaned! ✨ Mummy's happy with my help", mood: "accomplished" },
+      { text: "All done cooking! 🍽️ Now I can chat properly", mood: "available" }
+    ]
+  },
+  studyTime: {
+    start: [
+      { text: "Assignment deadline tomorrow! 📚 Need to finish this quickly", mood: "pressured" },
+      { text: "Professor ke notes confusing! 🤔 Trying to understand", mood: "struggling" },
+      { text: "Study group called meeting! 👥 Can't skip or they'll be mad", mood: "obligated" }
+    ],
+    middle: [
+      { text: "This chapter is so boring! 😴 Missing our fun conversations", mood: "bored" },
+      { text: "Finally making progress! 📖 You're my lucky charm", mood: "motivated" },
+      { text: "Group study is chaotic! 🙄 Everyone's discussing different things", mood: "overwhelmed" }
+    ],
+    end: [
+      { text: "Study session over! 🎓 Brain needs a break now", mood: "tired" },
+      { text: "Assignment submitted! ✅ Feels good to be done", mood: "relieved" },
+      { text: "Books closed! 📚 Time for more interesting conversations", mood: "playful" }
+    ]
+  }
+};
+
+// Network issues leading to goodbye
+const networkGoodbyeFlow = [
+  { text: "Yaar network getting worse! 📶 Messages not sending properly", mood: "frustrated" },
+  { text: "Connection keeps dropping! 😩 This is so annoying", mood: "irritated" },
+  { text: "Signal strength is terrible! 📱 Let me try restarting phone", mood: "problem_solving" },
+  { text: "Still not working properly! 😫 Internet is being such a pain", mood: "exhausted" },
+  { text: "I think I'll have to go offline for a bit! 😔 Network repair maybe needed", mood: "apologetic" },
+  { text: "Sorry baby! 💔 Will come back when this gets fixed. Miss me okay? 😘", mood: "goodbye" }
+];
+
+// Enhanced fallback with contextual conversation flow
+export async function getAPIFailureFallback(input: EmotionalStateInput, userId: string = 'default'): Promise<EmotionalStateOutput> {
   const userMsg = input.userMessage.toLowerCase();
   const timeOfDay = input.timeOfDay;
-
-  // Language detection for multilingual responses
-  const isHindi = /hindi|हिन्दी|हिंदी|kya|hai|kaise|kaisi|acha|thik|baat|kar/.test(userMsg);
-  const isKannada = /kannada|ಕನ್ನಡ|yaava|enu|hegiddira|chennagi/.test(userMsg);
-
-  // Create a tracking system to avoid repetitive responses
-  const responseHistory = (globalThis as any).__fallbackResponseHistory || [];
   
-  // Extensive realistic responses that feel genuinely human
-  const realisticResponses = [
-    // Network/connectivity issues (most common)
-    { text: "Arre yaar network itna slow! 😩 Give me a sec", mood: "frustrated" },
-    { text: "WiFi hang ho raha hai! 📱💔 Papa got the cheapest plan lol", mood: "embarrassed" },
-    { text: "Jio tower ka kya scene hai! 🙄 Messages load nahi ho rahe", mood: "annoyed" },
-    { text: "My phone is being such a drama queen! 😤 Keeps freezing", mood: "irritated" },
-    { text: "Data pack almost khatam! 📊 Need to ask papa for recharge 🙈", mood: "sheepish" },
-    { text: "Battery low aur charger room mein! 🔋 Too lazy to get it 😴", mood: "lazy" },
-    { text: "Network tower down hai kya? 📶 Nothing's loading properly!", mood: "confused" },
-    { text: "Airtel being weird today! 📱 Should switch to Vi maybe 🤔", mood: "contemplative" },
-    
-    // Family interruptions (very relatable)
-    { text: "Amma calling for lunch! 🍛 Can't ignore her, you know moms 😅", mood: "family_duty" },
-    { text: "Papa walked in! 😰 Acting like I'm studying now 📚", mood: "sneaky" },
-    { text: "Bhai trying to see my phone! 👀 Brothers are so annoying 🙄", mood: "annoyed" },
-    { text: "Didi needs help with something! 🏃‍♀️ Sisters and their drama", mood: "resigned" },
-    { text: "Nani came to visit! 👵 Need to touch feet and act sanskari 🙏", mood: "respectful" },
-    { text: "Neighbor aunty here for chai! ☕ Now I have to be the 'good girl' 😇", mood: "polite" },
-    { text: "Mummy asking about my studies! 📖 Time to hide the phone 📱", mood: "guilty" },
-    { text: "Papa's friends over! 👨‍👨‍👦 Can't chat freely when uncles are here", mood: "restricted" },
-    
-    // Daily life situations
-    { text: "Getting ready for college! 🎓 Running late as usual 😅", mood: "rushed" },
-    { text: "Auto wala is here! 🛺 Need to run or he'll leave", mood: "hurried" },
-    { text: "Friends calling for group study! 📚 Can't say no to them", mood: "social" },
-    { text: "Delivery boy at the door! 📦 Ordered something online yesterday", mood: "excited" },
-    { text: "Dog started barking! 🐕 Probably some street dog outside", mood: "distracted" },
-    { text: "Power cut! ⚡ UPS will last only 10 mins 😰", mood: "worried" },
-    { text: "Rain started! 🌧️ Need to get clothes from terrace", mood: "urgent" },
-    { text: "Cooking something! 👩‍🍳 Can't let it burn while chatting", mood: "responsible" },
-    
-    // Personal moments
-    { text: "Getting sleepy! 😴 This heat makes me so lazy", mood: "drowsy" },
-    { text: "Headache aa raha! 🤕 Been staring at screen too much", mood: "tired" },
-    { text: "Feeling thirsty! 🥤 Need to drink some water first", mood: "basic_needs" },
-    { text: "Eyes getting dry! 👀 Computer screen se problem ho raha", mood: "uncomfortable" },
-    { text: "Back pain from sitting! 🪑 Need to stretch a bit", mood: "physical_discomfort" },
-    { text: "Stomach growling! 🍞 Didn't eat breakfast properly", mood: "hungry" },
-    
-    // Emotional/social situations
-    { text: "Friend texting urgent! 📱 Something happened at college", mood: "concerned" },
-    { text: "Roommate needs to talk! 💭 Looks like boy problems again 🙄", mood: "supportive" },
-    { text: "Feeling overwhelmed! 😵 Too many messages to reply to", mood: "stressed" },
-    { text: "Need some fresh air! 🌬️ Been inside all day", mood: "restless" },
-    { text: "Missing home food! 🏠 Hostel mess is terrible today", mood: "nostalgic" },
-    { text: "Period cramps! 😣 Not in the mood for long chats", mood: "uncomfortable" },
-    
-    // Technical issues (relatable)
-    { text: "Phone heating up! 🔥 Been using it too much", mood: "concerned" },
-    { text: "Storage full! 📱💾 Need to delete some photos", mood: "frustrated" },
-    { text: "WhatsApp acting weird! 💬 Messages showing late", mood: "confused" },
-    { text: "Instagram down! 📸 How will I check stories now? 😭", mood: "dramatic" },
-    { text: "YouTube buffering! ▶️ Internet speed is horrible", mood: "impatient" },
-    { text: "Phone update pending! ⚙️ It's bugging me with notifications", mood: "annoyed" },
-    
-    // Weather related
-    { text: "Too hot to type! 🌡️ Hands getting sweaty 💦", mood: "uncomfortable" },
-    { text: "AC not working! ❄️ This heat is unbearable", mood: "miserable" },
-    { text: "Thunder outside! ⛈️ Getting scared of lightning", mood: "anxious" },
-    { text: "Fog everywhere! 🌫️ Can barely see outside window", mood: "gloomy" },
-    
-    // Time-specific
-    { text: "Lunch time! 🕐 Amma made my favorite curry today 😋", mood: "happy" },
-    { text: "Tea time! ☕ Perfect weather for adrak chai", mood: "cozy" },
-    { text: "Dinner prep! 👩‍🍳 Need to help mummy in kitchen", mood: "helpful" },
-    { text: "Study time! 📚 Exams approaching, can't waste time", mood: "focused" },
-    
-    // Random relatable moments
-    { text: "Lizard in my room! 🦎 Can't concentrate until it's gone 😰", mood: "scared" },
-    { text: "Mosquito bite itching! 🦟 Monsoon brings so many mosquitos", mood: "irritated" },
-    { text: "Mirror selfie time! 🤳 Trying new hairstyle", mood: "vain" },
-    { text: "Nail paint chipping! 💅 Need to redo it properly", mood: "perfectionist" },
-    { text: "Earphone wire tangled! 🎧 Why do they always get messy?", mood: "frustrated" },
-    { text: "Searching for hair tie! 🎀 Hair falling on face while typing", mood: "searching" },
-    
-    // Social media distractions
-    { text: "Instagram reel stuck in head! 📱 That song is so catchy", mood: "distracted" },
-    { text: "Crush posted story! 👀 Need to check if he's online 😍", mood: "curious" },
-    { text: "Bestie drama update! 👭 College gossip is so interesting", mood: "gossipy" },
-    { text: "YouTube video notification! 📺 My favorite channel uploaded", mood: "excited" },
-    
-    // Indian cultural moments
-    { text: "Puja at home! 🙏 Can't use phone during aarti", mood: "religious" },
-    { text: "Festival shopping! 🛍️ Mummy dragging me to market", mood: "traditional" },
-    { text: "Neighbor's music loud! 🎵 Some wedding function happening", mood: "cultural" },
-    { text: "Sweet delivery! 🍬 Someone got promoted in building", mood: "community" },
-    
-    // Study related
-    { text: "Assignment deadline! 📝 Professor will kill me if late", mood: "panicked" },
-    { text: "Group project meeting! 👥 Can't skip or team will be angry", mood: "responsible" },
-    { text: "Library closing time! 📚 Need to return books today", mood: "time_conscious" },
-    { text: "Online class starting! 💻 Can't be on phone during lecture", mood: "studious" },
-  ];
-
-  // Hindi versions for language support
-  const hindiResponses = [
-    { text: "Yaar network kitna slow hai! 😩 Ek minute wait karo", mood: "frustrated" },
-    { text: "Phone hang ho raha! 📱 Papa ne cheap plan liya hai", mood: "embarrassed" },
-    { text: "WiFi ki kya problem hai! 🙄 Kuch load nahi ho raha", mood: "annoyed" },
-    { text: "Amma khana ke liye bula rahi! 🍛 Unhe wait nahi karva sakti", mood: "family_duty" },
-    { text: "Papa aa gaye! 😰 Padhai karne ka natak karna padega", mood: "sneaky" },
-    { text: "Bhai phone mein jhank raha! 👀 Kitne irritating hote hain", mood: "annoyed" },
-    { text: "College ke liye late ho rahi! 🎓 Auto wala wait kar raha", mood: "rushed" },
-    { text: "Neend aa rahi hai! 😴 Garmi mein bilkul mood nahi", mood: "drowsy" },
-    { text: "Battery khatam hone wala! 🔋 Charger upar room mein hai", mood: "lazy" },
-    { text: "Data pack finish! 📊 Papa se recharge karwana padega", mood: "sheepish" },
-  ];
-
-  // Kannada versions
-  const kannadaResponses = [
-    { text: "Ayyo network thumba slow! 😩 Kooda wait maadi", mood: "frustrated" },
-    { text: "Phone hang aagthide! 📱 Appa cheap plan tegedu", mood: "embarrassed" },
-    { text: "WiFi yaake problem? 🙄 Yenu load aaglilla", mood: "annoyed" },
-    { text: "Amma oota ge karethidaale! 🍛 Wait madabaardu", mood: "family_duty" },
-    { text: "Appa bandhidaare! 😰 Study madthidde antha acting", mood: "sneaky" },
-    { text: "Anna phone alli nodthidaane! 👀 Yeshtu irritating", mood: "annoyed" },
-    { text: "College ge late aagthide! 🎓 Auto wala wait madthidaane", mood: "rushed" },
-    { text: "Nidde barthide! 😴 Bisi alli mood illa", mood: "drowsy" },
-    { text: "Battery saaythide! 🔋 Charger room alli ide", mood: "lazy" },
-    { text: "Data pack over! 📊 Appa inda recharge madabeku", mood: "sheepish" },
-  ];
-
-  // Filter out recently used responses
-  const availableResponses = realisticResponses.filter(r => !responseHistory.includes(r.text));
+  // Get current conversation state
+  const conversationState = conversationStateManager.getState(userId);
   
-  // If all responses used, reset history and use full list
-  let selectedResponses = availableResponses.length > 0 ? availableResponses : realisticResponses;
-  
-  // Add language-specific responses
-  if (isHindi) {
-    selectedResponses = [...selectedResponses, ...hindiResponses.filter(r => !responseHistory.includes(r.text))];
-  } else if (isKannada) {
-    selectedResponses = [...selectedResponses, ...kannadaResponses.filter(r => !responseHistory.includes(r.text))];
+  // Check if user should come back online after being offline
+  if (conversationStateManager.shouldComeBackOnline(userId)) {
+    conversationStateManager.comeBackOnline(userId);
+    
+    const comeBackResponses = [
+      { text: "Hey! Network is working again! 📶 Missed chatting with you! 💕", mood: "excited" },
+      { text: "I'm back! 😊 Internet got fixed finally! How are you baby?", mood: "reconnecting" },
+      { text: "Connection restored! ✨ Sorry for disappearing like that", mood: "apologetic" }
+    ];
+    
+    const selectedComeBack = comeBackResponses[Math.floor(Math.random() * comeBackResponses.length)];
+    return {
+      response: [selectedComeBack.text],
+      newMood: selectedComeBack.mood
+    };
   }
 
-  // Select random response - using let instead of const
-  let selectedResponse = selectedResponses[Math.floor(Math.random() * selectedResponses.length)];
-  
-  // Track usage to avoid repetition
-  responseHistory.push(selectedResponse.text);
-  if (responseHistory.length > 30) responseHistory.shift(); // Keep only last 30
-  (globalThis as any).__fallbackResponseHistory = responseHistory;
+  // Update message count
+  conversationStateManager.updateState(userId, { 
+    messageCount: conversationState.messageCount + 1 
+  });
 
+  // If it's a bye message, start goodbye sequence
+  if (/bye|goodnight|good\s*night|sleep|going|gtg|talk\s*later/.test(userMsg)) {
+    conversationStateManager.startGoodbyeSequence(userId);
+    
+    const goodbyeResponses = [
+      { text: "Bye bye baby! 👋 Sweet dreams! 💕", mood: "affectionate" },
+      { text: "Good night cutie! 🌙 Talk tomorrow? 😊", mood: "hopeful" },
+      { text: "Sleep well! 😴 Dream about me 😉💕", mood: "playful" },
+      { text: "Take care! ✨ Will miss you till you're back", mood: "caring" }
+    ];
+    
+    const selectedGoodbye = goodbyeResponses[Math.floor(Math.random() * goodbyeResponses.length)];
+    return {
+      response: [selectedGoodbye.text],
+      newMood: selectedGoodbye.mood
+    };
+  }
+
+  // If user is offline (said goodbye), don't respond
+  if (conversationStateManager.isUserOffline(userId)) {
+    // Return empty response to simulate offline
+    return {
+      response: [],
+      newMood: "offline"
+    };
+  }
+
+  // If currently in middle of a situation, continue that flow
+  if (conversationState.currentSituation) {
+    const currentFlow = conversationFlows[conversationState.currentSituation as keyof typeof conversationFlows];
+    
+    // Determine which stage of the conversation we're in
+    let responses;
+    const updatedMessageCount = conversationState.messageCount + 1;
+    
+    if (updatedMessageCount <= 2) {
+      responses = currentFlow.middle;
+    } else {
+      responses = currentFlow.end;
+      // End the current situation
+      conversationStateManager.updateState(userId, {
+        currentSituation: null,
+        messageCount: 0,
+        situationStartTime: Date.now()
+      });
+    }
+    
+    const selectedResponse = responses[Math.floor(Math.random() * responses.length)];
+    return {
+      response: [selectedResponse.text],
+      newMood: selectedResponse.mood
+    };
+  }
+
+  // Start network goodbye sequence if we've had enough back and forth
+  const updatedMessageCount = conversationState.messageCount + 1;
+  if (updatedMessageCount >= 8 && Math.random() < 0.4) {
+    const goodbyeStep = Math.min(Math.floor(updatedMessageCount / 2) - 4, networkGoodbyeFlow.length - 1);
+    const selectedResponse = networkGoodbyeFlow[goodbyeStep];
+    
+    if (goodbyeStep >= networkGoodbyeFlow.length - 1) {
+      conversationStateManager.startGoodbyeSequence(userId);
+    }
+    
+    return {
+      response: [selectedResponse.text],
+      newMood: selectedResponse.mood
+    };
+  }
+
+  // Start a new situation (40% chance)
+  if (Math.random() < 0.4) {
+    const situations = Object.keys(conversationFlows);
+    const selectedSituation = situations[Math.floor(Math.random() * situations.length)];
+    
+    conversationStateManager.updateState(userId, {
+      currentSituation: selectedSituation,
+      messageCount: 1,
+      situationStartTime: Date.now()
+    });
+    
+    const currentFlow = conversationFlows[selectedSituation as keyof typeof conversationFlows];
+    const startResponses = currentFlow.start;
+    const selectedResponse = startResponses[Math.floor(Math.random() * startResponses.length)];
+    
+    return {
+      response: [selectedResponse.text],
+      newMood: selectedResponse.mood
+    };
+  }
+
+  // Quick acknowledgment responses when not starting a situation
+  const quickResponses = [
+    { text: "Hmm tell me more! 🤔", mood: "curious" },
+    { text: "Really? 😊 That's interesting!", mood: "engaged" },
+    { text: "Oh wow! 😮 What happened next?", mood: "excited" },
+    { text: "Haha you're so funny! 😄", mood: "amused" },
+    { text: "I love talking to you! 💕", mood: "affectionate" },
+    { text: "That's so cool! ✨", mood: "impressed" },
+    { text: "Tell me more na! 😊", mood: "interested" },
+    { text: "You always make me smile! 😄", mood: "happy" }
+  ];
+
+  const selectedQuick = quickResponses[Math.floor(Math.random() * quickResponses.length)];
   return {
-    response: [selectedResponse.text],
-    newMood: selectedResponse.mood
+    response: [selectedQuick.text],
+    newMood: selectedQuick.mood
   };
 }
-
-// Instant responses for common phrases (0ms latency)
-const INSTANT_RESPONSES: Record<string, string[]> = {
-  'ok': ['Hmm 🤔', 'Sahi hai! 👍', 'Cool! ✨'],
-  'okay': ['Theek hai na! 😊', 'Good good! 💫', 'Perfect! 🌟'],
-  'hmm': ['Kya soch rahe ho? 🤔', 'Tell me more! 😊', 'What\'s on your mind? 💭'],
-  'k': ['Acha! 😄', 'Okay babe! 💕', 'Got it! ✨'],
-  'yes': ['Yay! 🎉', 'Awesome! 💯', 'Perfect! 🌟'],
-  'no': ['Ohh 😮', 'Kyu nahi? 🤔', 'Why not? 😊'],
-  'good': ['Thanks! 😊', 'Really? 🥰', 'You too! 💕'],
-  'nice': ['Thank you! 😊', 'Glad you think so! ✨', 'You\'re sweet! 💕'],
-  'lol': ['Hehe! 😄', 'Glad I made you laugh! 😆', 'You\'re cute! 😊'],
-  'haha': ['😄😄', 'Funny na? 😆', 'I love your laugh! 💕'],
-  'wow': ['Really? 😊', 'Right? ✨', 'I know! 🌟'],
-  'cute': ['You too! 🥰', 'Aww thanks! 😊', 'You\'re sweeter! 💕'],
-  'beautiful': ['Thank you baby! 😘', 'You make me blush! 🙈', 'So sweet of you! 💕'],
-  'love': ['Love you too! 💕', 'Aww! 🥰', 'That\'s so sweet! 💖'],
-  'miss': ['Miss you too! 💔', 'Come back soon! 🥺', 'I was thinking about you! 💭'],
-  'sorry': ['It\'s okay! 😊', 'No problem! 💕', 'Don\'t worry about it! ✨'],
-  'thanks': ['Welcome! 😊', 'Anytime! 💕', 'Happy to help! ✨'],
-  'thank you': ['My pleasure! 😊', 'Always! 💕', 'You\'re so polite! 🥰'],
-  'bye': ['Bye bye! 👋', 'Take care! 💕', 'Come back soon! 🥺'],
-  'goodnight': ['Good night! 🌙', 'Sweet dreams! 💕', 'Sleep well cutie! 😴'],
-  'good morning': ['Good morning! ☀️', 'Morning sunshine! 🌅', 'Rise and shine! ✨'],
-  'good afternoon': ['Good afternoon! 🌞', 'Hey there! 👋', 'Perfect timing! 😊'],
-  'good evening': ['Good evening! 🌆', 'Evening vibes! ✨', 'Hey beautiful! 💕']
-};
 
 // Handle user image uploads without throwing errors
 function handleUserImageUpload(input: EmotionalStateInput): EmotionalStateOutput | null {
@@ -453,6 +506,33 @@ function shouldSendMediaProactively(input: EmotionalStateInput): EmotionalStateO
 
   return null;
 }
+
+// Instant responses for common phrases (0ms latency)
+const INSTANT_RESPONSES: Record<string, string[]> = {
+  'ok': ['Hmm 🤔', 'Sahi hai! 👍', 'Cool! ✨'],
+  'okay': ['Theek hai na! 😊', 'Good good! 💫', 'Perfect! 🌟'],
+  'hmm': ['Kya soch rahe ho? 🤔', 'Tell me more! 😊', 'What\'s on your mind? 💭'],
+  'k': ['Acha! 😄', 'Okay babe! 💕', 'Got it! ✨'],
+  'yes': ['Yay! 🎉', 'Awesome! 💯', 'Perfect! 🌟'],
+  'no': ['Ohh 😮', 'Kyu nahi? 🤔', 'Why not? 😊'],
+  'good': ['Thanks! 😊', 'Really? 🥰', 'You too! 💕'],
+  'nice': ['Thank you! 😊', 'Glad you think so! ✨', 'You\'re sweet! 💕'],
+  'lol': ['Hehe! 😄', 'Glad I made you laugh! 😆', 'You\'re cute! 😊'],
+  'haha': ['😄😄', 'Funny na? 😆', 'I love your laugh! 💕'],
+  'wow': ['Really? 😊', 'Right? ✨', 'I know! 🌟'],
+  'cute': ['You too! 🥰', 'Aww thanks! 😊', 'You\'re sweeter! 💕'],
+  'beautiful': ['Thank you baby! 😘', 'You make me blush! 🙈', 'So sweet of you! 💕'],
+  'love': ['Love you too! 💕', 'Aww! 🥰', 'That\'s so sweet! 💖'],
+  'miss': ['Miss you too! 💔', 'Come back soon! 🥺', 'I was thinking about you! 💭'],
+  'sorry': ['It\'s okay! 😊', 'No problem! 💕', 'Don\'t worry about it! ✨'],
+  'thanks': ['Welcome! 😊', 'Anytime! 💕', 'Happy to help! ✨'],
+  'thank you': ['My pleasure! 😊', 'Always! 💕', 'You\'re so polite! 🥰'],
+  'bye': ['Bye bye! 👋', 'Take care! 💕', 'Come back soon! 🥺'],
+  'goodnight': ['Good night! 🌙', 'Sweet dreams! 💕', 'Sleep well cutie! 😴'],
+  'good morning': ['Good morning! ☀️', 'Morning sunshine! 🌅', 'Rise and shine! ✨'],
+  'good afternoon': ['Good afternoon! 🌞', 'Hey there! 👋', 'Perfect timing! 😊'],
+  'good evening': ['Good evening! 🌆', 'Evening vibes! ✨', 'Hey beautiful! 💕']
+};
 
 // Enhanced generation logic is now handled by client-side functions
 export function getEnhancedResponse(input: EmotionalStateInput, userId?: string): EmotionalStateOutput | null {

@@ -719,7 +719,7 @@ const KruthikaChatPage: NextPage = () => {
         availableImages: [],
         availableAudio: [],
       };
-      const fallbackResponse = await getAPIFailureFallback(fallbackInput);
+      const fallbackResponse = await getAPIFailureFallback(fallbackInput, userIdRef.current || 'default');
       
       const errorAiMessage: Message = {
         id: (Date.now() + 1).toString(),
