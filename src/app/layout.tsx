@@ -1,8 +1,6 @@
-
-import type { Metadata } from 'next';
-import { Inter } from 'next/font/google'; // Using Inter as a clean, readable font
-import './globals.css';
-import { Toaster } from "@/components/ui/toaster";
+import type { Metadata } from "next";
+import { Inter } from "next/font/google"; // Using Inter as a clean, readable font
+import "./globals.css";
 // import { Providers } from './providers'; // No longer using the generic Providers component
 import InstagramBrowserPrompt from '@/components/InstagramBrowserPrompt';
 import GlobalAdScripts from '@/components/GlobalAdScripts';
@@ -11,6 +9,8 @@ import { AdSettingsProvider } from '@/contexts/AdSettingsContext';
 import { AIProfileProvider } from '@/contexts/AIProfileContext';
 import { GlobalStatusProvider } from '@/contexts/GlobalStatusContext';
 import { AIMediaAssetsProvider } from '@/contexts/AIMediaAssetsContext';
+import { Toaster } from "@/components/ui/toaster";
+
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 
