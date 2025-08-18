@@ -22,7 +22,7 @@ const securityHeaders = [
 const nextConfig: NextConfig = {
   images: {
     unoptimized: true,
-    domains: ['localhost', 'ykgzsazqjhbdlzioduzx.supabase.co'],
+    domains: ['localhost', '0.0.0.0', 'ykgzsazqjhbdlzioduzx.supabase.co'],
     remotePatterns: [
       {
         protocol: 'https',
