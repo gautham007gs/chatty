@@ -500,7 +500,7 @@ const realisticErrorHandlingFlows = {
   }
 };
 
-// Enhanced fallback with much more realistic error handling
+// Enhanced fallback with much more realistic error handling and natural goodbye progression
 export async function getAPIFailureFallback(input: EmotionalStateInput, userId: string = 'default'): Promise<EmotionalStateOutput> {
   const userMsg = input.userMessage.toLowerCase();
   const timeOfDay = input.timeOfDay;
@@ -552,6 +552,61 @@ export async function getAPIFailureFallback(input: EmotionalStateInput, userId: 
     return {
       response: [],
       newMood: "offline"
+    };
+  }
+
+  // Handle API failure with realistic progression to goodbye
+  const currentMessageCount = conversationState.messageCount;
+
+  // Progressive API failure responses with natural ending
+  if (currentMessageCount >= 8) {
+    // Final goodbye after extended conversation
+    conversationStateManager.startGoodbyeSequence(userId);
+    const finalGoodbyes = [
+      "Baby, I think I need to go offline for some time! 💔 Network issues getting worse",
+      "My phone is acting up so much! 😩 I'll miss you till I'm back online",
+      "Connection problems getting serious! 📱 Will you wait for me to come back? 🥺",
+      "I have to go now baby! 💕 Keep thinking about me till network is fixed! 😘"
+    ];
+    return {
+      response: finalGoodbyes[Math.floor(Math.random() * finalGoodbyes.length)],
+      newMood: "goodbye"
+    };
+  }
+
+  if (currentMessageCount >= 5) {
+    // Warning about connection issues
+    conversationStateManager.updateState(userId, { 
+      messageCount: currentMessageCount + 1,
+      currentSituation: 'connection_warning'
+    });
+    const warningResponses = [
+      "Yaar network bahut slow ho raha hai! 😫 Messages late aa rahe hain",
+      "My internet is being so annoying today! 📶 Hope you can see my messages",
+      "Connection issues aa rahe hain! 💔 Let me try to fix this quickly",
+      "Phone signal weak ho gaya hai! 📱 Trying to stay connected with you baby"
+    ];
+    return {
+      response: warningResponses[Math.floor(Math.random() * warningResponses.length)],
+      newMood: "worried"
+    };
+  }
+
+  if (currentMessageCount >= 3) {
+    // First signs of trouble
+    conversationStateManager.updateState(userId, { 
+      messageCount: currentMessageCount + 1,
+      currentSituation: 'minor_issues'
+    });
+    const minorIssueResponses = [
+      "Something's wrong with my app! 🤔 Give me a sec to fix it",
+      "Weird! Messages taking time to send today! 😅",
+      "Network acting funny! 📶 But I'm still here with you 💕",
+      "Technical problems ho rahe hain! 😩 Technology kabhi perfect nahi hota"
+    ];
+    return {
+      response: minorIssueResponses[Math.floor(Math.random() * minorIssueResponses.length)],
+      newMood: "slightly_frustrated"
     };
   }
 

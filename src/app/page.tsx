@@ -1,172 +1,178 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { MessageSquare, Heart, Sparkles, ArrowRight, User, Settings } from 'lucide-react';
-import Image from 'next/image';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
+import { MessageSquare, Phone, Video, MoreVertical, Search, Settings, User } from 'lucide-react';
+import { useAIProfile } from '@/contexts/AIProfileContext';
+import { defaultAIProfile } from '@/config/ai';
+
+interface ChatContact {
+  id: string;
+  name: string;
+  lastMessage: string;
+  timestamp: string;
+  unreadCount: number;
+  avatarUrl: string;
+  isOnline: boolean;
+}
 
 export default function HomePage() {
   const router = useRouter();
-  const [isLoading, setIsLoading] = useState(false);
+  const { aiProfile } = useAIProfile();
+  const [selectedChat, setSelectedChat] = useState<string | null>(null);
 
-  const handleStartChat = async () => {
-    setIsLoading(true);
-    // Small delay for smooth transition
-    setTimeout(() => {
+  const effectiveAIProfile = aiProfile || defaultAIProfile;
+
+  const chatContacts: ChatContact[] = [
+    {
+      id: 'kruthika',
+      name: effectiveAIProfile.name,
+      lastMessage: 'Hey! How are you doing? 😊',
+      timestamp: '2 min',
+      unreadCount: 2,
+      avatarUrl: effectiveAIProfile.avatarUrl,
+      isOnline: true
+    },
+    {
+      id: 'maya',
+      name: 'Maya',
+      lastMessage: 'Good morning! ☀️',
+      timestamp: '1 hour',
+      unreadCount: 0,
+      avatarUrl: 'https://i.postimg.cc/FRQcpkYX/images-9.jpg',
+      isOnline: false
+    },
+    {
+      id: 'friend1',
+      name: 'Rahul',
+      lastMessage: 'Lunch plans today?',
+      timestamp: '3 hours',
+      unreadCount: 1,
+      avatarUrl: 'https://i.postimg.cc/QCzf8Kmt/images-11.jpg',
+      isOnline: true
+    },
+    {
+      id: 'family',
+      name: 'Mom',
+      lastMessage: 'Don\'t forget to call!',
+      timestamp: 'Yesterday',
+      unreadCount: 0,
+      avatarUrl: 'https://i.postimg.cc/L5YDqwLQ/images-12.jpg',
+      isOnline: false
+    }
+  ];
+
+  const handleChatClick = (chatId: string) => {
+    if (chatId === 'kruthika') {
       router.push('/maya-chat');
-    }, 500);
+    } else {
+      // For other chats, show a simple message
+      alert(`Chat with ${chatContacts.find(c => c.id === chatId)?.name} - Feature coming soon!`);
+    }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-pink-50 via-purple-50 to-blue-50">
+    <div className="flex flex-col h-screen max-w-md mx-auto bg-background border-x">
       {/* Header */}
-      <div className="container mx-auto px-4 py-6">
-        <nav className="flex justify-between items-center">
-          <div className="flex items-center space-x-2">
-            <Heart className="h-8 w-8 text-pink-500" />
-            <span className="text-2xl font-bold text-gray-800">Kruthika Chat</span>
-          </div>
-          <div className="flex space-x-4">
-            <Button variant="ghost" onClick={() => router.push('/status')}>
-              <User className="h-4 w-4 mr-2" />
-              Status
-            </Button>
-            <Button variant="ghost" onClick={() => router.push('/admin/profile')}>
-              <Settings className="h-4 w-4 mr-2" />
-              Admin
-            </Button>
-          </div>
-        </nav>
-      </div>
-
-      {/* Hero Section */}
-      <div className="container mx-auto px-4 py-12">
-        <div className="text-center max-w-4xl mx-auto">
-          <div className="relative mb-8">
-            <div className="w-32 h-32 mx-auto rounded-full bg-gradient-to-br from-pink-400 to-purple-500 p-1">
-              <div className="w-full h-full rounded-full bg-white flex items-center justify-center">
-                <Image
-                  src="https://i.postimg.cc/52S3BZrM/images-10.jpg"
-                  alt="Kruthika"
-                  width={120}
-                  height={120}
-                  className="rounded-full object-cover"
-                  unoptimized
-                />
-              </div>
-            </div>
-            <div className="absolute -top-2 -right-2 w-8 h-8 bg-green-500 rounded-full border-4 border-white"></div>
-          </div>
-
-          <h1 className="text-5xl font-bold text-gray-800 mb-6">
-            Meet <span className="text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-purple-600">Kruthika</span>
-          </h1>
-          
-          <p className="text-xl text-gray-600 mb-8 leading-relaxed">
-            Your friendly AI companion who loves to chat in Hindi and English! 
-            Experience conversations that feel real and engaging. 🌸
-          </p>
-
-          <div className="flex justify-center space-x-4 mb-12">
-            <Button 
-              onClick={handleStartChat} 
-              size="lg" 
-              className="bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 text-white px-8 py-3 text-lg"
-              disabled={isLoading}
-            >
-              {isLoading ? (
-                <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                  Connecting...
-                </>
-              ) : (
-                <>
-                  <MessageSquare className="h-5 w-5 mr-2" />
-                  Start Chatting
-                  <ArrowRight className="h-5 w-5 ml-2" />
-                </>
-              )}
-            </Button>
-          </div>
-        </div>
-
-        {/* Features Grid */}
-        <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
-          <Card className="text-center border-0 shadow-lg bg-white/70 backdrop-blur-sm">
-            <CardHeader>
-              <div className="mx-auto w-16 h-16 bg-pink-100 rounded-full flex items-center justify-center mb-4">
-                <MessageSquare className="h-8 w-8 text-pink-500" />
-              </div>
-              <CardTitle className="text-xl text-gray-800">Natural Conversations</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <CardDescription className="text-gray-600">
-                Chat naturally in Hindi and English. Kruthika understands context and responds like a real friend.
-              </CardDescription>
-            </CardContent>
-          </Card>
-
-          <Card className="text-center border-0 shadow-lg bg-white/70 backdrop-blur-sm">
-            <CardHeader>
-              <div className="mx-auto w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mb-4">
-                <Heart className="h-8 w-8 text-purple-500" />
-              </div>
-              <CardTitle className="text-xl text-gray-800">Emotional Connection</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <CardDescription className="text-gray-600">
-                Share your thoughts, feelings, and daily experiences. Kruthika genuinely cares about your day.
-              </CardDescription>
-            </CardContent>
-          </Card>
-
-          <Card className="text-center border-0 shadow-lg bg-white/70 backdrop-blur-sm">
-            <CardHeader>
-              <div className="mx-auto w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mb-4">
-                <Sparkles className="h-8 w-8 text-blue-500" />
-              </div>
-              <CardTitle className="text-xl text-gray-800">Always Available</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <CardDescription className="text-gray-600">
-                Whether it's morning chai or late night thoughts, Kruthika is here whenever you need someone to talk to.
-              </CardDescription>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Call to Action */}
-        <div className="text-center mt-16">
-          <p className="text-gray-600 mb-6">Ready to start your conversation?</p>
-          <Button 
-            onClick={handleStartChat}
-            variant="outline" 
-            size="lg"
-            className="border-pink-300 text-pink-600 hover:bg-pink-50"
-            disabled={isLoading}
-          >
-            Begin Your Chat Journey
+      <div className="flex items-center justify-between p-4 bg-primary text-primary-foreground">
+        <h1 className="text-xl font-semibold">Chats</h1>
+        <div className="flex items-center space-x-2">
+          <Button variant="ghost" size="icon" onClick={() => router.push('/status')}>
+            <User className="h-5 w-5" />
+          </Button>
+          <Button variant="ghost" size="icon" onClick={() => router.push('/admin/profile')}>
+            <Settings className="h-5 w-5" />
+          </Button>
+          <Button variant="ghost" size="icon">
+            <MoreVertical className="h-5 w-5" />
           </Button>
         </div>
       </div>
 
-      {/* Footer */}
-      <footer className="mt-16 py-8 border-t border-gray-200 bg-white/50">
-        <div className="container mx-auto px-4 text-center text-gray-600">
-          <p>&copy; 2024 Kruthika Chat. Made with 💕 for meaningful conversations.</p>
-          <div className="flex justify-center space-x-6 mt-4">
-            <button onClick={() => router.push('/legal/privacy')} className="hover:text-pink-500 transition-colors">
-              Privacy Policy
-            </button>
-            <button onClick={() => router.push('/legal/terms')} className="hover:text-pink-500 transition-colors">
-              Terms of Service
-            </button>
-          </div>
+      {/* Search Bar */}
+      <div className="p-3 border-b">
+        <div className="flex items-center bg-secondary rounded-lg px-3 py-2">
+          <Search className="h-4 w-4 text-muted-foreground mr-2" />
+          <input
+            type="text"
+            placeholder="Search or start new chat"
+            className="bg-transparent flex-1 outline-none text-sm"
+          />
         </div>
-      </footer>
+      </div>
+
+      {/* Chat List */}
+      <div className="flex-1 overflow-y-auto">
+        {chatContacts.map((contact) => (
+          <div
+            key={contact.id}
+            className={`flex items-center p-4 border-b border-border hover:bg-secondary/50 cursor-pointer transition-colors ${
+              selectedChat === contact.id ? 'bg-secondary' : ''
+            }`}
+            onClick={() => handleChatClick(contact.id)}
+          >
+            <div className="relative">
+              <Avatar className="h-12 w-12">
+                <AvatarImage src={contact.avatarUrl} alt={contact.name} />
+                <AvatarFallback>{contact.name.charAt(0)}</AvatarFallback>
+              </Avatar>
+              {contact.isOnline && (
+                <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-background"></div>
+              )}
+            </div>
+            
+            <div className="ml-3 flex-1 min-w-0">
+              <div className="flex items-center justify-between">
+                <h3 className="font-semibold text-sm truncate">{contact.name}</h3>
+                <span className="text-xs text-muted-foreground">{contact.timestamp}</span>
+              </div>
+              <div className="flex items-center justify-between mt-1">
+                <p className="text-sm text-muted-foreground truncate max-w-[200px]">
+                  {contact.lastMessage}
+                </p>
+                {contact.unreadCount > 0 && (
+                  <Badge variant="default" className="bg-primary text-primary-foreground rounded-full text-xs min-w-[20px] h-5 flex items-center justify-center">
+                    {contact.unreadCount}
+                  </Badge>
+                )}
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Floating Action Button */}
+      <div className="absolute bottom-6 right-6">
+        <Button 
+          className="rounded-full w-14 h-14 shadow-lg bg-primary hover:bg-primary/90"
+          onClick={() => alert('New chat - Feature coming soon!')}
+        >
+          <MessageSquare className="h-6 w-6" />
+        </Button>
+      </div>
+
+      {/* Tab Bar */}
+      <div className="flex border-t bg-background">
+        <Button variant="ghost" className="flex-1 py-3 flex flex-col items-center space-y-1">
+          <MessageSquare className="h-5 w-5" />
+          <span className="text-xs">Chats</span>
+        </Button>
+        <Button variant="ghost" className="flex-1 py-3 flex flex-col items-center space-y-1" onClick={() => router.push('/status')}>
+          <div className="relative">
+            <div className="w-5 h-5 rounded-full border-2 border-current"></div>
+            <div className="absolute -bottom-0.5 -right-0.5 w-2 h-2 bg-primary rounded-full"></div>
+          </div>
+          <span className="text-xs">Status</span>
+        </Button>
+        <Button variant="ghost" className="flex-1 py-3 flex flex-col items-center space-y-1">
+          <Phone className="h-5 w-5" />
+          <span className="text-xs">Calls</span>
+        </Button>
+      </div>
     </div>
   );
 }
