@@ -1,4 +1,3 @@
-
 import type {NextConfig} from 'next';
 
 const securityHeaders = [
@@ -21,21 +20,22 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
-  experimental: {
-    optimizePackageImports: ['lucide-react'],
-  },
   images: {
+    unoptimized: true,
+    domains: ['localhost', 'ykgzsazqjhbdlzioduzx.supabase.co'],
     remotePatterns: [
-      {
-        protocol: 'https',
-        hostname: 'placehold.co',
-      },
       {
         protocol: 'https',
         hostname: '**',
       },
+      {
+        protocol: 'http',
+        hostname: '**',
+      },
     ],
-    unoptimized: true,
+  },
+  experimental: {
+    serverComponentsExternalPackages: ['@google/generative-ai'],
   },
   async headers() {
     return [
@@ -44,6 +44,17 @@ const nextConfig: NextConfig = {
         headers: securityHeaders,
       },
     ];
+  },
+  webpack: (config, { isServer }) => {
+    if (!isServer) {
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        fs: false,
+        net: false,
+        tls: false,
+      };
+    }
+    return config;
   },
 };
 
