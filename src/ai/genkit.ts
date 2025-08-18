@@ -1,4 +1,3 @@
-
 import {genkit} from 'genkit';
 import {googleAI} from '@genkit-ai/googleai';
 
@@ -12,32 +11,29 @@ import {googleAI} from '@genkit-ai/googleai';
 const MIN_API_KEY_LENGTH = 30; // Most Google API keys are around 39 characters.
 
 const getApiKey = (): string | undefined => {
-  const keySources = [
-    { name: 'GOOGLE_API_KEY', value: process.env.GOOGLE_API_KEY },
-    { name: 'GEMINI_API_KEY_1', value: process.env.GEMINI_API_KEY_1 },
-    { name: 'GEMINI_API_KEY_2', value: process.env.GEMINI_API_KEY_2 },
-    // Add more potential backup keys here if needed:
-    // { name: 'GEMINI_API_KEY_3', value: process.env.GEMINI_API_KEY_3 },
-  ];
+  // Check multiple possible environment variable names for Gemini API key
+const possibleApiKeyNames = [
+  'GEMINI_API_KEY',
+  'GOOGLE_API_KEY',
+  'GEMINI_API_KEY_1',
+  'GEMINI_API_KEY_2',
+  'GEMINI_API_KEY_3',
+  'GEMINI_API_KEY_4',
+  'GEMINI_API_KEY_5'
+];
 
-  for (const source of keySources) {
-    console.log(`Genkit: Checking environment variable: ${source.name}`);
-    const key = source.value?.trim(); // Trim whitespace
-    if (key && key.length >= MIN_API_KEY_LENGTH && !key.includes(" ") && !key.includes("<") && !key.includes("your_")) {
-      console.log(`Genkit: Using API key from environment variable: ${source.name}`);
-      return key;
-    } else if (source.value) { // Check source.value to see if it was defined but invalid
-        if (!key) {
-            console.warn(`Genkit: Environment variable ${source.name} was defined but is an empty string after trimming. Skipping.`);
-        } else if (key.length < MIN_API_KEY_LENGTH) {
-            console.warn(`Genkit: Environment variable ${source.name} was defined but its value ("${key.substring(0,10)}...") is too short to be a valid API key (length ${key.length}, expected >=${MIN_API_KEY_LENGTH}). Skipping.`);
-        } else {
-            console.warn(`Genkit: Environment variable ${source.name} was defined but its value ("${key.substring(0,10)}...") appears invalid (e.g., contains spaces or placeholder text). Skipping.`);
-        }
-    } else {
-        console.log(`Genkit: Environment variable ${source.name} is not set.`);
-    }
+let geminiApiKey: string | undefined;
+for (const keyName of possibleApiKeyNames) {
+  console.log(`Genkit: Checking environment variable: ${keyName}`);
+  const keyValue = process.env[keyName];
+  if (keyValue && keyValue.trim() !== '' && keyValue.length > 10 && !keyValue.toLowerCase().includes('your') && !keyValue.toLowerCase().includes('api') && !keyValue.toLowerCase().includes('key')) {
+    geminiApiKey = keyValue.trim();
+    console.log(`Genkit: Found valid API key in ${keyName}`);
+    break;
+  } else {
+    console.log(`Genkit: Environment variable ${keyName} is not set.`);
   }
+}
 
   // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   // !!! HEY! IF YOU ARE IN FIREBASE STUDIO AND process.env ISN'T WORKING  !!!
@@ -47,7 +43,7 @@ const getApiKey = (): string | undefined => {
   // !!! REMOVE IT OR COMMENT IT OUT BEFORE PUSHING TO GITHUB/VERCEL!        !!!
   // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   const studioDevApiKey = "YOUR_GEMINI_API_KEY_HERE_FOR_STUDIO_TESTING"; // <<<<<<< REPLACE THIS WITH YOUR ACTUAL KEY FOR STUDIO
-  if (studioDevApiKey && studioDevApiKey !== "YOUR_GEMINI_API_KEY_HERE_FOR_STUDIO_TESTING" && studioDevApiKey.length >= MIN_API_KEY_LENGTH) {
+  if (!geminiApiKey && studioDevApiKey && studioDevApiKey !== "YOUR_GEMINI_API_KEY_HERE_FOR_STUDIO_TESTING" && studioDevApiKey.length >= MIN_API_KEY_LENGTH) {
       console.warn("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
       console.warn("!!! Genkit: WARNING! Using TEMPORARY hardcoded API key for Firebase Studio testing.        !!!");
       console.warn("!!! This is NOT secure for production. REMOVE before committing or deploying!              !!!");
@@ -55,14 +51,17 @@ const getApiKey = (): string | undefined => {
       return studioDevApiKey;
   }
 
-  console.error(
-    "CRITICAL Genkit Error: No valid Gemini API Key found for initialization. " +
-    "All checked environment variables (GOOGLE_API_KEY, GEMINI_API_KEY_1, etc.) " +
-    "are undefined, empty, too short, or appear invalid. AI features will NOT work. " +
-    "Please ensure at least one valid API key is correctly set in your environment variables " +
-    "OR for Firebase Studio testing, temporarily hardcode it in src/ai/genkit.ts (and remove before commit/deploy)."
-  );
-  return undefined;
+  if (!geminiApiKey) {
+      console.error(
+        "CRITICAL Genkit Error: No valid Gemini API Key found for initialization. " +
+        "All checked environment variables (GEMINI_API_KEY, GOOGLE_API_KEY, etc.) " +
+        "are undefined, empty, too short, or appear invalid. AI features will NOT work. " +
+        "Please ensure at least one valid API key is correctly set in your environment variables " +
+        "OR for Firebase Studio testing, temporarily hardcode it in src/ai/genkit.ts (and remove before commit/deploy)."
+      );
+  }
+
+  return geminiApiKey;
 };
 
 const activeApiKey = getApiKey();
@@ -126,4 +125,3 @@ export const ai = genkit({
 // IS BEING PASSED TO THE GOOGLE AI PLUGIN.
 // The `ai` object will be initialized with no plugins in that case,
 // and any call to `ai.generate()` will likely fail.
-    

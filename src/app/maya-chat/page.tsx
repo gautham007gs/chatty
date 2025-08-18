@@ -275,7 +275,7 @@ const KruthikaChatPage: NextPage = () => {
         }
 
         try {
-          const { error: activityError } = await supabase
+          const { error: activityError } = supabase
             .from('daily_activity_log')
             .upsert([{
               date: today,
@@ -569,7 +569,7 @@ const KruthikaChatPage: NextPage = () => {
         if (adSettings && adSettings.adsEnabledGlobally) {
             tryShowAdAndMaybeInterstitial(`Loading ${currentEffectiveAIProfile.name}'s share...`);
         }
-        await new Promise(resolve => setTimeout(resolve, 200));
+        await new Promise<void>(resolve => setTimeout(resolve, 200));
       }
 
       const logAiMessageToSupabase = async (aiText: string, aiMsgId: string, hasImage: boolean = false, hasAudio: boolean = false) => {
@@ -593,7 +593,7 @@ const KruthikaChatPage: NextPage = () => {
       const processAiTextMessage = async (responseText: string, messageIdSuffix: string = '') => {
         // Much faster typing simulation for better perceived performance
         const typingDuration = Math.min(Math.max(responseText.length * 20, 300), 1200);
-        await new Promise(resolve => setTimeout(resolve, typingDuration));
+        await new Promise<void>(resolve => setTimeout(resolve, typingDuration));
 
         const newAiMessageId = (Date.now() + Math.random()).toString() + messageIdSuffix;
         const newAiMessage: Message = {
@@ -616,7 +616,7 @@ const KruthikaChatPage: NextPage = () => {
 
       const processAiMediaMessage = async (mediaType: 'image' | 'audio', url: string, caption?: string) => {
         const typingDuration = Math.min(Math.max((caption || "").length * 60, 800), 2000);
-        await new Promise(resolve => setTimeout(resolve, typingDuration));
+        await new Promise<void>(resolve => setTimeout(resolve, typingDuration));
 
         const newAiMediaMessageId = (Date.now() + Math.random()).toString() + `_${mediaType}`;
         const newAiMediaMessage: Message = {
@@ -650,7 +650,7 @@ const KruthikaChatPage: NextPage = () => {
             setIsAiTyping(false);
             if (i < aiResponse.response.length - 1) {
               const interMessageDelay = 500 + Math.random() * 500;
-              await new Promise(resolve => setTimeout(resolve, interMessageDelay));
+              await new Promise<void>(resolve => setTimeout(resolve, interMessageDelay));
             }
           }
         } else if (aiResponse.response.trim() !== '') {
@@ -748,7 +748,7 @@ const KruthikaChatPage: NextPage = () => {
           };
           const offlineResult = await generateOfflineMessage(offlineInput);
           const typingDelay = Math.min(Math.max(offlineResult.message.length * 60, 700), 3500);
-          await new Promise(resolve => setTimeout(resolve, typingDelay));
+          await new Promise<void>(resolve => setTimeout(resolve, typingDelay));
           const newOfflineMsgId = (Date.now() + Math.random()).toString();
           const offlineMessage: Message = {
             id: newOfflineMsgId,

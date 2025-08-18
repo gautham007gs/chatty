@@ -34,9 +34,7 @@ const nextConfig: NextConfig = {
       },
     ],
   },
-  experimental: {
-    serverComponentsExternalPackages: ['@google/generative-ai'],
-  },
+  serverExternalPackages: ['@google/generative-ai'],
   async headers() {
     return [
       {
