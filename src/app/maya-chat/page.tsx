@@ -24,6 +24,8 @@ import { format, isToday } from 'date-fns';
 import { useAdSettings } from '@/contexts/AdSettingsContext';
 import { useAIProfile } from '@/contexts/AIProfileContext';
 import { useAIMediaAssets } from '@/contexts/AIMediaAssetsContext';
+import SocialBarAdDisplay from '@/components/SocialBarAdDisplay';
+import GlobalAdScripts from '@/components/GlobalAdScripts';
 
 const AI_DISCLAIMER_SHOWN_KEY = 'ai_disclaimer_shown_kruthika_chat_v2';
 const AI_DISCLAIMER_DURATION = 2000;
@@ -707,7 +709,7 @@ const KruthikaChatPage: NextPage = () => {
 
       // Don't show error toast to user - keep it natural
       console.error('Full error details:', error);
-      
+
       // Use realistic fallback response instead of showing technical error
       const { getAPIFailureFallback } = await import('@/ai/flows/emotional-state-simulation');
       const fallbackInput = {
@@ -720,7 +722,7 @@ const KruthikaChatPage: NextPage = () => {
         availableAudio: [],
       };
       const fallbackResponse = await getAPIFailureFallback(fallbackInput, userIdRef.current || 'default');
-      
+
       const errorAiMessage: Message = {
         id: (Date.now() + 1).toString(),
         text: fallbackResponse.response,
@@ -860,50 +862,47 @@ const KruthikaChatPage: NextPage = () => {
   }
 
   return (
-    <div className="flex flex-col h-screen max-w-3xl mx-auto bg-chat-bg-default shadow-2xl">
-      <ChatHeader
-        aiName={displayAIProfile.name}
-        aiAvatarUrl={displayAIProfile.avatarUrl}
-        onlineStatus={onlineStatus}
-        onAvatarClick={handleOpenAvatarZoom}
-        onCallClick={handleCallVideoClick}
-        onVideoClick={handleCallVideoClick}
-        tokenUsage={tokenUsageStatus}
-      />
-      <ChatView
-        messages={messages}
-        aiAvatarUrl={displayAIProfile.avatarUrl}
-        aiName={displayAIProfile.name}
-        isAiTyping={isAiTyping}
-        onTriggerAd={handleBubbleAdTrigger}
-      />
+    <>
+      <GlobalAdScripts />
+      <SocialBarAdDisplay />
 
-      {showInterstitialAd && (
-        <SimulatedAdPlaceholder
-          type="interstitial"
-          onClose={() => {
-            setShowInterstitialAd(false);
-            if(interstitialAdTimerRef.current) clearTimeout(interstitialAdTimerRef.current);
-          }}
-          message={interstitialAdMessage}
-          duration={REWARD_AD_INTERSTITIAL_DURATION_MS}
+      <div className="flex flex-col h-screen max-w-3xl mx-auto bg-chat-bg-default shadow-2xl">
+        <ChatHeader
+          aiName={displayAIProfile.name}
+          aiAvatarUrl={displayAIProfile.avatarUrl}
+          onlineStatus={onlineStatus}
+          onAvatarClick={handleOpenAvatarZoom}
+          onCallClick={handleCallVideoClick}
+          onVideoClick={handleCallVideoClick}
+          tokenUsage={tokenUsageStatus}
         />
-      )}
 
-      <BannerAdDisplay adType="standard" placementKey="chatViewBottomStandard" className="mx-auto w-full max-w-md" />
-
-      {/* Native ad with delayed appearance and contextual placement */}
-      <div className="my-1 mx-auto w-full max-w-md">
+        {/* Ad Space - Top of Chat */}
         <BannerAdDisplay
-          adType="native"
-          placementKey="chatViewBottomNative"
-          contextual={true}
-          delayMs={messages.length > 10 ? 5000 : 10000} // Show after 5s if engaged, 10s if new
+          adType="standard"
+          placementKey="chatViewBottomStandard"
+          className="mx-auto w-full max-w-md"
         />
-      </div>
 
+        <ChatView
+          messages={messages}
+          aiAvatarUrl={displayAIProfile.avatarUrl}
+          aiName={displayAIProfile.name}
+          isAiTyping={isAiTyping}
+          onTriggerAd={handleBubbleAdTrigger}
+        />
 
-      <ChatInput onSendMessage={handleSendMessage} isAiTyping={isAiTyping} />
+        {/* Ad Space - Bottom of Chat */}
+        <div className="my-1 mx-auto w-full max-w-md">
+          <BannerAdDisplay
+            adType="native"
+            placementKey="chatViewBottomNative"
+            contextual={true}
+            delayMs={messages.length > 10 ? 5000 : 10000} // Show after 5s if engaged, 10s if new
+          />
+        </div>
+
+        <ChatInput onSendMessage={handleSendMessage} isAiTyping={isAiTyping} />
 
        <Dialog open={showZoomedAvatarDialog} onOpenChange={setShowZoomedAvatarDialog}>
           <DialogContent
@@ -955,6 +954,7 @@ const KruthikaChatPage: NextPage = () => {
           </DialogContent>
       </Dialog>
     </div>
+    </>
   );
 };
 

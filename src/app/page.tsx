@@ -1,369 +1,195 @@
 
-<old_str>'use client';
+'use client';
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Button } from '@/components/ui/button';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
-import { MessageSquare, Phone, Video, MoreVertical, Search, Settings, User } from 'lucide-react';
-import { useAIProfile } from '@/contexts/AIProfileContext';
-import { defaultAIProfile } from '@/config/ai';
-
-interface ChatContact {
-  id: string;
-  name: string;
-  lastMessage: string;
-  timestamp: string;
-  unreadCount: number;
-  avatarUrl: string;
-  isOnline: boolean;
-}
-
-export default function HomePage() {
-  const router = useRouter();
-  const { aiProfile } = useAIProfile();
-  const [selectedChat, setSelectedChat] = useState<string | null>(null);
-
-  const effectiveAIProfile = aiProfile || defaultAIProfile;
-
-  const chatContacts: ChatContact[] = [
-    {
-      id: 'kruthika',
-      name: effectiveAIProfile.name,
-      lastMessage: 'Hey! How are you doing? 😊',
-      timestamp: '2 min',
-      unreadCount: 2,
-      avatarUrl: effectiveAIProfile.avatarUrl,
-      isOnline: true
-    },
-    {
-      id: 'maya',
-      name: 'Maya',
-      lastMessage: 'Good morning! ☀️',
-      timestamp: '1 hour',
-      unreadCount: 0,
-      avatarUrl: 'https://i.postimg.cc/FRQcpkYX/images-9.jpg',
-      isOnline: false
-    },
-    {
-      id: 'friend1',
-      name: 'Rahul',
-      lastMessage: 'Lunch plans today?',
-      timestamp: '3 hours',
-      unreadCount: 1,
-      avatarUrl: 'https://i.postimg.cc/QCzf8Kmt/images-11.jpg',
-      isOnline: true
-    },
-    {
-      id: 'family',
-      name: 'Mom',
-      lastMessage: 'Don\'t forget to call!',
-      timestamp: 'Yesterday',
-      unreadCount: 0,
-      avatarUrl: 'https://i.postimg.cc/L5YDqwLQ/images-12.jpg',
-      isOnline: false
-    }
-  ];
-
-  const handleChatClick = (chatId: string) => {
-    if (chatId === 'kruthika') {
-      router.push('/maya-chat');
-    } else {
-      // For other chats, show a simple message
-      alert(`Chat with ${chatContacts.find(c => c.id === chatId)?.name} - Feature coming soon!`);
-    }
-  };
-
-  return (
-    <div className="flex flex-col h-screen max-w-md mx-auto bg-background border-x">
-      {/* Header */}
-      <div className="flex items-center justify-between p-4 bg-primary text-primary-foreground">
-        <h1 className="text-xl font-semibold">Chats</h1>
-        <div className="flex items-center space-x-2">
-          <Button variant="ghost" size="icon" onClick={() => router.push('/status')}>
-            <User className="h-5 w-5" />
-          </Button>
-          <Button variant="ghost" size="icon" onClick={() => router.push('/admin/profile')}>
-            <Settings className="h-5 w-5" />
-          </Button>
-          <Button variant="ghost" size="icon">
-            <MoreVertical className="h-5 w-5" />
-          </Button>
-        </div>
-      </div>
-
-      {/* Search Bar */}
-      <div className="p-3 border-b">
-        <div className="flex items-center bg-secondary rounded-lg px-3 py-2">
-          <Search className="h-4 w-4 text-muted-foreground mr-2" />
-          <input
-            type="text"
-            placeholder="Search or start new chat"
-            className="bg-transparent flex-1 outline-none text-sm"
-          />
-        </div>
-      </div>
-
-      {/* Chat List */}
-      <div className="flex-1 overflow-y-auto">
-        {chatContacts.map((contact) => (
-          <div
-            key={contact.id}
-            className={`flex items-center p-4 border-b border-border hover:bg-secondary/50 cursor-pointer transition-colors ${
-              selectedChat === contact.id ? 'bg-secondary' : ''
-            }`}
-            onClick={() => handleChatClick(contact.id)}
-          >
-            <div className="relative">
-              <Avatar className="h-12 w-12">
-                <AvatarImage src={contact.avatarUrl} alt={contact.name} />
-                <AvatarFallback>{contact.name.charAt(0)}</AvatarFallback>
-              </Avatar>
-              {contact.isOnline && (
-                <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-background"></div>
-              )}
-            </div>
-            
-            <div className="ml-3 flex-1 min-w-0">
-              <div className="flex items-center justify-between">
-                <h3 className="font-semibold text-sm truncate">{contact.name}</h3>
-                <span className="text-xs text-muted-foreground">{contact.timestamp}</span>
-              </div>
-              <div className="flex items-center justify-between mt-1">
-                <p className="text-sm text-muted-foreground truncate max-w-[200px]">
-                  {contact.lastMessage}
-                </p>
-                {contact.unreadCount > 0 && (
-                  <Badge variant="default" className="bg-primary text-primary-foreground rounded-full text-xs min-w-[20px] h-5 flex items-center justify-center">
-                    {contact.unreadCount}
-                  </Badge>
-                )}
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {/* Floating Action Button */}
-      <div className="absolute bottom-6 right-6">
-        <Button 
-          className="rounded-full w-14 h-14 shadow-lg bg-primary hover:bg-primary/90"
-          onClick={() => alert('New chat - Feature coming soon!')}
-        >
-          <MessageSquare className="h-6 w-6" />
-        </Button>
-      </div>
-
-      {/* Tab Bar */}
-      <div className="flex border-t bg-background">
-        <Button variant="ghost" className="flex-1 py-3 flex flex-col items-center space-y-1">
-          <MessageSquare className="h-5 w-5" />
-          <span className="text-xs">Chats</span>
-        </Button>
-        <Button variant="ghost" className="flex-1 py-3 flex flex-col items-center space-y-1" onClick={() => router.push('/status')}>
-          <div className="relative">
-            <div className="w-5 h-5 rounded-full border-2 border-current"></div>
-            <div className="absolute -bottom-0.5 -right-0.5 w-2 h-2 bg-primary rounded-full"></div>
-          </div>
-          <span className="text-xs">Status</span>
-        </Button>
-        <Button variant="ghost" className="flex-1 py-3 flex flex-col items-center space-y-1">
-          <Phone className="h-5 w-5" />
-          <span className="text-xs">Calls</span>
-        </Button>
-      </div>
-    </div>
-  );
-}</old_str>
-<new_str>'use client';
-
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { Button } from '@/components/ui/button';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
-import { MessageSquare, Phone, Video, MoreVertical, Search, Settings, User } from 'lucide-react';
+import { MessageCircle, Users, Settings, Camera } from 'lucide-react';
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
 import { useAIProfile } from '@/contexts/AIProfileContext';
 import { defaultAIProfile } from '@/config/ai';
 import BannerAdDisplay from '@/components/chat/BannerAdDisplay';
-
-interface ChatContact {
-  id: string;
-  name: string;
-  lastMessage: string;
-  timestamp: string;
-  unreadCount: number;
-  avatarUrl: string;
-  isOnline: boolean;
-}
+import SocialBarAdDisplay from '@/components/SocialBarAdDisplay';
+import GlobalAdScripts from '@/components/GlobalAdScripts';
+import { cn } from '@/lib/utils';
 
 export default function HomePage() {
   const router = useRouter();
-  const { aiProfile } = useAIProfile();
-  const [selectedChat, setSelectedChat] = useState<string | null>(null);
+  const { aiProfile, isLoadingAIProfile } = useAIProfile();
+  const [currentTime, setCurrentTime] = useState(new Date());
 
-  const effectiveAIProfile = aiProfile || defaultAIProfile;
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 1000);
 
-  // Only Kruthika chat now
-  const chatContacts: ChatContact[] = [
-    {
-      id: 'kruthika',
-      name: effectiveAIProfile.name,
-      lastMessage: 'Hey! How are you doing? 😊 Let\'s chat!',
-      timestamp: 'online',
-      unreadCount: 2,
-      avatarUrl: effectiveAIProfile.avatarUrl,
-      isOnline: true
-    }
-  ];
+    return () => clearInterval(timer);
+  }, []);
 
-  const handleChatClick = (chatId: string) => {
-    if (chatId === 'kruthika') {
-      router.push('/maya-chat');
-    }
-  };
+  const effectiveProfile = aiProfile || defaultAIProfile;
 
-  const handleNewChatClick = () => {
-    // Same function as clicking Kruthika chat
+  const handleChatClick = () => {
     router.push('/maya-chat');
   };
 
+  const handleStatusClick = () => {
+    router.push('/status');
+  };
+
+  if (isLoadingAIProfile) {
+    return (
+      <div className="flex flex-col h-screen bg-background">
+        <div className="flex-grow flex items-center justify-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="flex flex-col h-screen max-w-md mx-auto bg-background border-x">
-      {/* Header */}
-      <div className="flex items-center justify-between p-4 bg-primary text-primary-foreground">
-        <h1 className="text-xl font-semibold">Chats</h1>
-        <div className="flex items-center space-x-2">
-          <Button variant="ghost" size="icon" onClick={() => router.push('/status')}>
-            <User className="h-5 w-5" />
-          </Button>
-          <Button variant="ghost" size="icon" onClick={() => router.push('/admin/profile')}>
-            <Settings className="h-5 w-5" />
-          </Button>
-          <Button variant="ghost" size="icon">
-            <MoreVertical className="h-5 w-5" />
-          </Button>
-        </div>
-      </div>
-
-      {/* Banner Ad */}
-      <BannerAdDisplay 
-        adType="standard" 
-        placementKey="homePageTopBanner" 
-        className="mx-2 mt-2" 
-      />
-
-      {/* Search Bar */}
-      <div className="p-3 border-b">
-        <div className="flex items-center bg-secondary rounded-lg px-3 py-2">
-          <Search className="h-4 w-4 text-muted-foreground mr-2" />
-          <input
-            type="text"
-            placeholder="Search or start new chat"
-            className="bg-transparent flex-1 outline-none text-sm"
-          />
-        </div>
-      </div>
-
-      {/* Welcome Message */}
-      <div className="p-4 bg-secondary/30">
-        <h2 className="text-sm font-medium text-muted-foreground mb-2">RECENT CHATS</h2>
-        <p className="text-xs text-muted-foreground">
-          Start chatting with {effectiveAIProfile.name}, your AI companion!
-        </p>
-      </div>
-
-      {/* Chat List - Only Kruthika */}
-      <div className="flex-1 overflow-y-auto">
-        {chatContacts.map((contact) => (
-          <div
-            key={contact.id}
-            className={`flex items-center p-4 border-b border-border hover:bg-secondary/50 cursor-pointer transition-colors ${
-              selectedChat === contact.id ? 'bg-secondary' : ''
-            }`}
-            onClick={() => handleChatClick(contact.id)}
-          >
-            <div className="relative">
-              <Avatar className="h-12 w-12">
-                <AvatarImage src={contact.avatarUrl} alt={contact.name} />
-                <AvatarFallback>{contact.name.charAt(0)}</AvatarFallback>
-              </Avatar>
-              {contact.isOnline && (
-                <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-background"></div>
-              )}
+    <>
+      <GlobalAdScripts />
+      <SocialBarAdDisplay />
+      
+      <div className="flex flex-col h-screen max-w-3xl mx-auto bg-background">
+        {/* Header */}
+        <div className="bg-primary text-primary-foreground p-4 shadow-md">
+          <div className="flex items-center justify-between">
+            <h1 className="text-xl font-bold">KruthikaChat</h1>
+            <div className="text-sm">
+              {currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
             </div>
-            
-            <div className="ml-3 flex-1 min-w-0">
-              <div className="flex items-center justify-between">
-                <h3 className="font-semibold text-sm truncate">{contact.name}</h3>
-                <span className="text-xs text-muted-foreground">{contact.timestamp}</span>
-              </div>
-              <div className="flex items-center justify-between mt-1">
-                <p className="text-sm text-muted-foreground truncate max-w-[200px]">
-                  {contact.lastMessage}
+          </div>
+        </div>
+
+        {/* Ad Space - Top Banner */}
+        <BannerAdDisplay 
+          adType="standard" 
+          placementKey="home-top" 
+          className="my-2"
+        />
+
+        {/* Main Content */}
+        <div className="flex-grow overflow-y-auto bg-secondary/10">
+          {/* Chat List */}
+          <div className="bg-background">
+            <div 
+              className="flex items-center p-4 hover:bg-secondary/50 cursor-pointer border-b border-border transition-colors"
+              onClick={handleChatClick}
+            >
+              <Avatar className="h-14 w-14 ring-2 ring-primary/20">
+                <AvatarImage 
+                  src={effectiveProfile.avatarUrl} 
+                  alt={effectiveProfile.name}
+                  className="object-cover"
+                />
+                <AvatarFallback>
+                  {effectiveProfile.name.charAt(0).toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
+              
+              <div className="ml-4 flex-grow">
+                <div className="flex items-center justify-between">
+                  <h2 className="font-semibold text-lg">{effectiveProfile.name}</h2>
+                  <span className="text-xs text-muted-foreground">
+                    {currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  </span>
+                </div>
+                <p className="text-muted-foreground text-sm truncate">
+                  {effectiveProfile.status}
                 </p>
-                {contact.unreadCount > 0 && (
-                  <Badge variant="default" className="bg-primary text-primary-foreground rounded-full text-xs min-w-[20px] h-5 flex items-center justify-center">
-                    {contact.unreadCount}
-                  </Badge>
-                )}
               </div>
             </div>
           </div>
-        ))}
 
-        {/* Native Ad */}
-        <div className="mt-4">
+          {/* Ad Space - Native Banner */}
           <BannerAdDisplay 
             adType="native" 
-            placementKey="homePageNativeAd" 
-            className="mx-4" 
-            contextual={true}
-            delayMs={3000}
+            placementKey="home-middle" 
+            className="my-4"
+          />
+
+          {/* Quick Actions */}
+          <div className="p-4 space-y-3">
+            <h3 className="text-sm font-medium text-muted-foreground mb-3">QUICK ACTIONS</h3>
+            
+            <div 
+              className="flex items-center p-3 bg-card rounded-lg hover:bg-secondary/50 cursor-pointer transition-colors border"
+              onClick={handleStatusClick}
+            >
+              <div className="bg-primary/10 p-2 rounded-full">
+                <Camera className="h-5 w-5 text-primary" />
+              </div>
+              <div className="ml-3">
+                <h4 className="font-medium">Status Updates</h4>
+                <p className="text-sm text-muted-foreground">View and share status</p>
+              </div>
+            </div>
+
+            <div 
+              className="flex items-center p-3 bg-card rounded-lg hover:bg-secondary/50 cursor-pointer transition-colors border"
+              onClick={handleChatClick}
+            >
+              <div className="bg-green-500/10 p-2 rounded-full">
+                <MessageCircle className="h-5 w-5 text-green-500" />
+              </div>
+              <div className="ml-3">
+                <h4 className="font-medium">Start Chat</h4>
+                <p className="text-sm text-muted-foreground">Chat with Kruthika</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Ad Space - Bottom Banner */}
+          <BannerAdDisplay 
+            adType="standard" 
+            placementKey="home-bottom" 
+            className="my-2"
           />
         </div>
 
-        {/* Additional space for scrolling */}
-        <div className="h-20"></div>
-      </div>
-
-      {/* Banner Ad before floating button */}
-      <BannerAdDisplay 
-        adType="standard" 
-        placementKey="homePageBottomBanner" 
-        className="mx-2 mb-2" 
-      />
-
-      {/* Floating Action Button - Now opens Kruthika chat */}
-      <div className="absolute bottom-24 right-6">
-        <Button 
-          className="rounded-full w-14 h-14 shadow-lg bg-green-600 hover:bg-green-700"
-          onClick={handleNewChatClick}
-          title="Start chatting with Kruthika"
-        >
-          <MessageSquare className="h-6 w-6" />
-        </Button>
-      </div>
-
-      {/* Tab Bar */}
-      <div className="flex border-t bg-background">
-        <Button variant="ghost" className="flex-1 py-3 flex flex-col items-center space-y-1">
-          <MessageSquare className="h-5 w-5" />
-          <span className="text-xs">Chats</span>
-        </Button>
-        <Button variant="ghost" className="flex-1 py-3 flex flex-col items-center space-y-1" onClick={() => router.push('/status')}>
-          <div className="relative">
-            <div className="w-5 h-5 rounded-full border-2 border-current"></div>
-            <div className="absolute -bottom-0.5 -right-0.5 w-2 h-2 bg-primary rounded-full"></div>
+        {/* Bottom Navigation */}
+        <div className="bg-background border-t border-border p-2">
+          <div className="flex justify-around items-center">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="flex-1 flex flex-col items-center py-3"
+            >
+              <MessageCircle className="h-5 w-5 mb-1" />
+              <span className="text-xs">Chats</span>
+            </Button>
+            
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="flex-1 flex flex-col items-center py-3"
+              onClick={handleStatusClick}
+            >
+              <Users className="h-5 w-5 mb-1" />
+              <span className="text-xs">Status</span>
+            </Button>
+            
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="flex-1 flex flex-col items-center py-3"
+              onClick={() => router.push('/admin/profile')}
+            >
+              <Settings className="h-5 w-5 mb-1" />
+              <span className="text-xs">Settings</span>
+            </Button>
           </div>
-          <span className="text-xs">Status</span>
-        </Button>
-        <Button variant="ghost" className="flex-1 py-3 flex flex-col items-center space-y-1">
-          <Phone className="h-5 w-5" />
-          <span className="text-xs">Calls</span>
+        </div>
+
+        {/* Floating Action Button */}
+        <Button
+          className="fixed bottom-6 right-6 rounded-full w-14 h-14 shadow-lg z-50"
+          onClick={handleChatClick}
+        >
+          <MessageCircle className="h-6 w-6" />
         </Button>
       </div>
-    </div>
+    </>
   );
-}</new_str>
+}

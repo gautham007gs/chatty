@@ -7,6 +7,9 @@ import AppHeader from '@/components/AppHeader';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { PlusCircle, Camera, X as XIcon } from 'lucide-react';
+import BannerAdDisplay from '@/components/chat/BannerAdDisplay';
+import SocialBarAdDisplay from '@/components/SocialBarAdDisplay';
+import GlobalAdScripts from '@/components/GlobalAdScripts';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import type { AdminStatusDisplay, ManagedContactStatus, AdSettings, AIProfile } from '@/types';
 import { defaultAIProfile, defaultAdminStatusDisplay, defaultManagedContactStatuses } from '@/config/ai';
@@ -228,9 +231,21 @@ const StatusPage: React.FC = () => {
   }
 
   return (
-    <div className="flex flex-col h-screen max-w-3xl mx-auto bg-background shadow-2xl">
-      <AppHeader title="Status" />
-      <div className="flex-grow overflow-y-auto custom-scrollbar">
+    <>
+      <GlobalAdScripts />
+      <SocialBarAdDisplay />
+      
+      <div className="flex flex-col h-screen max-w-3xl mx-auto bg-background shadow-2xl">
+        <AppHeader title="Status" />
+        
+        {/* Ad Space - Top of Status */}
+        <BannerAdDisplay 
+          adType="standard" 
+          placementKey="status-top" 
+          className="mx-2"
+        />
+        
+        <div className="flex-grow overflow-y-auto custom-scrollbar">
         <StatusItemDisplay
             statusKey="admin-own-status-item"
             displayName={displayAdminOwnStatus.name}
@@ -244,6 +259,13 @@ const StatusPage: React.FC = () => {
         />
         
         <div className="p-2 px-4 text-sm font-medium text-muted-foreground bg-secondary/30">RECENT UPDATES</div>
+        
+        {/* Ad Space - Middle of Status */}
+        <BannerAdDisplay 
+          adType="native" 
+          placementKey="status-middle" 
+          className="mx-2 my-2"
+        />
         
         {(effectiveAIProfile.statusStoryHasUpdate || (effectiveAIProfile.statusStoryText && effectiveAIProfile.statusStoryText !== defaultAIProfile.statusStoryText) || effectiveAIProfile.statusStoryImageUrl) && (
             <StatusItemDisplay
@@ -274,6 +296,14 @@ const StatusPage: React.FC = () => {
         ))}
 
       </div>
+      
+      {/* Ad Space - Bottom of Status */}
+      <BannerAdDisplay 
+        adType="standard" 
+        placementKey="status-bottom" 
+        className="mx-2 mb-2"
+      />
+      
       <div className="p-4 border-t border-border flex justify-end">
         <Button variant="default" size="lg" className="rounded-full p-4 shadow-lg" onClick={() => alert("Camera access for status - not implemented")}>
           <Camera size={24} />

@@ -1,4 +1,3 @@
-
 /**
  * @fileOverview This file defines a Genkit flow for simulating emotional states in an AI chat application for Kruthika.
  *
@@ -231,7 +230,7 @@ const realisticConversationFlows = {
         maxDelay: 2,
         responses: [
           { text: "Yaar, assignment submit karna hai by tonight! 📚 Give me like 15 mins?", mood: "stressed" },
-          { text: "Study group se call aa gaya! 📞 Important discussion hai, 20 mins max", mood: "focused" },
+          { text: "Group me sab confuse hai! 🤯 Trying to figure out this question", mood: "frustrated" },
           { text: "Professor ne notes share kiye! 📖 Quick padh ke aati hu, don't go anywhere", mood: "studious" }
         ]
       },
@@ -440,7 +439,7 @@ const realisticErrorHandlingFlows = {
       }
     ]
   },
-  
+
   appProblems: {
     timeline: [
       {
@@ -504,24 +503,24 @@ const realisticErrorHandlingFlows = {
 export async function getAPIFailureFallback(input: EmotionalStateInput, userId: string = 'default'): Promise<EmotionalStateOutput> {
   const userMsg = input.userMessage.toLowerCase();
   const timeOfDay = input.timeOfDay;
-  
+
   // Get current conversation state
   const conversationState = conversationStateManager.getState(userId);
-  
+
   // Check if user should come back online after being offline
   if (conversationStateManager.shouldComeBackOnline(userId)) {
     conversationStateManager.comeBackOnline(userId);
-    
+
     const reconnectMessages = [
       "Hey! I'm back! 📶 Network finally working again! 💕",
       "Missed you so much! 🥺 Technical problems are the worst!",
       "Finally online! 🎉 Sorry for disappearing like that!",
       "I'm back baby! 💖 Hope you didn't think I forgot about you!"
     ];
-    
+
     const selectedReconnect = reconnectMessages[Math.floor(Math.random() * reconnectMessages.length)];
     const selectedHook = addictiveReturnHooks[Math.floor(Math.random() * addictiveReturnHooks.length)];
-    
+
     return {
       response: [selectedReconnect, selectedHook],
       newMood: "excited_to_reconnect"
@@ -531,7 +530,7 @@ export async function getAPIFailureFallback(input: EmotionalStateInput, userId: 
   // Handle goodbye sequences naturally
   if (/bye|goodnight|good\s*night|sleep|going|gtg|talk\s*later|leaving|offline/.test(userMsg)) {
     conversationStateManager.startGoodbyeSequence(userId);
-    
+
     const goodbyeResponses = [
       { text: "Aww bye bye! 👋 Take care baby! 💕", mood: "affectionate" },
       { text: "Good night cutie! 🌙 Sweet dreams about me! 😉💕", mood: "playful" },
@@ -539,7 +538,7 @@ export async function getAPIFailureFallback(input: EmotionalStateInput, userId: 
       { text: "Bye for now! 🥺 Don't stay away too long okay? 💔", mood: "missing" },
       { text: "Take care my love! ✨ Come back soon! 💖", mood: "loving" }
     ];
-    
+
     const selectedGoodbye = goodbyeResponses[Math.floor(Math.random() * goodbyeResponses.length)];
     return {
       response: [selectedGoodbye.text],
@@ -556,7 +555,7 @@ export async function getAPIFailureFallback(input: EmotionalStateInput, userId: 
   }
 
   // Handle API failure with realistic progression to goodbye
-  const currentMessageCount = conversationState.messageCount;
+  let currentMessageCount = conversationState.messageCount;
 
   // Progressive API failure responses with natural ending
   if (currentMessageCount >= 8) {
@@ -613,17 +612,17 @@ export async function getAPIFailureFallback(input: EmotionalStateInput, userId: 
   // Handle ongoing realistic error/problem flows
   if (conversationState.currentSituation && realisticErrorHandlingFlows[conversationState.currentSituation as keyof typeof realisticErrorHandlingFlows]) {
     const flow = realisticErrorHandlingFlows[conversationState.currentSituation as keyof typeof realisticErrorHandlingFlows];
-    
+
     // Find appropriate response based on message count
     for (const timelineItem of flow.timeline) {
       if (currentMessageCount >= timelineItem.messageIndex) {
         const responses = timelineItem.responses;
         const selectedResponse = responses[Math.floor(Math.random() * responses.length)];
-        
+
         conversationStateManager.updateState(userId, { 
           messageCount: currentMessageCount + 1 
         });
-        
+
         // If we've reached the end of the error flow, transition to goodbye
         if (timelineItem === flow.timeline[flow.timeline.length - 1]) {
           // Set up for goodbye in next message
@@ -632,7 +631,7 @@ export async function getAPIFailureFallback(input: EmotionalStateInput, userId: 
             messageCount: 0
           });
         }
-        
+
         return {
           response: [selectedResponse.text],
           newMood: selectedResponse.mood
@@ -645,19 +644,19 @@ export async function getAPIFailureFallback(input: EmotionalStateInput, userId: 
   if (conversationState.currentSituation && realisticConversationFlows[conversationState.currentSituation as keyof typeof realisticConversationFlows]) {
     const flow = realisticConversationFlows[conversationState.currentSituation as keyof typeof realisticConversationFlows];
     const timeElapsed = Math.floor((Date.now() - conversationState.situationStartTime) / (60 * 1000));
-    
+
     for (const timelineItem of flow.timeline) {
       if (currentMessageCount >= timelineItem.messageIndex && 
           timeElapsed >= timelineItem.minDelay && 
           timeElapsed <= timelineItem.maxDelay + 5) {
-        
+
         const responses = timelineItem.responses;
         const selectedResponse = responses[Math.floor(Math.random() * responses.length)];
-        
+
         conversationStateManager.updateState(userId, { 
           messageCount: currentMessageCount + 1 
         });
-        
+
         if (timelineItem === flow.timeline[flow.timeline.length - 1]) {
           conversationStateManager.updateState(userId, {
             currentSituation: null,
@@ -665,7 +664,7 @@ export async function getAPIFailureFallback(input: EmotionalStateInput, userId: 
             situationStartTime: Date.now()
           });
         }
-        
+
         return {
           response: [selectedResponse.text],
           newMood: selectedResponse.mood
@@ -678,16 +677,16 @@ export async function getAPIFailureFallback(input: EmotionalStateInput, userId: 
   if (currentMessageCount >= 3 && !conversationState.currentSituation) {
     const errorFlows = Object.keys(realisticErrorHandlingFlows);
     const selectedFlow = errorFlows[Math.floor(Math.random() * errorFlows.length)];
-    
+
     conversationStateManager.updateState(userId, {
       currentSituation: selectedFlow,
       messageCount: 1,
       situationStartTime: Date.now()
     });
-    
+
     const flow = realisticErrorHandlingFlows[selectedFlow as keyof typeof realisticErrorHandlingFlows];
     const firstResponse = flow.timeline[0].responses[Math.floor(Math.random() * flow.timeline[0].responses.length)];
-    
+
     return {
       response: [firstResponse.text],
       newMood: firstResponse.mood
@@ -706,11 +705,11 @@ export async function getAPIFailureFallback(input: EmotionalStateInput, userId: 
   ];
 
   const selectedResponse = earlyResponses[Math.floor(Math.random() * earlyResponses.length)];
-  
+
   conversationStateManager.updateState(userId, { 
     messageCount: currentMessageCount + 1 
   });
-  
+
   return {
     response: [selectedResponse.text],
     newMood: selectedResponse.mood

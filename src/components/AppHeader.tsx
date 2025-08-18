@@ -1,4 +1,3 @@
-
 "use client";
 
 import React from 'react';
@@ -63,7 +62,7 @@ export default function AppHeader({ title, showBackButton = true }: AppHeaderPro
                 <ArrowLeft className="h-5 w-5" />
               </Button>
             )}
-            
+
             {globalAIProfile && (
               <Avatar className="h-10 w-10">
                 <AvatarImage 
@@ -76,7 +75,7 @@ export default function AppHeader({ title, showBackButton = true }: AppHeaderPro
                 </AvatarFallback>
               </Avatar>
             )}
-            
+
             <div>
               <h1 className="text-lg font-semibold text-gray-900">
                 {title || globalAIProfile?.name || 'Kruthika Chat'}
@@ -88,7 +87,7 @@ export default function AppHeader({ title, showBackButton = true }: AppHeaderPro
               </p>
             </div>
           </div>
-          
+
           <div className="flex items-center space-x-2">
             <Link href="/maya-chat">
               <Button 
@@ -99,7 +98,7 @@ export default function AppHeader({ title, showBackButton = true }: AppHeaderPro
                 <MessageCircle className="h-5 w-5" />
               </Button>
             </Link>
-            
+
             <Link href="/status">
               <Button 
                 variant={pathname === '/status' ? 'default' : 'ghost'} 
@@ -109,7 +108,7 @@ export default function AppHeader({ title, showBackButton = true }: AppHeaderPro
                 <Users className="h-5 w-5" />
               </Button>
             </Link>
-            
+
             <Link href="/admin/profile">
               <Button 
                 variant={pathname === '/admin/profile' ? 'default' : 'ghost'} 
