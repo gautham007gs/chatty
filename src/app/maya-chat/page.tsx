@@ -179,6 +179,7 @@ const KruthikaChatPage: NextPage = () => {
   const [recentInteractions, setRecentInteractions] = useState<string[]>([]);
   const [showZoomedAvatarDialog, setShowZoomedAvatarDialog] = useState(false);
   const [zoomedAvatarUrl, setZoomedAvatarUrl] = useState('');
+  const [showOptionsMenu, setShowOptionsMenu] = useState(false);
   const { toast } = useToast();
   const initialLoadComplete = useRef(false);
   const [isLoadingChatState, setIsLoadingChatState] = useState(true);
@@ -463,11 +464,22 @@ const KruthikaChatPage: NextPage = () => {
   useEffect(() => {
     checkFirstDailyVisit();
     resetInactivityTimer();
+    
+    // Close options menu when clicking outside
+    const handleClickOutside = (event: MouseEvent) => {
+      if (showOptionsMenu) {
+        setShowOptionsMenu(false);
+      }
+    };
+    
+    document.addEventListener('mousedown', handleClickOutside);
+    
     return () => {
       if (inactivityTimerRef.current) clearTimeout(inactivityTimerRef.current);
       if (interstitialAdTimerRef.current) clearTimeout(interstitialAdTimerRef.current);
+      document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [messages, resetInactivityTimer, checkFirstDailyVisit]);
+  }, [messages, resetInactivityTimer, checkFirstDailyVisit, showOptionsMenu]);
 
 
   const handleSendMessage = async (text: string, imageUriFromInput?: string) => {
@@ -860,7 +872,7 @@ const KruthikaChatPage: NextPage = () => {
       <SocialBarAdDisplay />
 
       <div className="flex flex-col h-screen max-w-3xl mx-auto bg-chat-bg-default shadow-2xl">
-        {/* Updated ChatHeader to WhatsApp style */}
+        {/* WhatsApp-style header with call icons and menu */}
         <div className="bg-[#25D366] text-white px-4 py-3 shadow-md sticky top-0 z-50">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
@@ -881,14 +893,65 @@ const KruthikaChatPage: NextPage = () => {
                 </Avatar>
                 <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-400 rounded-full border-2 border-[#25D366]"></div>
               </div>
-              <div className="flex-grow">
+              <div className="flex-grow cursor-pointer" onClick={handleOpenAvatarZoom}>
                 <h1 className="text-lg font-semibold text-white">{displayAIProfile.name}</h1>
                 <p className="text-sm text-green-100 opacity-90">{onlineStatus}</p>
               </div>
             </div>
             <div className="flex items-center space-x-4">
-              <Camera className="h-5 w-5 cursor-pointer text-white hover:text-green-200 transition-colors" onClick={handleCallVideoClick} />
-              <MoreVertical className="h-5 w-5 cursor-pointer text-white hover:text-green-200 transition-colors" onClick={() => alert("More options not implemented yet.")} />
+              <Phone className="h-5 w-5 cursor-pointer text-white hover:text-green-200 transition-colors" onClick={handleCallVideoClick} />
+              <Video className="h-5 w-5 cursor-pointer text-white hover:text-green-200 transition-colors" onClick={handleCallVideoClick} />
+              <div className="relative">
+                <MoreVertical 
+                  className="h-5 w-5 cursor-pointer text-white hover:text-green-200 transition-colors" 
+                  onClick={() => setShowOptionsMenu(!showOptionsMenu)} 
+                />
+                {showOptionsMenu && (
+                  <div className="absolute right-0 top-8 bg-white text-gray-800 rounded-lg shadow-lg w-48 py-2 z-50">
+                    <button 
+                      className="w-full text-left px-4 py-2 hover:bg-gray-100 text-sm"
+                      onClick={() => {
+                        setShowOptionsMenu(false);
+                        router.push('/legal/terms');
+                      }}
+                    >
+                      Terms of Service
+                    </button>
+                    <button 
+                      className="w-full text-left px-4 py-2 hover:bg-gray-100 text-sm"
+                      onClick={() => {
+                        setShowOptionsMenu(false);
+                        router.push('/legal/privacy');
+                      }}
+                    >
+                      Privacy Policy
+                    </button>
+                    <div className="border-t border-gray-200 my-1"></div>
+                    <button 
+                      className="w-full text-left px-4 py-2 hover:bg-gray-100 text-sm text-gray-600"
+                      onClick={() => {
+                        setShowOptionsMenu(false);
+                        toast({
+                          title: "AI Disclaimer",
+                          description: `You're chatting with ${displayAIProfile.name}, an AI companion. Enjoy responsibly!`,
+                          duration: 4000,
+                        });
+                      }}
+                    >
+                      About AI Companion
+                    </button>
+                    <button 
+                      className="w-full text-left px-4 py-2 hover:bg-gray-100 text-sm"
+                      onClick={() => {
+                        setShowOptionsMenu(false);
+                        alert('Help & Support - Coming soon!');
+                      }}
+                    >
+                      Help & Support
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>

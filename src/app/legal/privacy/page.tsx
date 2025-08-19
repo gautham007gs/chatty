@@ -12,8 +12,8 @@ const PrivacyPolicyPage = () => {
       <div className="flex-grow overflow-y-auto p-4 sm:p-6 custom-scrollbar">
         <Card className="bg-card text-card-foreground">
           <CardHeader>
-            <CardTitle>Privacy Policy for Kruthika Chat</CardTitle>
-            <CardDescription>Last Updated: [Date - Please fill this in]</CardDescription>
+            <CardTitle>Privacy Policy for WhatApp</CardTitle>
+            <CardDescription>Last Updated: January 2025</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="p-4 border border-destructive/50 rounded-md bg-destructive/10 text-destructive">
@@ -27,13 +27,13 @@ const PrivacyPolicyPage = () => {
             <section>
               <h2 className="text-xl font-semibold mt-4 mb-2">1. Introduction</h2>
               <p className="text-muted-foreground">
-                Welcome to Kruthika Chat (the "Service"), operated by [Your Company Name/Your Name] ("we", "us", or "our").
+                Welcome to WhatApp (the "Service"), a social entertainment platform. 
                 This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our Service.
                 By using the Service, you agree to the collection and use of information in accordance with this policy.
               </p>
               <p className="text-muted-foreground mt-2">
-                The character "Kruthika" you interact with is an Artificial Intelligence (AI) language model.
-                Your interactions are with this AI and are not with a real human.
+                The character "Kruthika" you interact with is an Artificial Intelligence (AI) companion designed to provide
+                engaging social interaction. Your conversations are with this AI system and are intended for entertainment purposes.
               </p>
             </section>
 

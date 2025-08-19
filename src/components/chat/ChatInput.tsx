@@ -114,48 +114,65 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, isAiTyping }) => {
   };
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="flex items-end p-2 sm:p-3 bg-chat-input-bg border-t border-border gap-2"
-    >
-      <Button variant="ghost" size="icon" type="button" className="text-muted-foreground hover:text-foreground/80 self-end shrink-0">
-        <Smile className="h-5 w-5" />
-      </Button>
-      <Textarea
-        ref={textareaRef}
-        value={inputValue}
-        onChange={handleInputChange}
-        onKeyDown={handleKeyDown}
-        placeholder="Type a message..."
-        className="flex-grow resize-none border-0 focus-visible:ring-0 focus-visible:ring-offset-0 bg-card rounded-lg shadow-sm custom-scrollbar py-2 px-3 text-sm leading-tight max-h-[6rem] min-h-[2.5rem]" 
-        rows={1}
-      />
-      {inputValue.trim() || selectedImage ? (
-        <Button type="submit" variant="default" size="icon" className="bg-primary hover:bg-primary/90 self-end shrink-0">
-          <Send className="h-5 w-5 text-primary-foreground" />
-        </Button>
-      ) : (
-        <Button variant="ghost" size="icon" type="button" className="text-muted-foreground hover:text-foreground/80 self-end shrink-0">
-          <Mic className="h-5 w-5" />
-        </Button>
-      )}
-       <input 
-        type="file" 
-        ref={fileInputRef} 
-        onChange={handleImageChange} 
-        accept="image/jpeg,image/png,image/webp,image/gif" 
-        className="hidden" 
-      />
-      <Button 
-        variant="ghost" 
-        size="icon" 
-        type="button" 
-        className="text-muted-foreground hover:text-foreground/80 self-end shrink-0"
-        onClick={() => fileInputRef.current?.click()}
+    <div className="bg-[#F0F2F5] p-3 border-t border-gray-200">
+      <form
+        onSubmit={handleSubmit}
+        className="flex items-end gap-2"
       >
-        <Paperclip className="h-5 w-5" />
-      </Button>
-    </form>
+        <Button 
+          variant="ghost" 
+          size="icon" 
+          type="button" 
+          className="text-gray-500 hover:text-gray-700 self-end shrink-0 h-10 w-10"
+          onClick={() => fileInputRef.current?.click()}
+        >
+          <Paperclip className="h-5 w-5" />
+        </Button>
+        
+        <div className="flex-grow bg-white rounded-full flex items-center px-4 py-2 shadow-sm">
+          <Button variant="ghost" size="icon" type="button" className="text-gray-500 hover:text-gray-700 shrink-0 h-8 w-8">
+            <Smile className="h-5 w-5" />
+          </Button>
+          
+          <Textarea
+            ref={textareaRef}
+            value={inputValue}
+            onChange={handleInputChange}
+            onKeyDown={handleKeyDown}
+            placeholder="Type a message"
+            className="flex-grow resize-none border-0 focus-visible:ring-0 focus-visible:ring-offset-0 bg-transparent custom-scrollbar py-1 px-2 text-sm leading-tight max-h-[6rem] min-h-[1.5rem] placeholder:text-gray-500" 
+            rows={1}
+          />
+        </div>
+
+        {inputValue.trim() || selectedImage ? (
+          <Button 
+            type="submit" 
+            size="icon" 
+            className="bg-[#25D366] hover:bg-[#20B858] self-end shrink-0 h-10 w-10 rounded-full shadow-md"
+          >
+            <Send className="h-5 w-5 text-white" />
+          </Button>
+        ) : (
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            type="button" 
+            className="text-gray-500 hover:text-gray-700 self-end shrink-0 h-10 w-10 rounded-full bg-white shadow-sm"
+          >
+            <Mic className="h-5 w-5" />
+          </Button>
+        )}
+        
+        <input 
+          type="file" 
+          ref={fileInputRef} 
+          onChange={handleImageChange} 
+          accept="image/jpeg,image/png,image/webp,image/gif" 
+          className="hidden" 
+        />
+      </form>
+    </div>
   );
 };
 
