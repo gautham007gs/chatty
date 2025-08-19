@@ -139,6 +139,13 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
 
   const isProfilePage = pathname === '/admin/profile';
 
+  const handleTabChange = (tabId: string) => {
+    setActiveTab(tabId);
+    if (setActiveTab) {
+      setActiveTab(tabId);
+    }
+  };
+
   if (!isProfilePage) {
     return (
       <div className="admin-panel-wrapper" data-admin-panel="true">
@@ -223,7 +230,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
                         cursor-pointer transition-all duration-200 hover:shadow-md
                         ${isActive ? 'bg-primary/10 border-primary/30' : 'hover:bg-secondary/50'}
                       `}
-                      onClick={() => setActiveTab(item.id)}
+                      onClick={() => handleTabChange(item.id)}
                     >
                       <CardContent className="p-3">
                         <div className="flex items-start space-x-3">

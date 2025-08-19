@@ -42,8 +42,8 @@
   --chat-bg-ai: 0 0% 100%;
   --chat-text-ai: 222.2 84% 4.9%;
   --chat-bg-default: 0 0% 100%;
-  --chat-header-bg: 222.2 47.4% 11.2%;
-  --chat-header-text: 210 40% 98%;
+  --chat-header-bg: 144 84% 50%;
+  --chat-header-text: 0 0% 100%;
   --chat-input-bg: 0 0% 100%;
 }
 
@@ -85,8 +85,8 @@
   --chat-bg-ai: 222.2 84% 4.9%;
   --chat-text-ai: 210 40% 98%;
   --chat-bg-default: 222.2 84% 4.9%;
-  --chat-header-bg: 210 40% 98%;
-  --chat-header-text: 222.2 47.4% 11.2%;
+  --chat-header-bg: 144 84% 50%;
+  --chat-header-text: 0 0% 100%;
   --chat-input-bg: 217.2 32.6% 17.5%;
 }
 
