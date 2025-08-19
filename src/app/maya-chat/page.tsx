@@ -3,6 +3,7 @@
 import type { NextPage } from 'next';
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 import ChatHeader from '@/components/chat/ChatHeader';
 import ChatView from '@/components/chat/ChatView';
 import ChatInput from '@/components/chat/ChatInput';
@@ -167,6 +168,7 @@ export const tryShowRotatedAd = (activeAdSettings: AdSettings | null): boolean =
 
 
 const KruthikaChatPage: NextPage = () => {
+  const router = useRouter();
   const { adSettings, isLoadingAdSettings } = useAdSettings();
   const { aiProfile: globalAIProfile, isLoadingAIProfile } = useAIProfile();
   const { mediaAssetsConfig, isLoadingMediaAssets } = useAIMediaAssets();
@@ -859,15 +861,19 @@ const KruthikaChatPage: NextPage = () => {
 
       <div className="flex flex-col h-screen max-w-3xl mx-auto bg-chat-bg-default shadow-2xl">
         {/* Updated ChatHeader to WhatsApp style */}
-        <div className="bg-[#075E54] text-white p-4 shadow-md sticky top-0 z-50">
+        <div className="bg-[#25D366] text-white p-4 shadow-md sticky top-0 z-50">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
+              <ArrowLeft 
+                className="h-6 w-6 cursor-pointer text-white hover:text-gray-200" 
+                onClick={() => router.push('/')} 
+              />
               <Avatar className="h-10 w-10 cursor-pointer" onClick={handleOpenAvatarZoom}>
                 <AvatarImage
                   src={displayAIProfile.avatarUrl}
                   alt={displayAIProfile.name}
                 />
-                <AvatarFallback className="bg-white text-[#075E54]">
+                <AvatarFallback className="bg-white text-[#25D366]">
                   {displayAIProfile.name.charAt(0)}
                 </AvatarFallback>
               </Avatar>

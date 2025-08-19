@@ -41,8 +41,8 @@ const MessageBubble = memo(({ message, aiAvatarUrl, aiName = "AI", onImageClick,
         className={cn(
           "rounded-2xl px-4 py-2 max-w-full break-words cursor-pointer transition-colors",
           isAi
-            ? "bg-gray-200 text-gray-900 rounded-bl-md"
-            : "bg-blue-500 text-white rounded-br-md"
+            ? "bg-white text-gray-900 rounded-bl-md"
+            : "bg-[#DCF8C6] text-gray-900 rounded-br-md"
         )}
         onClick={handleBubbleClick}
       >

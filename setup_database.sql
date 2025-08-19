@@ -1,4 +1,3 @@
-
 -- Enable Row Level Security
 ALTER TABLE IF EXISTS public.messages_log ENABLE ROW LEVEL SECURITY;
 ALTER TABLE IF EXISTS public.daily_activity_log ENABLE ROW LEVEL SECURITY;

@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect, useRef } from 'react';
@@ -322,10 +321,10 @@ const StatusPage: React.FC = () => {
         </div>
 
         {/* Bottom Banner Ad */}
-        <div className="bg-white border-t border-gray-200">
-          <BannerAdDisplay
-            adType="standard"
-            placementKey="status-footer"
+        <div className="bg-white border-t border-gray-100">
+          <BannerAdDisplay 
+            adType="standard" 
+            placementKey="status-bottom" 
             className="w-full py-2"
           />
         </div>

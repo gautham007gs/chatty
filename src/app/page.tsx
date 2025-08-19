@@ -1,8 +1,9 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { MessageCircle, Search, MoreVertical, ChevronRight } from 'lucide-react';
+import { MessageCircle, ArrowLeft } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { useAIProfile } from '@/contexts/AIProfileContext';
@@ -38,7 +39,7 @@ export default function HomePage() {
     return (
       <div className="flex flex-col h-screen bg-gray-50">
         <div className="flex-grow flex items-center justify-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#075E54]"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500"></div>
         </div>
       </div>
     );
@@ -50,21 +51,17 @@ export default function HomePage() {
       <SocialBarAdDisplay />
 
       <div className="flex flex-col h-screen max-w-md mx-auto bg-white shadow-lg">
-        {/* Header */}
-        <div className="bg-[#075E54] text-white px-4 py-3 shadow-md">
+        {/* Header with lighter green color */}
+        <div className="bg-[#25D366] text-white px-4 py-3 shadow-md">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              <h1 className="text-xl font-bold">WhatsApp</h1>
-            </div>
-            <div className="flex items-center space-x-3">
-              <Search className="h-5 w-5 cursor-pointer hover:text-gray-300" />
-              <MoreVertical className="h-5 w-5 cursor-pointer hover:text-gray-300" />
+              <h1 className="text-xl font-bold">WhatApp</h1>
             </div>
           </div>
         </div>
 
         {/* Navigation Tabs */}
-        <div className="bg-[#075E54] text-white">
+        <div className="bg-[#25D366] text-white">
           <div className="flex">
             <Button 
               variant="ghost" 
@@ -79,29 +76,14 @@ export default function HomePage() {
             >
               STATUS
             </Button>
-            <Button 
-              variant="ghost" 
-              className="flex-1 text-white/70 hover:bg-white/10 rounded-none py-3 font-medium text-sm"
-            >
-              CALLS
-            </Button>
           </div>
-        </div>
-
-        {/* Banner Ad Space */}
-        <div className="bg-white border-b border-gray-100">
-          <BannerAdDisplay 
-            adType="standard" 
-            placementKey="home-top" 
-            className="w-full py-2"
-          />
         </div>
 
         {/* Chat List Container */}
         <div className="flex-grow overflow-y-auto bg-white">
           {/* Main Chat Entry */}
           <div 
-            className="flex items-center p-4 hover:bg-gray-50 cursor-pointer border-b border-gray-100 transition-all duration-200 active:bg-gray-100 group"
+            className="flex items-center p-4 hover:bg-gray-50 cursor-pointer border-b border-gray-100 transition-all duration-200 active:bg-gray-100"
             onClick={handleChatClick}
           >
             <Avatar className="h-14 w-14 ring-2 ring-green-500/30">
@@ -110,7 +92,7 @@ export default function HomePage() {
                 alt={effectiveProfile.name}
                 className="object-cover"
               />
-              <AvatarFallback className="bg-[#075E54] text-white text-lg">
+              <AvatarFallback className="bg-[#25D366] text-white text-lg">
                 {effectiveProfile.name.charAt(0).toUpperCase()}
               </AvatarFallback>
             </Avatar>
@@ -118,12 +100,9 @@ export default function HomePage() {
             <div className="ml-4 flex-grow">
               <div className="flex items-center justify-between">
                 <h2 className="font-semibold text-gray-900 text-lg">{effectiveProfile.name}</h2>
-                <div className="flex items-center space-x-2">
-                  <span className="text-xs text-gray-500">
-                    {currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                  </span>
-                  <ChevronRight className="h-4 w-4 text-gray-400 group-hover:text-gray-600" />
-                </div>
+                <span className="text-xs text-gray-500">
+                  {currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                </span>
               </div>
               <p className="text-gray-600 text-sm mt-1 line-clamp-2">
                 {effectiveProfile.status}
@@ -140,23 +119,23 @@ export default function HomePage() {
             </div>
           </div>
 
-          {/* Welcome Message */}
+          {/* Welcome Section */}
           <div className="p-6 text-center">
             <div className="mb-4">
-              <h3 className="text-2xl font-bold text-gray-800 mb-4">
-                Welcome to WhatsApp! 👋
+              <h3 className="text-3xl font-bold text-gray-800 mb-4">
+                Welcome to WhatApp! 👋
               </h3>
               <p className="text-gray-600 leading-relaxed text-sm">
                 Start chatting with {effectiveProfile.name} - your friend who's always ready to talk!
               </p>
-              <p className="text-xs text-gray-400 mt-2">
+              <p className="text-xs text-gray-400 mt-2 opacity-50">
                 Powered by smart conversation technology
               </p>
             </div>
 
             <Button 
               onClick={handleChatClick}
-              className="w-full bg-[#25D366] hover:bg-[#20B858] text-white py-3 text-lg font-medium rounded-lg shadow-md hover:shadow-lg transition-all mt-4"
+              className="w-full bg-[#25D366] hover:bg-[#20B858] text-white py-3 text-lg font-medium rounded-lg shadow-md hover:shadow-lg transition-all mt-4 mb-6"
             >
               <MessageCircle className="h-5 w-5 mr-2" />
               Start Chatting
@@ -164,9 +143,18 @@ export default function HomePage() {
           </div>
         </div>
 
+        {/* Banner Ad at Bottom */}
+        <div className="bg-white border-t border-gray-100">
+          <BannerAdDisplay 
+            adType="standard" 
+            placementKey="home-bottom" 
+            className="w-full py-2"
+          />
+        </div>
+
         {/* Floating Action Button */}
         <Button
-          className="fixed bottom-6 right-6 rounded-full w-16 h-16 shadow-2xl bg-[#25D366] hover:bg-[#20B858] z-50 transition-all duration-200 hover:scale-110"
+          className="fixed bottom-20 right-6 rounded-full w-16 h-16 shadow-2xl bg-[#25D366] hover:bg-[#20B858] z-50 transition-all duration-200 hover:scale-110"
           onClick={handleChatClick}
         >
           <MessageCircle className="h-7 w-7 text-white" />
