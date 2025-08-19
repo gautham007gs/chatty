@@ -11,6 +11,7 @@ import { Alert } from '@/components/ui/alert'; // Added import
 import { useToast } from '@/hooks/use-toast';
 import { KeyRound, ShieldAlert } from 'lucide-react';
 import { supabase } from '@/lib/supabaseClient'; // Import Supabase client
+import AdminLayout from '@/components/admin/AdminLayout';
 
 const ADMIN_AUTH_KEY = 'isAdminLoggedIn_KruthikaChat';
 
@@ -64,6 +65,7 @@ const AdminLoginPage: React.FC = () => {
   };
 
   return (
+    <AdminLayout>
     <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-background to-secondary/30 p-4">
       <Card className="w-full max-w-md shadow-2xl">
         <CardHeader className="text-center">
@@ -115,6 +117,7 @@ const AdminLoginPage: React.FC = () => {
         </CardContent>
       </Card>
     </div>
+    </AdminLayout>
   );
 };
 

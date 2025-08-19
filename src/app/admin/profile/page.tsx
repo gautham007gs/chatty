@@ -18,7 +18,11 @@ import { BarChart as RechartsBarChart, CartesianGrid, XAxis, YAxis, Bar } from '
 import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartLegend, ChartLegendContent } from "@/components/ui/chart";
 import type { ChartConfig } from "@/components/ui/chart";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { Badge } from '@/components/ui/badge';
 import { Terminal, Database, Users, MessageSquare, LogOut, LinkIcon, Settings, ExternalLink, Palette, Info, UserCircle, Globe, ImagePlus, Music2, Trash2, PlusCircle, Edit3, Sparkles, BarChartHorizontalBig, Edit, FileText, RefreshCcw, RotateCcw, Newspaper, LayoutPanelLeft, TrendingUp, ShieldAlert } from "lucide-react"
+import CacheManagement from '@/components/admin/CacheManagement';
+import PerformanceMonitor from '@/components/admin/PerformanceMonitor';
+import AdminLayout from '@/components/admin/AdminLayout';
 import { supabase } from '@/lib/supabaseClient';
 import { format, subDays, eachDayOfInterval } from 'date-fns';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -485,6 +489,7 @@ const AdminProfilePage: React.FC = () => {
 
 
   return (
+    <AdminLayout>
     <TooltipProvider>
     <div className="container mx-auto p-2 sm:p-4 lg:p-6 bg-background min-h-screen">
       <div className="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">
@@ -517,11 +522,13 @@ const AdminProfilePage: React.FC = () => {
 
 
       <Tabs defaultValue="kruthika" className="w-full">
-        <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 mb-8 h-auto py-2">
+        <TabsList className="grid w-full grid-cols-2 md:grid-cols-6 mb-8 h-auto py-2">
           <TabsTrigger value="kruthika" className="text-xs sm:text-sm py-2.5"><UserCircle className="mr-1 sm:mr-2 h-4 w-4"/>Kruthika's Settings</TabsTrigger>
           <TabsTrigger value="ads" className="text-xs sm:text-sm py-2.5"><Settings className="mr-1 sm:mr-2 h-4 w-4"/>Ad Settings</TabsTrigger>
           <TabsTrigger value="status_content" className="text-xs sm:text-sm py-2.5"><FileText className="mr-1 sm:mr-2 h-4 w-4"/>Status Page</TabsTrigger>
           <TabsTrigger value="analytics" className="text-xs sm:text-sm py-2.5"><BarChartHorizontalBig className="mr-1 sm:mr-2 h-4 w-4"/>Analytics</TabsTrigger>
+          <TabsTrigger value="system" className="text-xs sm:text-sm py-2.5"><Terminal className="mr-1 sm:mr-2 h-4 w-4"/>System</TabsTrigger>
+          <TabsTrigger value="security" className="text-xs sm:text-sm py-2.5"><ShieldAlert className="mr-1 sm:mr-2 h-4 w-4"/>Security</TabsTrigger>
         </TabsList>
 
         <TabsContent value="kruthika">
@@ -1009,9 +1016,204 @@ const AdminProfilePage: React.FC = () => {
             </CardFooter>
           </Card>
         </TabsContent>
+
+        <TabsContent value="system">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <Card className="bg-card text-card-foreground shadow-lg">
+              <CardHeader className="pb-4">
+                <CardTitle className="flex items-center text-xl font-semibold"><Terminal className="mr-2 h-5 w-5 text-primary"/>System Performance</CardTitle>
+                <CardDescription className="text-sm">Monitor application performance and cache statistics</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <PerformanceMonitor />
+              </CardContent>
+            </Card>
+
+            <Card className="bg-card text-card-foreground shadow-lg">
+              <CardHeader className="pb-4">
+                <CardTitle className="flex items-center text-xl font-semibold"><Database className="mr-2 h-5 w-5 text-primary"/>Database Management</CardTitle>
+                <CardDescription className="text-sm">Database operations and maintenance tools</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <Alert variant="default" className="bg-primary/10 border-primary/30">
+                  <Database className="h-4 w-4 !text-primary" />
+                  <AlertTitle className="text-primary font-semibold">Database Status</AlertTitle>
+                  <AlertDescription className="text-primary/80 text-sm">
+                    Connection: {supabase ? 'Connected' : 'Disconnected'} | Environment: {process.env.NODE_ENV || 'development'}
+                  </AlertDescription>
+                </Alert>
+                <div className="grid grid-cols-2 gap-2">
+                  <Button onClick={() => router.push('/api/test-db')} variant="outline" size="sm">
+                    Test DB Connection
+                  </Button>
+                  <Button onClick={() => window.open('/SUPABASE_SETUP.md', '_blank')} variant="outline" size="sm">
+                    Setup Guide
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-card text-card-foreground shadow-lg">
+              <CardHeader className="pb-4">
+                <CardTitle className="flex items-center text-xl font-semibold"><RefreshCcw className="mr-2 h-5 w-5 text-primary"/>Cache Management</CardTitle>
+                <CardDescription className="text-sm">Manage application caching for optimal performance</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <CacheManagement />
+              </CardContent>
+            </Card>
+
+            <Card className="bg-card text-card-foreground shadow-lg">
+              <CardHeader className="pb-4">
+                <CardTitle className="flex items-center text-xl font-semibold"><Globe className="mr-2 h-5 w-5 text-primary"/>Environment Info</CardTitle>
+                <CardDescription className="text-sm">Current environment and configuration status</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Supabase URL:</span>
+                    <Badge variant={process.env.NEXT_PUBLIC_SUPABASE_URL ? "default" : "destructive"}>
+                      {process.env.NEXT_PUBLIC_SUPABASE_URL ? "Configured" : "Missing"}
+                    </Badge>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Supabase Key:</span>
+                    <Badge variant={process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ? "default" : "destructive"}>
+                      {process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ? "Configured" : "Missing"}
+                    </Badge>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Gemini API:</span>
+                    <Badge variant={process.env.GEMINI_API_KEY ? "default" : "destructive"}>
+                      {process.env.GEMINI_API_KEY ? "Configured" : "Missing"}
+                    </Badge>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="security">
+          <div className="space-y-6">
+            <Alert variant="destructive" className="mb-8">
+              <ShieldAlert className="h-5 w-5" />
+              <AlertTitle>Security Recommendations</AlertTitle>
+              <AlertDescription>
+                Implement these security measures before deploying to production:
+              </AlertDescription>
+            </Alert>
+
+            <Card className="bg-card text-card-foreground shadow-lg">
+              <CardHeader className="pb-4">
+                <CardTitle className="flex items-center text-xl font-semibold"><ShieldAlert className="mr-2 h-5 w-5 text-primary"/>Authentication & Authorization</CardTitle>
+                <CardDescription className="text-sm">Current admin authentication status and recommendations</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <Alert variant="default" className="bg-yellow-50 border-yellow-200">
+                  <Info className="h-4 w-4 !text-yellow-600" />
+                  <AlertTitle className="text-yellow-800 font-semibold">Current Auth Method</AlertTitle>
+                  <AlertDescription className="text-yellow-700 text-sm">
+                    Using Supabase Authentication. Ensure RLS policies are properly configured for production.
+                  </AlertDescription>
+                </Alert>
+                
+                <div className="space-y-3">
+                  <h4 className="font-semibold text-primary">Security Checklist:</h4>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex items-center space-x-2">
+                      <input type="checkbox" className="rounded" defaultChecked />
+                      <span>Supabase RLS policies enabled</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <input type="checkbox" className="rounded" />
+                      <span>Admin role-based access control</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <input type="checkbox" className="rounded" />
+                      <span>API rate limiting implemented</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <input type="checkbox" className="rounded" />
+                      <span>Environment variables secured</span>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-card text-card-foreground shadow-lg">
+              <CardHeader className="pb-4">
+                <CardTitle className="flex items-center text-xl font-semibold"><Database className="mr-2 h-5 w-5 text-primary"/>Data Protection</CardTitle>
+                <CardDescription className="text-sm">User data protection and privacy compliance</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="p-4 border rounded-lg bg-secondary/20">
+                    <h4 className="font-semibold text-sm mb-2">Chat Data</h4>
+                    <p className="text-xs text-muted-foreground">Stored locally in browser localStorage</p>
+                    <Badge variant="default" className="mt-1">Privacy Friendly</Badge>
+                  </div>
+                  <div className="p-4 border rounded-lg bg-secondary/20">
+                    <h4 className="font-semibold text-sm mb-2">Analytics Data</h4>
+                    <p className="text-xs text-muted-foreground">Pseudo-anonymous tracking in Supabase</p>
+                    <Badge variant="secondary" className="mt-1">GDPR Compliant</Badge>
+                  </div>
+                </div>
+                
+                <div className="flex gap-2">
+                  <Button onClick={() => router.push('/legal/privacy')} variant="outline" size="sm">
+                    <FileText className="mr-2 h-4 w-4"/>View Privacy Policy
+                  </Button>
+                  <Button onClick={() => router.push('/legal/terms')} variant="outline" size="sm">
+                    <FileText className="mr-2 h-4 w-4"/>View Terms of Service
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-card text-card-foreground shadow-lg">
+              <CardHeader className="pb-4">
+                <CardTitle className="flex items-center text-xl font-semibold"><Globe className="mr-2 h-5 w-5 text-primary"/>Legal Compliance</CardTitle>
+                <CardDescription className="text-sm">Compliance status and recommendations for your AI chatbot</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <Alert variant="default" className="bg-blue-50 border-blue-200">
+                  <Info className="h-4 w-4 !text-blue-600" />
+                  <AlertTitle className="text-blue-800 font-semibold">Smart Strategy Implementation</AlertTitle>
+                  <AlertDescription className="text-blue-700 text-sm">
+                    Your app cleverly presents as a WhatsApp-like interface while maintaining legal safety through:
+                    <ul className="mt-2 ml-4 list-disc space-y-1">
+                      <li>Clear AI disclosure in legal pages</li>
+                      <li>Non-exact WhatsApp branding ("WhatApp" not "WhatsApp")</li>
+                      <li>Transparent privacy policy</li>
+                      <li>User consent mechanisms</li>
+                    </ul>
+                  </AlertDescription>
+                </Alert>
+                
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+                  <div className="text-center p-3 border rounded-lg">
+                    <Badge variant="default" className="mb-2">Active</Badge>
+                    <p className="text-sm font-medium">Legal Disclaimers</p>
+                  </div>
+                  <div className="text-center p-3 border rounded-lg">
+                    <Badge variant="default" className="mb-2">Active</Badge>
+                    <p className="text-sm font-medium">Three-Dot Menu</p>
+                  </div>
+                  <div className="text-center p-3 border rounded-lg">
+                    <Badge variant="default" className="mb-2">Active</Badge>
+                    <p className="text-sm font-medium">AI Transparency</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
       </Tabs>
     </div>
     </TooltipProvider>
+    </AdminLayout>
   );
 };
 

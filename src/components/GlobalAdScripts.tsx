@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useEffect, useRef } from 'react';
@@ -15,6 +14,12 @@ const GlobalAdScripts: React.FC = () => {
       return;
     }
 
+    // Check if we're in admin panel
+    if (sessionStorage.getItem('isAdminPanel') === 'true' || 
+        window.location.pathname.startsWith('/admin/')) {
+      return;
+    }
+
     const injectScript = (scriptCode: string, networkName: string, injectedRef: React.MutableRefObject<boolean>) => {
       if (injectedRef.current || !scriptCode || !scriptCode.trim() || scriptCode.toLowerCase().includes('placeholder')) {
         return; 
@@ -23,19 +28,19 @@ const GlobalAdScripts: React.FC = () => {
       try {
         const scriptContainer = document.createElement('div');
         scriptContainer.innerHTML = scriptCode; 
-        
+
         let hasValidScriptTag = false;
         Array.from(scriptContainer.childNodes).forEach(node => {
           if (node.nodeName === "SCRIPT") {
             const scriptTag = document.createElement('script');
             const originalScript = node as HTMLScriptElement;
-            
+
             for (let i = 0; i < originalScript.attributes.length; i++) {
               const attr = originalScript.attributes[i];
               scriptTag.setAttribute(attr.name, attr.value);
             }
             scriptTag.innerHTML = originalScript.innerHTML;
-            
+
             if (scriptTag.src || scriptTag.innerHTML.trim()) {
               hasValidScriptTag = true;
               document.body.appendChild(scriptTag);
