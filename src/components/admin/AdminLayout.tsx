@@ -141,8 +141,10 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
 
   const handleTabChange = (tabId: string) => {
     setActiveTab(tabId);
-    if (setActiveTab) {
-      setActiveTab(tabId);
+    // If we're in the profile page and have a setActiveTab prop, use it
+    if (isProfilePage && window.location.pathname === '/admin/profile') {
+      // Trigger a custom event to communicate with the profile page
+      window.dispatchEvent(new CustomEvent('adminTabChange', { detail: tabId }));
     }
   };
 

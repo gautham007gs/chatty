@@ -12,6 +12,7 @@ import { useAdSettings } from '@/contexts/AdSettingsContext';
 import { useAIMediaAssets } from '@/contexts/AIMediaAssetsContext';
 import { useToast } from "@/hooks/use-toast";
 import GlobalAdScripts from '@/components/GlobalAdScripts';
+import ProfileEditor from '@/components/chat/ProfileEditor';
 
 interface Message {
   id: string;
@@ -20,110 +21,98 @@ interface Message {
   timestamp: Date;
   mediaUrl?: string;
   mediaType?: 'image' | 'audio';
+  status?: 'sent' | 'delivered' | 'read'; // Added status for better message tracking
 }
 
+// Helper functions for local storage
+const getMessagesFromStorage = (): Message[] => {
+  try {
+    const stored = localStorage.getItem('kruthika_chat_messages');
+    if (stored) {
+      return JSON.parse(stored).map((msg: any) => ({
+        ...msg,
+        timestamp: new Date(msg.timestamp)
+      }));
+    }
+    return [];
+  } catch (error) {
+    console.error('Error loading messages from storage:', error);
+    return [];
+  }
+};
+
+const saveMessagesToStorage = (messages: Message[]): void => {
+  try {
+    localStorage.setItem('kruthika_chat_messages', JSON.stringify(messages));
+  } catch (error) {
+    console.error('Error saving messages to storage:', error);
+  }
+};
+
 const MayaChatPage: React.FC = () => {
+  const [isAiTyping, setIsAiTyping] = useState(false);
+  const [tokenUsage, setTokenUsage] = useState<{ used: number; limit: number; percentage: number } | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
-  const [isTyping, setIsTyping] = useState(false);
-  const router = useRouter();
+  const [isFirstVisit, setIsFirstVisit] = useState(true);
+  const [hasShownWelcome, setHasShownWelcome] = useState(false);
+  const [isProfileEditorOpen, setIsProfileEditorOpen] = useState(false); // State for profile editor modal
+
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const router = useRouter();
   const { toast } = useToast();
 
-  const { aiProfile, isLoadingAIProfile } = useAIProfile();
+  const { aiProfile, isLoadingAIProfile, updateAIProfile } = useAIProfile();
   const { adSettings, isLoadingAdSettings } = useAdSettings();
   const { mediaAssetsConfig, isLoadingMediaAssets } = useAIMediaAssets();
 
-  // Smart AI disclosure for new users
+  // Load messages on mount and add welcome message
   useEffect(() => {
-    const showAIDisclosure = () => {
-      try {
-        const hasSeenDisclosure = localStorage.getItem('kruthika_ai_disclosure_shown');
-        const lastVisit = localStorage.getItem('kruthika_last_visit');
-        const currentTime = Date.now();
-
-        // Show disclosure if:
-        // 1. Never seen before, OR
-        // 2. Last visit was more than 7 days ago, OR
-        // 3. User has less than 3 messages in history (new user)
-        const storedMessages = localStorage.getItem('kruthika_chat_messages');
-        const messageCount = storedMessages ? JSON.parse(storedMessages).length : 0;
-        const daysSinceLastVisit = lastVisit ? (currentTime - parseInt(lastVisit)) / (1000 * 60 * 60 * 24) : Infinity;
-
-        const shouldShow = !hasSeenDisclosure || daysSinceLastVisit > 7 || messageCount < 3;
-
-        if (shouldShow) {
-          // Random delay between 2-5 seconds after page load
-          const delay = Math.random() * 3000 + 2000;
-
-          setTimeout(() => {
-            toast({
-              title: "💬 Smart Chat Assistant",
-              description: "You're chatting with our advanced AI companion for the best experience!",
-              duration: 4000,
-              className: "bg-green-50 border-green-200 text-green-800"
-            });
-
-            // Mark as shown and update last visit
-            localStorage.setItem('kruthika_ai_disclosure_shown', 'true');
-            localStorage.setItem('kruthika_last_visit', currentTime.toString());
-          }, delay);
-        } else {
-          // Just update last visit time
-          localStorage.setItem('kruthika_last_visit', currentTime.toString());
-        }
-      } catch (error) {
-        console.error('Error handling AI disclosure:', error);
+    const savedMessages = getMessagesFromStorage();
+    setMessages(savedMessages);
+    if (savedMessages.length === 0) {
+      setIsFirstVisit(true);
+      // Add welcome message if this is the first visit
+      if (!hasShownWelcome) {
+        const welcomeMessage: Message = {
+          id: `welcome_${Date.now()}`,
+          text: `Hi there! 🌸 I'm ${aiProfile?.name || 'Kruthika'}! Welcome to our chat! I'm so excited to talk with you! Feel free to ask me anything or just say hello! 💕`,
+          sender: 'ai',
+          timestamp: new Date(),
+          status: 'delivered',
+        };
+        setMessages([welcomeMessage]);
+        saveMessagesToStorage([welcomeMessage]);
+        setHasShownWelcome(true);
       }
-    };
-
-    // Show disclosure after a short delay to ensure smooth page load
-    const timer = setTimeout(showAIDisclosure, 1000);
-    return () => clearTimeout(timer);
-  }, [toast]);
-
-  useEffect(() => {
-    const loadMessages = () => {
-      try {
-        const stored = localStorage.getItem('kruthika_chat_messages');
-        if (stored) {
-          const parsedMessages = JSON.parse(stored).map((msg: any) => ({
-            ...msg,
-            timestamp: new Date(msg.timestamp)
-          }));
-          setMessages(parsedMessages);
-        }
-      } catch (error) {
-        console.error('Error loading messages:', error);
-      }
-    };
-
-    loadMessages();
-  }, []);
-
-  useEffect(() => {
-    try {
-      localStorage.setItem('kruthika_chat_messages', JSON.stringify(messages));
-    } catch (error) {
-      console.error('Error saving messages:', error);
+    } else {
+      setIsFirstVisit(false);
+      setHasShownWelcome(true); // Mark as shown if messages are loaded from storage
     }
+  }, [aiProfile?.name, hasShownWelcome]); // Depend on aiProfile?.name to update welcome message if name changes
+
+  // Effect to save messages to storage whenever messages state changes
+  useEffect(() => {
+    saveMessagesToStorage(messages);
   }, [messages]);
 
+  // Scroll to bottom when messages or typing status changes
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages, isTyping]);
+  }, [messages, isAiTyping]);
 
   const handleSendMessage = async (text: string) => {
     if (!text.trim()) return;
 
     const userMessage: Message = {
-      id: Date.now().toString(),
+      id: `user_${Date.now()}`,
       text,
       sender: 'user',
-      timestamp: new Date()
+      timestamp: new Date(),
+      status: 'sent',
     };
 
     setMessages(prev => [...prev, userMessage]);
-    setIsTyping(true);
+    setIsAiTyping(true);
 
     try {
       const response = await fetch('/api/chat', {
@@ -131,42 +120,101 @@ const MayaChatPage: React.FC = () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
           message: text, 
-          conversationHistory: messages.slice(-10),
+          conversationHistory: messages.slice(-10), // Keep history relevant
           aiProfile: aiProfile || undefined,
           mediaAssets: mediaAssetsConfig?.assets || []
         })
       });
 
-      if (!response.ok) throw new Error('Network response was not ok');
+      if (!response.ok) {
+        // Handle network or server errors
+        let errorMessage = "Sorry, I'm having trouble connecting right now. Please try again! 😊";
+        if (response.status === 429) { // Example: Rate limiting
+          errorMessage = "Too many requests. Please try again in a moment.";
+        } else {
+          try {
+            const errorData = await response.json();
+            errorMessage = errorData.error || errorMessage;
+          } catch (e) {
+            // Ignore if error response is not JSON
+          }
+        }
+        toast({
+          title: "Connection Issue",
+          description: errorMessage,
+          variant: "destructive",
+          duration: 3000, // Shorter duration for error toasts
+        });
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
 
       const data = await response.json();
 
       const aiMessage: Message = {
-        id: (Date.now() + 1).toString(),
+        id: `ai_${Date.now()}`,
         text: data.message || "Sorry, I couldn't process that message.",
         sender: 'ai',
         timestamp: new Date(),
         mediaUrl: data.mediaUrl,
-        mediaType: data.mediaType
+        mediaType: data.mediaType,
+        status: 'delivered',
       };
 
       setMessages(prev => [...prev, aiMessage]);
     } catch (error) {
       console.error('Error sending message:', error);
-      const errorMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        text: "Sorry, I'm having trouble connecting right now. Please try again! 😊",
-        sender: 'ai',
-        timestamp: new Date()
-      };
-      setMessages(prev => [...prev, errorMessage]);
+      // This catch block is for errors that occur before receiving a response or network issues
+      toast({
+        title: "Connection Issue",
+        description: "Unable to send message. Please check your connection and try again.",
+        variant: "destructive",
+        duration: 3000, // Shorter duration for error toasts
+      });
     } finally {
-      setIsTyping(false);
+      setIsAiTyping(false);
     }
   };
 
   const handleBackToHome = () => {
     router.push('/');
+  };
+
+  const handleAvatarClick = () => {
+    setIsProfileEditorOpen(true);
+  };
+
+  const handleProfileSave = (updatedProfile: any) => {
+    updateAIProfile(updatedProfile);
+    setIsProfileEditorOpen(false);
+    toast({
+      title: "Profile Updated",
+      description: "Your AI profile has been successfully updated.",
+      duration: 2000,
+    });
+  };
+
+  const handleCallClick = () => {
+    toast({
+      title: "Voice Call",
+      description: "Voice calling feature coming soon!",
+      duration: 2000, // Shorter duration for feature announcements
+    });
+  };
+
+  const handleVideoClick = () => {
+    toast({
+      title: "Video Call", 
+      description: "Video calling feature coming soon!",
+      duration: 2000, // Shorter duration for feature announcements
+    });
+  };
+
+  const handleTriggerAd = () => {
+    toast({
+      title: "Ad Link",
+      description: "This would open an ad in a real implementation.",
+      duration: 2000, // Shorter duration for ad interaction feedback
+    });
   };
 
   const isLoading = isLoadingAIProfile || isLoadingAdSettings || isLoadingMediaAssets;
@@ -182,33 +230,46 @@ const MayaChatPage: React.FC = () => {
     );
   }
 
+  // The actual rendering of the chat page
   return (
     <>
       <GlobalAdScripts adSettings={adSettings} />
-      <div className="flex flex-col h-screen bg-gray-50 relative">
-        {/* Header */}
+      <div className="flex flex-col h-screen bg-background overflow-hidden">
         <ChatHeader 
           profile={aiProfile}
           onBack={handleBackToHome}
+          onAvatarClick={handleAvatarClick}
+          onCallClick={handleCallClick}
+          onVideoClick={handleVideoClick}
+          tokenUsage={tokenUsage}
         />
 
-        {/* Banner Ad */}
         <BannerAdDisplay adSettings={adSettings} />
 
-        {/* Chat Area */}
-        <div className="flex-1 overflow-hidden">
+        <div className="flex-1 overflow-y-auto"> {/* Changed overflow-hidden to overflow-y-auto for scrollable chat */}
           <ChatView 
             messages={messages}
-            isTyping={isTyping}
+            isTyping={isAiTyping}
             messagesEndRef={messagesEndRef}
+            aiAvatarUrl={aiProfile?.avatarUrl || ''} // Pass avatarUrl
+            aiName={aiProfile?.name || 'AI Assistant'} // Pass name
+            onTriggerAd={handleTriggerAd}
           />
         </div>
 
-        {/* Input */}
-        <ChatInput onSendMessage={handleSendMessage} />
+        <ChatInput onSendMessage={handleSendMessage} disabled={isAiTyping} />
 
-        {/* Social Bar Ad */}
         <SocialBarAdDisplay adSettings={adSettings} />
+
+        {isProfileEditorOpen && aiProfile && (
+          <ProfileEditor
+            currentProfile={aiProfile}
+            onSave={handleProfileSave}
+            onClose={() => setIsProfileEditorOpen(false)}
+            isOpen={isProfileEditorOpen}
+            onOpenChange={setIsProfileEditorOpen}
+          />
+        )}
       </div>
     </>
   );

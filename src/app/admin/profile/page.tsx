@@ -56,6 +56,22 @@ const AdminProfilePage: React.FC<AdminProfilePageProps> = ({ activeTab = 'kruthi
   // Use internal state if setActiveTab is not provided
   const currentActiveTab = activeTab || internalActiveTab;
   const handleTabChange = setActiveTab || setInternalActiveTab;
+
+  // Listen for tab changes from AdminLayout
+  useEffect(() => {
+    const handleAdminTabChange = (event: CustomEvent) => {
+      const newTab = event.detail;
+      setInternalActiveTab(newTab);
+      if (setActiveTab) {
+        setActiveTab(newTab);
+      }
+    };
+
+    window.addEventListener('adminTabChange', handleAdminTabChange as EventListener);
+    return () => {
+      window.removeEventListener('adminTabChange', handleAdminTabChange as EventListener);
+    };
+  }, [setActiveTab]);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const router = useRouter();
   const { toast } = useToast();

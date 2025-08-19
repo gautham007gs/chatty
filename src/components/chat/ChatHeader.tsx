@@ -71,11 +71,11 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
   };
 
   return (
-    <header className="flex items-center p-3 bg-[#25D366] border-b border-border shadow-sm">
+    <header className="flex items-center p-3 bg-[#25D366] border-b border-border shadow-sm sticky top-0 z-10">
       <Button 
         variant="ghost" 
         size="icon" 
-        className="text-white hover:bg-white/10 mr-2"
+        className="text-white hover:bg-white/10 mr-2 shrink-0"
         onClick={handleBackClick}
         aria-label="Go back"
       >
@@ -84,13 +84,13 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
       <button 
         onClick={onAvatarClick} 
         className={cn(
-            "flex items-center focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-[#25D366] rounded-full p-1 mr-3",
-            aiName === "Kruthika" && "border-2 border-white p-0.5" 
+            "flex items-center focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-[#25D366] rounded-full mr-3 shrink-0",
+            aiName === "Kruthika" && "ring-2 ring-white ring-opacity-50" 
         )}
         key={`avatar-header-wrapper-${aiName}-${avatarUrlToUse || 'default_wrapper_key_ch'}`}
       >
         <Avatar 
-            className="h-10 w-10 cursor-pointer" 
+            className="h-10 w-10 cursor-pointer border-2 border-white/20" 
             key={`avatar-comp-header-${aiName}-${avatarUrlToUse || 'default_avatar_comp_key_ch'}`}
         >
           <AvatarImage 
@@ -99,30 +99,31 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
             data-ai-hint="profile woman" 
             key={`chat-header-avatar-img-${aiName}-${avatarUrlToUse || 'no_avatar_fallback_img_ch'}`}
             onError={handleAvatarError} 
+            className="object-cover"
           />
-          <AvatarFallback>{(aiName || "K").charAt(0).toUpperCase()}</AvatarFallback>
+          <AvatarFallback className="bg-white/20 text-white font-bold">{(aiName || "K").charAt(0).toUpperCase()}</AvatarFallback>
         </Avatar>
       </button>
-      <div className="flex-grow cursor-pointer" onClick={onAvatarClick}>
-        <h1 className="font-semibold text-lg text-white">{aiName}</h1>
-        <p className="text-xs text-white/70">{onlineStatus}</p>
+      <div className="flex-grow cursor-pointer min-w-0" onClick={onAvatarClick}>
+        <h1 className="font-semibold text-lg text-white truncate">{aiName}</h1>
+        <p className="text-xs text-white/80 truncate">{onlineStatus}</p>
         {tokenUsage && tokenUsage.percentage > 0 && (
-          <div className="text-xs text-pink-300 mt-1">
+          <div className="text-xs text-pink-200 mt-1 truncate">
             {getTokenMessage()}
           </div>
         )}
-      </div >
+      </div>
 
-      <Button variant="ghost" size="icon" className="text-white hover:bg-white/10" aria-label="Video call (simulated ad)" onClick={onVideoClick}>
+      <Button variant="ghost" size="icon" className="text-white hover:bg-white/10 shrink-0" aria-label="Video call (simulated ad)" onClick={onVideoClick}>
         <Video className="h-5 w-5" />
       </Button>
-      <Button variant="ghost" size="icon" className="text-white hover:bg-white/10 mr-1" aria-label="Call (simulated ad)" onClick={onCallClick}>
+      <Button variant="ghost" size="icon" className="text-white hover:bg-white/10 mr-1 shrink-0" aria-label="Call (simulated ad)" onClick={onCallClick}>
         <Phone className="h-5 w-5" />
       </Button>
 
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="icon" className="text-white hover:bg-white/10" aria-label="More options">
+          <Button variant="ghost" size="icon" className="text-white hover:bg-white/10 shrink-0" aria-label="More options">
             <MoreVertical className="h-5 w-5" />
           </Button>
         </DropdownMenuTrigger>
