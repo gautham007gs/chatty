@@ -29,8 +29,4 @@ mode = "sequential"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "npx kill-port 5000 || true"
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
 args = "npm run dev -- --port 5000 --hostname 0.0.0.0"
