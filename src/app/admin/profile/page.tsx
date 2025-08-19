@@ -45,7 +45,12 @@ interface DailyCount {
   count: number;
 }
 
-const AdminProfilePage: React.FC = () => {
+interface AdminProfilePageProps {
+  activeTab?: string;
+  setActiveTab?: (tab: string) => void;
+}
+
+const AdminProfilePage: React.FC<AdminProfilePageProps> = ({ activeTab = 'kruthika', setActiveTab }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const router = useRouter();
   const { toast } = useToast();
@@ -521,7 +526,7 @@ const AdminProfilePage: React.FC = () => {
       </Alert>
 
 
-      <Tabs defaultValue="kruthika" className="w-full">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="grid w-full grid-cols-2 md:grid-cols-6 mb-8 h-auto py-2">
           <TabsTrigger value="kruthika" className="text-xs sm:text-sm py-2.5"><UserCircle className="mr-1 sm:mr-2 h-4 w-4"/>Kruthika's Settings</TabsTrigger>
           <TabsTrigger value="ads" className="text-xs sm:text-sm py-2.5"><Settings className="mr-1 sm:mr-2 h-4 w-4"/>Ad Settings</TabsTrigger>
