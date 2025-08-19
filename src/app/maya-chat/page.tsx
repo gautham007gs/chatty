@@ -861,30 +861,34 @@ const KruthikaChatPage: NextPage = () => {
 
       <div className="flex flex-col h-screen max-w-3xl mx-auto bg-chat-bg-default shadow-2xl">
         {/* Updated ChatHeader to WhatsApp style */}
-        <div className="bg-[#25D366] text-white p-4 shadow-md sticky top-0 z-50">
+        <div className="bg-[#25D366] text-white px-4 py-3 shadow-md sticky top-0 z-50">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
               <ArrowLeft 
-                className="h-6 w-6 cursor-pointer text-white hover:text-gray-200" 
+                className="h-6 w-6 cursor-pointer text-white hover:text-gray-200 transition-colors" 
                 onClick={() => router.push('/')} 
               />
-              <Avatar className="h-10 w-10 cursor-pointer" onClick={handleOpenAvatarZoom}>
-                <AvatarImage
-                  src={displayAIProfile.avatarUrl}
-                  alt={displayAIProfile.name}
-                />
-                <AvatarFallback className="bg-white text-[#25D366]">
-                  {displayAIProfile.name.charAt(0)}
-                </AvatarFallback>
-              </Avatar>
-              <div>
-                <h1 className="text-lg font-semibold">{displayAIProfile.name}</h1>
-                <p className="text-sm text-green-100">{onlineStatus}</p>
+              <div className="relative">
+                <Avatar className="h-10 w-10 cursor-pointer border-2 border-white/20" onClick={handleOpenAvatarZoom}>
+                  <AvatarImage
+                    src={displayAIProfile.avatarUrl}
+                    alt={displayAIProfile.name}
+                    className="object-cover"
+                  />
+                  <AvatarFallback className="bg-white text-[#25D366] font-semibold">
+                    {displayAIProfile.name.charAt(0)}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-400 rounded-full border-2 border-[#25D366]"></div>
+              </div>
+              <div className="flex-grow">
+                <h1 className="text-lg font-semibold text-white">{displayAIProfile.name}</h1>
+                <p className="text-sm text-green-100 opacity-90">{onlineStatus}</p>
               </div>
             </div>
             <div className="flex items-center space-x-4">
-              <Camera className="h-5 w-5 cursor-pointer text-gray-300 hover:text-white" onClick={handleCallVideoClick} />
-              <MoreVertical className="h-5 w-5 cursor-pointer text-gray-300 hover:text-white" onClick={() => alert("More options not implemented yet.")} />
+              <Camera className="h-5 w-5 cursor-pointer text-white hover:text-green-200 transition-colors" onClick={handleCallVideoClick} />
+              <MoreVertical className="h-5 w-5 cursor-pointer text-white hover:text-green-200 transition-colors" onClick={() => alert("More options not implemented yet.")} />
             </div>
           </div>
         </div>

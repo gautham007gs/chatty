@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { MessageCircle, ArrowLeft } from 'lucide-react';
+import { MessageCircle, ArrowLeft, Camera, Search, MoreVertical, Users } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { useAIProfile } from '@/contexts/AIProfileContext';
@@ -57,6 +57,11 @@ export default function HomePage() {
             <div className="flex items-center space-x-3">
               <h1 className="text-xl font-bold">WhatApp</h1>
             </div>
+            <div className="flex items-center space-x-4">
+              <Camera className="h-5 w-5 cursor-pointer hover:text-gray-200" />
+              <Search className="h-5 w-5 cursor-pointer hover:text-gray-200" />
+              <MoreVertical className="h-5 w-5 cursor-pointer hover:text-gray-200" />
+            </div>
           </div>
         </div>
 
@@ -86,16 +91,22 @@ export default function HomePage() {
             className="flex items-center p-4 hover:bg-gray-50 cursor-pointer border-b border-gray-100 transition-all duration-200 active:bg-gray-100"
             onClick={handleChatClick}
           >
-            <Avatar className="h-14 w-14 ring-2 ring-green-500/30">
-              <AvatarImage 
-                src={effectiveProfile.avatarUrl} 
-                alt={effectiveProfile.name}
-                className="object-cover"
-              />
-              <AvatarFallback className="bg-[#25D366] text-white text-lg">
-                {effectiveProfile.name.charAt(0).toUpperCase()}
-              </AvatarFallback>
-            </Avatar>
+            <div className="relative">
+              <Avatar className="h-14 w-14 ring-3 ring-[#25D366] p-0.5">
+                <AvatarImage 
+                  src={effectiveProfile.avatarUrl} 
+                  alt={effectiveProfile.name}
+                  className="object-cover"
+                />
+                <AvatarFallback className="bg-[#25D366] text-white text-lg">
+                  {effectiveProfile.name.charAt(0).toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
+              {/* Green status indicator for story/status updates */}
+              <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 bg-[#25D366] rounded-full border-2 border-white flex items-center justify-center">
+                <div className="w-2 h-2 bg-white rounded-full"></div>
+              </div>
+            </div>
 
             <div className="ml-4 flex-grow">
               <div className="flex items-center justify-between">
@@ -135,10 +146,18 @@ export default function HomePage() {
 
             <Button 
               onClick={handleChatClick}
-              className="w-full bg-[#25D366] hover:bg-[#20B858] text-white py-3 text-lg font-medium rounded-lg shadow-md hover:shadow-lg transition-all mt-4 mb-6"
+              className="w-full bg-[#25D366] hover:bg-[#20B858] text-white py-3 text-lg font-medium rounded-lg shadow-md hover:shadow-lg transition-all mt-4 mb-3"
             >
               <MessageCircle className="h-5 w-5 mr-2" />
               Start Chatting
+            </Button>
+
+            <Button 
+              onClick={handleStatusClick}
+              className="w-full bg-[#075E54] hover:bg-[#064841] text-white py-3 text-lg font-medium rounded-lg shadow-md hover:shadow-lg transition-all mb-6"
+            >
+              <Users className="h-5 w-5 mr-2" />
+              View Status
             </Button>
           </div>
         </div>

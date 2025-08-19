@@ -250,15 +250,6 @@ const StatusPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Top Banner Ad */}
-        <div className="bg-gray-50 border-b border-gray-200">
-          <BannerAdDisplay
-            adType="standard"
-            placementKey="status-top"
-            className="w-full py-1"
-          />
-        </div>
-
         <div className="flex-grow overflow-y-auto">
           {/* My Status */}
           <StatusItemDisplay
@@ -292,15 +283,8 @@ const StatusPage: React.FC = () => {
             />
           )}
 
-          {/* Mid-content Banner Ad */}
-          <div className="my-3 px-4">
-            <BannerAdDisplay
-              adType="native"
-              placementKey="status-middle"
-              className="w-full rounded-lg"
-              contextual={true}
-            />
-          </div>
+          {/* Spacer for better content flow */}
+          <div className="my-3"></div>
 
           {/* Other Contacts */}
           {displayManagedDemoContacts.map(contact => (
@@ -326,6 +310,12 @@ const StatusPage: React.FC = () => {
             adType="standard" 
             placementKey="status-bottom" 
             className="w-full py-2"
+          />
+          <BannerAdDisplay
+            adType="native"
+            placementKey="status-middle"
+            className="w-full rounded-lg p-2"
+            contextual={true}
           />
         </div>
 
