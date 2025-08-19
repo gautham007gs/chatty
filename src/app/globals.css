@@ -55,21 +55,20 @@ body {
     --sidebar-border: 120 15% 80%;
     --sidebar-ring: 130 50% 45%;
 
-    /* Chat specific variables reflecting the new theme */
-    --chat-bg-user: 98 55% 88%; /* Light green for user messages e.g. #DDF7C7 (hsl(98, 55%, 88%)) */
-    --chat-text-user: 0 0% 10%; /* Dark Grey/Black text on user messages */
+    /* Chat specific variables reflecting WhatsApp theme */
+    --chat-bg-user: 98 55% 88%; /* Light green for user messages #DCF8C6 */
+    --chat-text-user: 0 0% 10%; /* Dark text on user messages */
     
-    --chat-bg-ai: 0 0% 97%; /* WhatsApp AI/other person bubble: Very light grey/off-white (e.g. #F7F7F7) */
-    --chat-text-ai: 0 0% 15%; /* Dark text for AI messages on light background */
+    --chat-bg-ai: 0 0% 100%; /* White for AI messages */
+    --chat-text-ai: 0 0% 15%; /* Dark text for AI messages */
     
-    /* This is the background for the chat message viewing area (ChatView.tsx) */
-    /* It's a light beige, suitable to go under a doodle pattern if you add one. */
-    --chat-bg-default: 48 33% 92%; /* Lighter beige for chat area background - e.g. #F2EDE4 */
+    /* Chat area background - light WhatsApp style */
+    --chat-bg-default: 45 15% 97%; /* Very light cream background #FAFAFA */
     
-    --chat-header-bg: 0 0% 98%; /* Whitish background for in-chat header */
-    --chat-header-text: hsl(var(--foreground)); /* Dark text on in-chat header */
+    --chat-header-bg: 213 33% 33%; /* WhatsApp green #075E54 */
+    --chat-header-text: 0 0% 100%; /* White text on header */
     
-    --chat-input-bg: 0 0% 96%; /* Light grey/off-white for input area */
+    --chat-input-bg: 0 0% 98%; /* Very light grey for input */
   }
 
   .dark {
@@ -127,7 +126,7 @@ body {
     @apply border-border;
   }
   body {
-    background-color: hsl(var(--chat-bg-default)); /* Uses the chat area background for the whole page */
+    background-color: #FAFAFA; /* Light WhatsApp background */
     @apply text-foreground;
   }
   /* Ensure header text color is applied */

@@ -701,32 +701,22 @@ const KruthikaChatPage: NextPage = () => {
       }
 
     } catch (error: any) {
-      console.error('Error getting AI response:', error);
-      let errorDescription = `Could not get a response from ${currentEffectiveAIProfile.name}.`;
-      if (error?.response?.data?.error) errorDescription = `${currentEffectiveAIProfile.name}'s server said: ${error.response.data.error}`;
-      else if (error?.message) errorDescription += ` Details: ${error.message}`;
-      else if (typeof error === 'string') errorDescription += ` Details: ${error}`;
-      else errorDescription += ` An unknown error occurred. Please check console logs.`;
-
-      // Don't show error toast to user - keep it natural
       console.error('Full error details:', error);
 
-      // Use realistic fallback response instead of showing technical error
-      const { getAPIFailureFallback } = await import('@/ai/flows/emotional-state-simulation');
-      const fallbackInput = {
-        userMessage: text,
-        userImageUri: currentImageUri,
-        timeOfDay: getTimeOfDay(),
-        mood: aiMood,
-        recentInteractions: updatedRecentInteractions,
-        availableImages: [],
-        availableAudio: [],
-      };
-      const fallbackResponse = await getAPIFailureFallback(fallbackInput, userIdRef.current || 'default');
+      // Show a natural, context-aware fallback response
+      const fallbackResponses = [
+        "Sorry, I was thinking about something else! What were you saying? 😊",
+        "Oops, my mind wandered for a second! Can you repeat that?",
+        "I think I missed that - network issues maybe? Tell me again! 💭",
+        "Sorry, I was distracted! What did you want to talk about?",
+        "My connection seems slow today! Can you say that again? 🙈"
+      ];
+
+      const randomFallback = fallbackResponses[Math.floor(Math.random() * fallbackResponses.length)];
 
       const errorAiMessage: Message = {
         id: (Date.now() + 1).toString(),
-        text: fallbackResponse.response,
+        text: randomFallback,
         sender: 'ai',
         timestamp: new Date(),
         status: 'read',
