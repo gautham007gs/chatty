@@ -1,0 +1,37 @@
+Error: An error occurred in `next/font`.
+
+Error: Cannot find module 'autoprefixer'
+Require stack:
+- /home/runner/workspace/node_modules/next/dist/build/webpack/config/blocks/css/plugins.js
+- /home/runner/workspace/node_modules/next/dist/build/webpack/config/blocks/css/index.js
+- /home/runner/workspace/node_modules/next/dist/build/webpack/config/index.js
+- /home/runner/workspace/node_modules/next/dist/build/webpack-config.js
+- /home/runner/workspace/node_modules/next/dist/server/dev/hot-reloader-webpack.js
+- /home/runner/workspace/node_modules/next/dist/server/lib/router-utils/setup-dev-bundler.js
+- /home/runner/workspace/node_modules/next/dist/server/lib/router-server.js
+- /home/runner/workspace/node_modules/next/dist/server/lib/start-server.js
+    at Module._resolveFilename (node:internal/modules/cjs/loader:1212:15)
+    at /home/runner/workspace/node_modules/next/dist/server/require-hook.js:55:36
+    at Function.resolve (node:internal/modules/helpers:193:19)
+    at loadPlugin (/home/runner/workspace/node_modules/next/dist/build/webpack/config/blocks/css/plugins.js:53:32)
+    at /home/runner/workspace/node_modules/next/dist/build/webpack/config/blocks/css/plugins.js:185:56
+    at Array.map (<anonymous>)
+    at getPostCssPlugins (/home/runner/workspace/node_modules/next/dist/build/webpack/config/blocks/css/plugins.js:185:47)
+    at async /home/runner/workspace/node_modules/next/dist/build/webpack/config/blocks/css/index.js:125:36
+    at async /home/runner/workspace/node_modules/next/dist/build/webpack/loaders/next-font-loader/index.js:94:33
+    at async Span.traceAsyncFn (/home/runner/workspace/node_modules/next/dist/trace/trace.js:157:20)
+    at Module._resolveFilename (node:internal/modules/cjs/loader:1212:15)
+    at <unknown> (file:///home/runner/workspace/node_modules/next/dist/server/require-hook.js:55:36)
+    at Function.resolve (node:internal/modules/helpers:193:19)
+    at loadPlugin (file:///home/runner/workspace/node_modules/next/dist/build/webpack/config/blocks/css/plugins.js:53:32)
+    at <unknown> (file:///home/runner/workspace/node_modules/next/dist/build/webpack/config/blocks/css/plugins.js:185:56)
+    at Array.map (<anonymous>)
+    at getPostCssPlugins (file:///home/runner/workspace/node_modules/next/dist/build/webpack/config/blocks/css/plugins.js:185:47)
+    at async (file:///home/runner/workspace/node_modules/next/dist/build/webpack/config/blocks/css/index.js:125:36)
+    at async (file:///home/runner/workspace/node_modules/next/dist/build/webpack/loaders/next-font-loader/index.js:94:33)
+    at async Span.traceAsyncFn (file:///home/runner/workspace/node_modules/next/dist/trace/trace.js:157:20)
+    at getNextFontError (file:///home/runner/workspace/node_modules/next/dist/build/webpack/plugins/wellknown-errors-plugin/parseNextFontError.js:26:20)
+    at getModuleBuildError (file:///home/runner/workspace/node_modules/next/dist/build/webpack/plugins/wellknown-errors-plugin/webpackModuleError.js:123:63)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async (file:///home/runner/workspace/node_modules/next/dist/build/webpack/plugins/wellknown-errors-plugin/index.js:29:49)
+    at async (file:///home/runner/workspace/node_modules/next/dist/build/webpack/plugins/wellknown-errors-plugin/index.js:27:21)
