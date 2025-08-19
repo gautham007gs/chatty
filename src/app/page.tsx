@@ -37,7 +37,6 @@ export default function HomePage() {
   };
 
   const handleBackClick = () => {
-    // For homepage, we can go back in browser history
     if (window.history.length > 1) {
       window.history.back();
     }
@@ -74,9 +73,9 @@ export default function HomePage() {
               <h1 className="text-xl font-bold">Whatapp</h1>
             </div>
             <div className="flex items-center space-x-3">
-              <Camera className="h-5 w-5 cursor-pointer" />
-              <Search className="h-5 w-5 cursor-pointer" />
-              <MoreVertical className="h-5 w-5 cursor-pointer" />
+              <Camera className="h-5 w-5 cursor-pointer hover:text-gray-300" />
+              <Search className="h-5 w-5 cursor-pointer hover:text-gray-300" />
+              <MoreVertical className="h-5 w-5 cursor-pointer hover:text-gray-300" />
             </div>
           </div>
         </div>
@@ -86,18 +85,27 @@ export default function HomePage() {
           <div className="flex">
             <Button 
               variant="ghost" 
-              className="flex-1 text-white hover:bg-white/10 rounded-none border-b-2 border-white py-3 font-medium"
+              className="flex-1 text-white hover:bg-white/10 rounded-none border-b-2 border-white py-3 font-medium text-sm"
             >
               CHATS
             </Button>
             <Button 
               variant="ghost" 
-              className="flex-1 text-white/70 hover:bg-white/10 rounded-none py-3 font-medium"
+              className="flex-1 text-white/70 hover:bg-white/10 rounded-none py-3 font-medium text-sm"
               onClick={handleStatusClick}
             >
               STATUS
             </Button>
           </div>
+        </div>
+
+        {/* Header Banner Ad */}
+        <div className="bg-gray-50 border-b border-gray-200">
+          <BannerAdDisplay 
+            adType="standard" 
+            placementKey="home-header" 
+            className="w-full py-1"
+          />
         </div>
 
         {/* Chat List Container */}
@@ -107,7 +115,7 @@ export default function HomePage() {
             className="flex items-center p-4 hover:bg-gray-50 cursor-pointer border-b border-gray-100 transition-all duration-200 active:bg-gray-100"
             onClick={handleChatClick}
           >
-            <Avatar className="h-14 w-14 ring-2 ring-[#075E54]/20">
+            <Avatar className="h-12 w-12 ring-2 ring-green-500/30">
               <AvatarImage 
                 src={effectiveProfile.avatarUrl} 
                 alt={effectiveProfile.name}
@@ -118,55 +126,78 @@ export default function HomePage() {
               </AvatarFallback>
             </Avatar>
             
-            <div className="ml-4 flex-grow">
+            <div className="ml-3 flex-grow">
               <div className="flex items-center justify-between">
-                <h2 className="font-semibold text-gray-900 text-lg">{effectiveProfile.name}</h2>
-                <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
+                <h2 className="font-semibold text-gray-900">{effectiveProfile.name}</h2>
+                <span className="text-xs text-gray-500">
                   {currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                 </span>
               </div>
-              <p className="text-gray-600 text-sm mt-1 line-clamp-2">
+              <p className="text-gray-600 text-sm mt-1 line-clamp-1">
                 {effectiveProfile.status}
               </p>
-              <div className="flex items-center mt-2">
-                <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
+              <div className="flex items-center mt-1">
+                <div className="w-2 h-2 bg-green-500 rounded-full mr-1"></div>
                 <span className="text-xs text-green-600 font-medium">Online</span>
               </div>
             </div>
             
-            <div className="ml-2">
-              <MessageCircle className="h-6 w-6 text-[#075E54]" />
+            <div className="ml-2 flex flex-col items-center">
+              <MessageCircle className="h-5 w-5 text-[#075E54]" />
+              <div className="w-5 h-5 bg-[#25D366] rounded-full flex items-center justify-center mt-1">
+                <span className="text-xs text-white font-bold">1</span>
+              </div>
             </div>
+          </div>
+
+          {/* Mid-content Banner Ad */}
+          <div className="my-3 px-4">
+            <BannerAdDisplay 
+              adType="native" 
+              placementKey="home-mid-content" 
+              className="w-full rounded-lg"
+              contextual={true}
+            />
           </div>
 
           {/* Placeholder entries for better UX */}
           <div className="space-y-1">
-            {[1, 2, 3].map((index) => (
-              <div key={index} className="flex items-center p-4 opacity-30">
-                <Avatar className="h-12 w-12">
-                  <AvatarFallback className="bg-gray-300 text-gray-600">
-                    {String.fromCharCode(65 + index)}
+            {[
+              { name: "Add Friends", status: "Tap to invite contacts", initial: "+" },
+              { name: "Groups", status: "Create or join groups", initial: "G" },
+              { name: "Broadcast", status: "Send to many at once", initial: "B" }
+            ].map((item, index) => (
+              <div key={index} className="flex items-center p-4 opacity-40 hover:opacity-60 cursor-pointer">
+                <Avatar className="h-10 w-10">
+                  <AvatarFallback className="bg-gray-300 text-gray-600 text-sm">
+                    {item.initial}
                   </AvatarFallback>
                 </Avatar>
-                <div className="ml-4 flex-grow">
+                <div className="ml-3 flex-grow">
                   <div className="flex items-center justify-between">
-                    <h2 className="font-medium text-gray-400">Add more contacts</h2>
+                    <h2 className="font-medium text-gray-400 text-sm">{item.name}</h2>
                     <span className="text-xs text-gray-400">--:--</span>
                   </div>
-                  <p className="text-gray-400 text-sm">Tap to invite friends</p>
+                  <p className="text-gray-400 text-xs">{item.status}</p>
                 </div>
               </div>
             ))}
           </div>
 
           {/* Welcome Message */}
-          <div className="p-6 text-center border-t border-gray-100 mt-4">
+          <div className="p-4 text-center border-t border-gray-100 mt-2">
             <h3 className="text-lg font-semibold text-gray-800 mb-2">
               Welcome to Whatapp! 👋
             </h3>
             <p className="text-gray-600 text-sm leading-relaxed">
               Start chatting with Kruthika - your AI companion who's always ready to talk!
             </p>
+            <Button 
+              onClick={handleChatClick}
+              className="mt-3 bg-[#25D366] hover:bg-[#20B858] text-white px-6 py-2"
+            >
+              Start Chatting
+            </Button>
           </div>
         </div>
 
@@ -181,10 +212,10 @@ export default function HomePage() {
 
         {/* Floating Action Button */}
         <Button
-          className="fixed bottom-6 right-6 rounded-full w-16 h-16 shadow-xl bg-[#25D366] hover:bg-[#20B858] z-50 transition-all duration-200 hover:scale-110"
+          className="fixed bottom-6 right-6 rounded-full w-14 h-14 shadow-xl bg-[#25D366] hover:bg-[#20B858] z-50 transition-all duration-200 hover:scale-110"
           onClick={handleChatClick}
         >
-          <MessageCircle className="h-7 w-7 text-white" />
+          <MessageCircle className="h-6 w-6 text-white" />
         </Button>
       </div>
     </>

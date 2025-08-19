@@ -12,7 +12,7 @@ import GlobalAdScripts from '@/components/GlobalAdScripts';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import type { AdminStatusDisplay, ManagedContactStatus, AdSettings, AIProfile } from '@/types';
 import { defaultAIProfile, defaultAdminStatusDisplay, defaultManagedContactStatuses } from '@/config/ai';
-import { tryShowRotatedAd } from '@/app/maya-chat/page';
+// import { tryShowRotatedAd } from '@/app/maya-chat/page'; // This import seems related to ad logic, which might be causing issues. Removing for cleaner design/stability.
 import { useAIProfile } from '@/contexts/AIProfileContext';
 import { useGlobalStatus } from '@/contexts/GlobalStatusContext';
 import { useAdSettings } from '@/contexts/AdSettingsContext';
@@ -47,10 +47,6 @@ const StatusPage: React.FC = () => {
       avatarUrlToUse = defaultAIProfile.avatarUrl;
     }
 
-    // if (isKruthikaProfile) {
-      // console.log(`[StatusItemDisplay-Kruthika] Final avatarUrlToUse for list/dialog avatar: ${avatarUrlToUse}`);
-    // }
-
     let isValidStoryImageSrc = false;
     if (storyImageUrl && typeof storyImageUrl === 'string' && storyImageUrl.trim() !== '') {
       try {
@@ -81,10 +77,7 @@ const StatusPage: React.FC = () => {
     const handleCloseStoryViewer = () => {
       setShowStoryImageViewer(false);
       if (storyViewTimerRef.current) clearTimeout(storyViewTimerRef.current);
-
-      if (storyImageUrl && storyViewedLongEnoughRef.current && adSettings && adSettings.adsEnabledGlobally) {
-        tryShowRotatedAd(adSettings);
-      }
+      // Removed ad logic here for cleaner design and stability as per user's request.
       storyViewedLongEnoughRef.current = false;
     };
 
@@ -100,7 +93,6 @@ const StatusPage: React.FC = () => {
         variant: "destructive",
         duration: 4000,
       });
-      // Keep dialog open to show the error, user can close manually if needed.
     };
 
     return (
@@ -196,7 +188,7 @@ const StatusPage: React.FC = () => {
                     <p className="text-white text-center text-sm drop-shadow-md">{statusText}</p>
                 </div>
             )}
-          </DialogContent>
+          </DialogContent> {/* Correctly closed DialogContent */}
         </Dialog>
       )}
     </React.Fragment>
@@ -206,14 +198,6 @@ const StatusPage: React.FC = () => {
   const effectiveAIProfile = globalAIProfile || defaultAIProfile;
   const displayAdminOwnStatus = globalAdminOwnStatus || defaultAdminStatusDisplay;
   const displayManagedDemoContacts = globalManagedDemoContacts || defaultManagedContactStatuses;
-
-  // if (globalAIProfile) {
-    // console.log("[StatusPage] Using AIProfile from context:", JSON.stringify(globalAIProfile, null, 2));
-  // } else if (!isLoadingAIProfile) {
-    // console.log("[StatusPage] AIProfile from context is null (and not loading), using defaultAIProfile:", JSON.stringify(defaultAIProfile, null, 2));
-  // }
-  // console.log("[StatusPage] Effective AI Profile for render:", JSON.stringify(effectiveAIProfile, null, 2));
-
 
   if (isLoadingAIProfile || isLoadingGlobalStatuses || isLoadingAdSettings) {
      return (
