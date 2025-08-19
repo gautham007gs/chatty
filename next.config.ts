@@ -40,16 +40,7 @@ const nextConfig: NextConfig = {
     'https://*.replit.dev',
     'https://*.repl.co'
   ],
-  experimental: {
-    turbo: {
-      rules: {
-        '*.css': {
-          loaders: ['css-loader'],
-          as: '*.css'
-        }
-      }
-    }
-  },
+  
   async headers() {
     return [
       {

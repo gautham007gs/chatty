@@ -5,11 +5,12 @@ import "./globals.css";
 import InstagramBrowserPrompt from '@/components/InstagramBrowserPrompt';
 import GlobalAdScripts from '@/components/GlobalAdScripts';
 import SocialBarAdDisplay from '@/components/SocialBarAdDisplay'; // Import SocialBarAdDisplay
-import { AdSettingsProvider } from '@/contexts/AdSettingsContext';
+import { AdSettingsProvider } from '@/contexts/AdSettingsProvider';
 import { AIProfileProvider } from '@/contexts/AIProfileContext';
 import { GlobalStatusProvider } from '@/contexts/GlobalStatusContext';
 import { AIMediaAssetsProvider } from '@/contexts/AIMediaAssetsContext';
 import { Toaster } from "@/components/ui/toaster";
+import { Suspense } from 'react';
 
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
@@ -29,19 +30,21 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className={`${inter.variable} font-sans antialiased`}>
         {/* <Providers> Removed this generic wrapper */}
-          <AdSettingsProvider>
-            <AIProfileProvider>
-              <GlobalStatusProvider>
-                <AIMediaAssetsProvider>
-                  <InstagramBrowserPrompt />
-                  <GlobalAdScripts />
-                  {children}
-                  <SocialBarAdDisplay /> {/* Add SocialBarAdDisplay here */}
-                  <Toaster />
-                </AIMediaAssetsProvider>
-              </GlobalStatusProvider>
-            </AIProfileProvider>
-          </AdSettingsProvider>
+          <Suspense fallback={<div>Loading...</div>}>
+            <AdSettingsProvider>
+              <AIProfileProvider>
+                <GlobalStatusProvider>
+                  <AIMediaAssetsProvider>
+                    <InstagramBrowserPrompt />
+                    <GlobalAdScripts />
+                    {children}
+                    <SocialBarAdDisplay /> {/* Add SocialBarAdDisplay here */}
+                    <Toaster />
+                  </AIMediaAssetsProvider>
+                </GlobalStatusProvider>
+              </AIProfileProvider>
+            </AdSettingsProvider>
+          </Suspense>
         {/* </Providers> */}
       </body>
     </html>
