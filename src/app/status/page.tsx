@@ -201,7 +201,7 @@ const StatusPage: React.FC = () => {
   if (isLoadingAIProfile || isLoadingGlobalStatuses || isLoadingAdSettings) {
     return (
       <div className="flex flex-col h-screen max-w-md mx-auto bg-white shadow-lg">
-        <div className="bg-[#075E54] text-white p-4 shadow-md">
+        <div className="bg-[#25D366] text-white p-4 shadow-md">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
               <ArrowLeft className="h-5 w-5" />
@@ -215,7 +215,7 @@ const StatusPage: React.FC = () => {
         </div>
         <div className="flex-grow flex items-center justify-center text-gray-500">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#075E54] mx-auto mb-4"></div>
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#25D366] mx-auto mb-4"></div>
             <p>Loading statuses...</p>
           </div>
         </div>
@@ -230,12 +230,12 @@ const StatusPage: React.FC = () => {
 
       <div className="flex flex-col h-screen max-w-md mx-auto bg-white shadow-lg">
         {/* Header */}
-        <div className="bg-[#075E54] text-white p-4 shadow-md">
+        <div className="bg-[#25D366] text-white p-4 shadow-md">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              <Button 
-                variant="ghost" 
-                size="icon" 
+              <Button
+                variant="ghost"
+                size="icon"
                 onClick={handleBackClick}
                 className="h-8 w-8 text-white hover:bg-white/10"
               >
@@ -306,9 +306,9 @@ const StatusPage: React.FC = () => {
 
         {/* Bottom Banner Ad */}
         <div className="bg-white border-t border-gray-100">
-          <BannerAdDisplay 
-            adType="standard" 
-            placementKey="status-bottom" 
+          <BannerAdDisplay
+            adType="standard"
+            placementKey="status-bottom"
             className="w-full py-2"
           />
           <BannerAdDisplay
@@ -321,10 +321,10 @@ const StatusPage: React.FC = () => {
 
         {/* Camera Button */}
         <div className="p-4 border-t border-gray-200 flex justify-end">
-          <Button 
-            variant="default" 
-            size="lg" 
-            className="rounded-full p-4 shadow-lg bg-[#25D366] hover:bg-[#20B858]" 
+          <Button
+            variant="default"
+            size="lg"
+            className="rounded-full p-4 shadow-lg bg-[#25D366] hover:bg-[#20B858]"
             onClick={() => toast({ title: "Camera", description: "Status camera feature coming soon!" })}
           >
             <Camera size={24} />

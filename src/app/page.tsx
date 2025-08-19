@@ -92,7 +92,7 @@ export default function HomePage() {
             onClick={handleChatClick}
           >
             <div className="relative">
-              <Avatar className="h-14 w-14 ring-3 ring-[#25D366] p-0.5">
+              <Avatar className="h-14 w-14 ring-2 ring-[#25D366] p-0.5">
                 <AvatarImage 
                   src={effectiveProfile.avatarUrl} 
                   alt={effectiveProfile.name}
@@ -152,13 +152,35 @@ export default function HomePage() {
               Start Chatting
             </Button>
 
-            <Button 
-              onClick={handleStatusClick}
-              className="w-full bg-[#075E54] hover:bg-[#064841] text-white py-3 text-lg font-medium rounded-lg shadow-md hover:shadow-lg transition-all mb-6"
-            >
-              <Users className="h-5 w-5 mr-2" />
-              View Status
-            </Button>
+            <div className="flex gap-3 mb-6">
+              <Button 
+                onClick={handleStatusClick}
+                className="flex-1 bg-[#128C7E] hover:bg-[#0F7A6B] text-white py-3 text-lg font-medium rounded-lg shadow-md hover:shadow-lg transition-all"
+              >
+                <Users className="h-5 w-5 mr-2" />
+                View Status
+              </Button>
+              <Button 
+                onClick={() => {
+                  if (navigator.share) {
+                    navigator.share({
+                      title: 'Chat with Kruthika on WhatApp',
+                      text: 'Join me chatting with friends on WhatApp!',
+                      url: window.location.origin
+                    });
+                  } else {
+                    navigator.clipboard.writeText(window.location.origin);
+                    // You could add a toast here
+                  }
+                }}
+                className="bg-[#34B7F1] hover:bg-[#2DA9E1] text-white py-3 px-4 rounded-lg shadow-md hover:shadow-lg transition-all"
+                title="Share WhatApp"
+              >
+                <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92s2.92-1.31 2.92-2.92-1.31-2.92-2.92-2.92z"/>
+                </svg>
+              </Button>
+            </div>
           </div>
         </div>
 
