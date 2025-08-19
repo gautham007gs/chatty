@@ -13,6 +13,7 @@ import { useAIMediaAssets } from '@/contexts/AIMediaAssetsContext';
 import { useToast } from "@/hooks/use-toast";
 import GlobalAdScripts from '@/components/GlobalAdScripts';
 import ProfileEditor from '@/components/chat/ProfileEditor';
+import AvatarView from '@/components/chat/AvatarView';
 
 interface Message {
   id: string;
@@ -56,6 +57,7 @@ const MayaChatPage: React.FC = () => {
   const [isFirstVisit, setIsFirstVisit] = useState(true);
   const [hasShownWelcome, setHasShownWelcome] = useState(false);
   const [isProfileEditorOpen, setIsProfileEditorOpen] = useState(false); // State for profile editor modal
+  const [isAvatarViewOpen, setIsAvatarViewOpen] = useState(false); // State for avatar full view
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
@@ -68,27 +70,26 @@ const MayaChatPage: React.FC = () => {
   // Load messages on mount and add welcome message
   useEffect(() => {
     const savedMessages = getMessagesFromStorage();
-    setMessages(savedMessages);
-    if (savedMessages.length === 0) {
+    
+    if (savedMessages.length === 0 && aiProfile && !hasShownWelcome) {
       setIsFirstVisit(true);
       // Add welcome message if this is the first visit
-      if (!hasShownWelcome) {
-        const welcomeMessage: Message = {
-          id: `welcome_${Date.now()}`,
-          text: `Hi there! 🌸 I'm ${aiProfile?.name || 'Kruthika'}! Welcome to our chat! I'm so excited to talk with you! Feel free to ask me anything or just say hello! 💕`,
-          sender: 'ai',
-          timestamp: new Date(),
-          status: 'delivered',
-        };
-        setMessages([welcomeMessage]);
-        saveMessagesToStorage([welcomeMessage]);
-        setHasShownWelcome(true);
-      }
-    } else {
+      const welcomeMessage: Message = {
+        id: `welcome_${Date.now()}`,
+        text: `Hi there! 🌸 I'm ${aiProfile.name}! Welcome to our chat! I'm so excited to talk with you! Feel free to ask me anything or just say hello! 💕`,
+        sender: 'ai',
+        timestamp: new Date(),
+        status: 'delivered',
+      };
+      setMessages([welcomeMessage]);
+      saveMessagesToStorage([welcomeMessage]);
+      setHasShownWelcome(true);
+    } else if (savedMessages.length > 0) {
+      setMessages(savedMessages);
       setIsFirstVisit(false);
-      setHasShownWelcome(true); // Mark as shown if messages are loaded from storage
+      setHasShownWelcome(true);
     }
-  }, [aiProfile?.name, hasShownWelcome]); // Depend on aiProfile?.name to update welcome message if name changes
+  }, [aiProfile, hasShownWelcome]);
 
   // Effect to save messages to storage whenever messages state changes
   useEffect(() => {
@@ -180,7 +181,7 @@ const MayaChatPage: React.FC = () => {
   };
 
   const handleAvatarClick = () => {
-    setIsProfileEditorOpen(true);
+    setIsAvatarViewOpen(true);
   };
 
   const handleProfileSave = (updatedProfile: any) => {
@@ -268,6 +269,16 @@ const MayaChatPage: React.FC = () => {
             onClose={() => setIsProfileEditorOpen(false)}
             isOpen={isProfileEditorOpen}
             onOpenChange={setIsProfileEditorOpen}
+          />
+        )}
+
+        {isAvatarViewOpen && aiProfile && (
+          <AvatarView
+            isOpen={isAvatarViewOpen}
+            onClose={() => setIsAvatarViewOpen(false)}
+            avatarUrl={aiProfile.avatarUrl || ''}
+            name={aiProfile.name}
+            status={aiProfile.status}
           />
         )}
       </div>

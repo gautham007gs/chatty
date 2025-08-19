@@ -1,3 +1,4 @@
+
 "use client";
 
 import React from 'react';
@@ -17,9 +18,12 @@ import { cn } from '@/lib/utils';
 import { defaultAIProfile } from '@/config/ai'; 
 
 interface ChatHeaderProps {
-  aiName: string;
-  aiAvatarUrl: string; 
-  onlineStatus: string;
+  profile?: {
+    name: string;
+    avatarUrl?: string;
+    status?: string;
+  };
+  onBack?: () => void;
   onAvatarClick: () => void;
   onCallClick: () => void; 
   onVideoClick: () => void; 
@@ -27,9 +31,8 @@ interface ChatHeaderProps {
 }
 
 const ChatHeader: React.FC<ChatHeaderProps> = ({
-  aiName,
-  aiAvatarUrl, 
-  onlineStatus,
+  profile,
+  onBack,
   onAvatarClick,
   onCallClick,
   onVideoClick,
@@ -38,17 +41,20 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
   const router = useRouter();
 
   const handleBackClick = () => {
-    router.push('/');
+    if (onBack) {
+      onBack();
+    } else {
+      router.push('/');
+    }
   };
 
-  let avatarUrlToUse = aiAvatarUrl; 
+  const aiName = profile?.name || defaultAIProfile.name;
+  const onlineStatus = profile?.status || "Online";
+  
+  let avatarUrlToUse = profile?.avatarUrl; 
   if (!avatarUrlToUse || typeof avatarUrlToUse !== 'string' || avatarUrlToUse.trim() === '' || (!avatarUrlToUse.startsWith('http') && !avatarUrlToUse.startsWith('data:'))) {
     avatarUrlToUse = defaultAIProfile.avatarUrl;
   }
-
-  // if (aiName === "Kruthika") {
-    // console.log(`ChatHeader - Kruthika's final aiAvatarUrlToUse: ${avatarUrlToUse}`);
-  // }
 
   const handleAvatarError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
     console.error(`ChatHeader - AvatarImage load error for ${aiName}. URL: ${avatarUrlToUse}`, e);
