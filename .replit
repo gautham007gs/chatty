@@ -29,4 +29,4 @@ mode = "sequential"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "npm run dev -- --hostname 0.0.0.0"
+args = "npm run dev -- --port 5000 --hostname 0.0.0.0"

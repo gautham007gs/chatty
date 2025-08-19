@@ -45,33 +45,7 @@ interface DailyCount {
   count: number;
 }
 
-interface AdminProfilePageProps {
-  activeTab?: string;
-  setActiveTab?: (tab: string) => void;
-}
-
-const AdminProfilePage: React.FC<AdminProfilePageProps> = ({ activeTab = 'kruthika', setActiveTab }) => {
-  const [internalActiveTab, setInternalActiveTab] = useState(activeTab);
-  
-  // Use internal state if setActiveTab is not provided
-  const currentActiveTab = activeTab || internalActiveTab;
-  const handleTabChange = setActiveTab || setInternalActiveTab;
-
-  // Listen for tab changes from AdminLayout
-  useEffect(() => {
-    const handleAdminTabChange = (event: CustomEvent) => {
-      const newTab = event.detail;
-      setInternalActiveTab(newTab);
-      if (setActiveTab) {
-        setActiveTab(newTab);
-      }
-    };
-
-    window.addEventListener('adminTabChange', handleAdminTabChange as EventListener);
-    return () => {
-      window.removeEventListener('adminTabChange', handleAdminTabChange as EventListener);
-    };
-  }, [setActiveTab]);
+const AdminProfilePage: React.FC = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const router = useRouter();
   const { toast } = useToast();
@@ -547,7 +521,7 @@ const AdminProfilePage: React.FC<AdminProfilePageProps> = ({ activeTab = 'kruthi
       </Alert>
 
 
-      <Tabs value={currentActiveTab} onValueChange={handleTabChange} className="w-full">
+      <Tabs defaultValue="kruthika" className="w-full">
         <TabsList className="grid w-full grid-cols-2 md:grid-cols-6 mb-8 h-auto py-2">
           <TabsTrigger value="kruthika" className="text-xs sm:text-sm py-2.5"><UserCircle className="mr-1 sm:mr-2 h-4 w-4"/>Kruthika's Settings</TabsTrigger>
           <TabsTrigger value="ads" className="text-xs sm:text-sm py-2.5"><Settings className="mr-1 sm:mr-2 h-4 w-4"/>Ad Settings</TabsTrigger>

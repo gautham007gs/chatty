@@ -35,12 +35,6 @@ const nextConfig: NextConfig = {
     ],
   },
   serverExternalPackages: ['@google/generative-ai'],
-  allowedDevOrigins: [
-    'https://a17be61e-35de-47a9-9513-55f3caaa53c0-00-353tfm5zi0lbs.sisko.replit.dev',
-    'https://*.replit.dev',
-    'https://*.repl.co'
-  ],
-  
   async headers() {
     return [
       {

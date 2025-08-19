@@ -10,7 +10,6 @@ import { AIProfileProvider } from '@/contexts/AIProfileContext';
 import { GlobalStatusProvider } from '@/contexts/GlobalStatusContext';
 import { AIMediaAssetsProvider } from '@/contexts/AIMediaAssetsContext';
 import { Toaster } from "@/components/ui/toaster";
-import { Suspense } from 'react';
 
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
@@ -30,21 +29,19 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className={`${inter.variable} font-sans antialiased`}>
         {/* <Providers> Removed this generic wrapper */}
-          <Suspense fallback={<div>Loading...</div>}>
-            <AdSettingsProvider>
-              <AIProfileProvider>
-                <GlobalStatusProvider>
-                  <AIMediaAssetsProvider>
-                    <InstagramBrowserPrompt />
-                    <GlobalAdScripts />
-                    {children}
-                    <SocialBarAdDisplay /> {/* Add SocialBarAdDisplay here */}
-                    <Toaster />
-                  </AIMediaAssetsProvider>
-                </GlobalStatusProvider>
-              </AIProfileProvider>
-            </AdSettingsProvider>
-          </Suspense>
+          <AdSettingsProvider>
+            <AIProfileProvider>
+              <GlobalStatusProvider>
+                <AIMediaAssetsProvider>
+                  <InstagramBrowserPrompt />
+                  <GlobalAdScripts />
+                  {children}
+                  <SocialBarAdDisplay /> {/* Add SocialBarAdDisplay here */}
+                  <Toaster />
+                </AIMediaAssetsProvider>
+              </GlobalStatusProvider>
+            </AIProfileProvider>
+          </AdSettingsProvider>
         {/* </Providers> */}
       </body>
     </html>
