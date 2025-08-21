@@ -1,0 +1,414 @@
+
+# 🚀 COMPLETE SETUP GUIDE FOR KRUTHIKA CHAT APP 🚀
+=======================================================
+
+This guide will help you set up your AI chatbot on Replit with Supabase integration.
+
+## PART 1: SUPABASE SETUP (Database & Analytics)
+===============================================
+
+### Step 1: Create Supabase Account
+1. Go to https://supabase.com/
+2. Sign up with your email (free account is sufficient)
+3. Click "New Project"
+4. Choose organization name: "KruthikaChat" 
+5. Project name: "kruthika-chat-db"
+6. Generate strong database password (SAVE THIS!)
+7. Select region closest to your users (e.g., Asia Pacific for Indian users)
+8. Click "Create new project"
+9. Wait 2-3 minutes for project setup
+
+### Step 2: Get Supabase Credentials
+1. In Supabase dashboard, click "Settings" (gear icon)
+2. Click "API" in left sidebar
+3. Copy these values:
+   - Project URL (starts with https://)
+   - Project API Key (anon/public key)
+4. Keep these safe - you'll need them!
+
+### Step 3: Create Database Tables
+1. In Supabase dashboard, click "SQL Editor"
+2. Click "+ New Query"
+3. Copy and paste this SQL code:
+
+```sql
+-- Create messages_log table
+CREATE TABLE IF NOT EXISTS messages_log (
+    id BIGSERIAL PRIMARY KEY,
+    message_id TEXT NOT NULL,
+    sender_type TEXT NOT NULL CHECK (sender_type IN ('user', 'ai')),
+    chat_id TEXT NOT NULL DEFAULT 'kruthika_chat',
+    user_id TEXT,
+    text_content TEXT,
+    has_image BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW())
+);
+
+-- Create daily_activity_log table  
+CREATE TABLE IF NOT EXISTS daily_activity_log (
+    id BIGSERIAL PRIMARY KEY,
+    user_pseudo_id TEXT NOT NULL,
+    activity_date DATE NOT NULL,
+    chat_id TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    CONSTRAINT unique_user_activity_per_day_per_chat UNIQUE (user_pseudo_id, activity_date, chat_id)
+);
+
+-- Create app_configurations table
+CREATE TABLE IF NOT EXISTS app_configurations (
+    id TEXT PRIMARY KEY,
+    settings JSONB NOT NULL,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Create ai_profile_settings table
+CREATE TABLE IF NOT EXISTS ai_profile_settings (
+    id TEXT PRIMARY KEY DEFAULT 'default_profile',
+    settings JSONB NOT NULL,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Create user_analytics table  
+CREATE TABLE IF NOT EXISTS user_analytics (
+    id BIGSERIAL PRIMARY KEY,
+    user_id TEXT,
+    session_id TEXT,
+    event_type TEXT,
+    event_data JSONB,
+    timestamp TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Create media_assets table
+CREATE TABLE IF NOT EXISTS media_assets (
+    id BIGSERIAL PRIMARY KEY,
+    file_name TEXT NOT NULL,
+    file_type TEXT NOT NULL,
+    file_url TEXT NOT NULL,
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+```
+
+4. Click "RUN" to execute
+5. You should see "Success. No rows returned" message
+
+### Step 4: Set Row Level Security (RLS) Policies
+Run this SQL in a new query:
+
+```sql
+-- Enable RLS on all tables
+ALTER TABLE messages_log ENABLE ROW LEVEL SECURITY;
+ALTER TABLE daily_activity_log ENABLE ROW LEVEL SECURITY;
+ALTER TABLE app_configurations ENABLE ROW LEVEL SECURITY;
+ALTER TABLE ai_profile_settings ENABLE ROW LEVEL SECURITY;
+ALTER TABLE user_analytics ENABLE ROW LEVEL SECURITY;
+ALTER TABLE media_assets ENABLE ROW LEVEL SECURITY;
+
+-- Create permissive policies for prototype (TIGHTEN FOR PRODUCTION!)
+CREATE POLICY "Allow anon access" ON messages_log FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Allow anon access" ON daily_activity_log FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Allow anon access" ON app_configurations FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Allow anon access" ON ai_profile_settings FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Allow anon access" ON user_analytics FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Allow anon access" ON media_assets FOR ALL USING (true) WITH CHECK (true);
+```
+
+### Step 5: Create Helper Functions
+Run this SQL:
+
+```sql
+-- Function to get daily message counts
+CREATE OR REPLACE FUNCTION get_daily_message_counts(start_date DATE)
+RETURNS TABLE(date DATE, messages BIGINT)
+LANGUAGE plpgsql AS $$
+BEGIN
+  RETURN QUERY
+  SELECT DATE_TRUNC('day', ml.created_at)::DATE AS date,
+         COUNT(ml.id) AS messages
+  FROM messages_log ml
+  WHERE ml.created_at::DATE >= start_date
+  GROUP BY DATE_TRUNC('day', ml.created_at)
+  ORDER BY date ASC;
+END;
+$$;
+
+-- Function to get daily active users
+CREATE OR REPLACE FUNCTION get_daily_active_user_counts(start_date DATE)
+RETURNS TABLE(date DATE, active_users BIGINT)
+LANGUAGE plpgsql AS $$
+BEGIN
+  RETURN QUERY
+  SELECT dal.activity_date AS date,
+         COUNT(DISTINCT dal.user_pseudo_id) AS active_users
+  FROM daily_activity_log dal
+  WHERE dal.activity_date >= start_date
+  GROUP BY dal.activity_date
+  ORDER BY date ASC;
+END;
+$$;
+
+-- Grant execute permissions
+GRANT EXECUTE ON FUNCTION get_daily_message_counts(DATE) TO anon;
+GRANT EXECUTE ON FUNCTION get_daily_active_user_counts(DATE) TO anon;
+```
+
+### Step 6: Insert Initial Data
+Run this SQL:
+
+```sql
+-- Insert default AI profile
+INSERT INTO ai_profile_settings (id, settings) VALUES (
+    'default_profile',
+    '{
+        "name": "Kruthika",
+        "status": "🌸 Living my best life! Lets chat! 🌸",
+        "avatarUrl": "https://i.postimg.cc/52S3BZrM/images-10.jpg",
+        "statusStoryText": "Ask me anything! 💬",
+        "statusStoryImageUrl": "https://i.postimg.cc/52S3BZrM/images-10.jpg",
+        "statusStoryHasUpdate": true
+    }'::jsonb
+) ON CONFLICT (id) DO UPDATE SET 
+    settings = EXCLUDED.settings,
+    updated_at = NOW();
+
+-- Insert default ad settings
+INSERT INTO app_configurations (id, settings) VALUES (
+    'ad_settings_kruthika_chat_v1',
+    '{
+        "adsEnabledGlobally": true,
+        "adsterraDirectLink": "https://www.profitablecpmrate.com/w06q4gkg?key=7c2fb3e1e1d4dd2ea9d2a71c5f8b0e3c",
+        "adsterraDirectLinkEnabled": true,
+        "adsterraBannerCode": "<!-- Banner Code -->",
+        "adsterraBannerEnabled": false,
+        "adsterraPopunderCode": "<!-- Popunder Code -->",
+        "adsterraPopunderEnabled": true,
+        "monetagDirectLink": "https://monetag.com",
+        "monetagDirectLinkEnabled": false,
+        "monetagBannerCode": "<!-- Banner Code -->",
+        "monetagBannerEnabled": false,
+        "monetagPopunderCode": "<!-- Popunder Code -->",
+        "monetagPopunderEnabled": false
+    }'::jsonb
+) ON CONFLICT (id) DO UPDATE SET 
+    settings = EXCLUDED.settings,
+    updated_at = NOW();
+```
+
+## PART 2: REPLIT ENVIRONMENT SETUP  
+===================================
+
+### Step 1: Set Environment Variables in Replit
+1. In your Replit project, look for "Secrets" tab in the left sidebar
+2. If not visible, click the lock icon 🔒
+3. Add these secrets:
+
+Key: GEMINI_API_KEY
+Value: AIzaSyCxMPhCbiIyTXl4s3sf5FdzzzNju7j51Qc
+
+Key: NEXT_PUBLIC_SUPABASE_URL  
+Value: [Your Supabase Project URL from Step 2]
+
+Key: NEXT_PUBLIC_SUPABASE_ANON_KEY
+Value: [Your Supabase anon key from Step 2]
+
+### Step 2: Test Your Setup
+1. Click the "Run" button in Replit
+2. Wait for the app to start (should say "Ready in X seconds")
+3. Open the app URL (usually shown as "Your app is running at...")
+4. Test the chat - send a message
+5. Check admin panel at: yourapp.com/admin/profile
+
+## PART 3: REPLIT DEPLOYMENT
+============================
+
+### Step 1: Deploy on Replit (Recommended)
+1. Click "Deploy" button in Replit header
+2. Choose "Autoscale Deployment"
+3. Configure deployment:
+   - Build command: `npm run build`
+   - Run command: `npm run start`  
+   - Choose your domain name
+4. Set environment variables in deployment settings:
+   - Copy all your secrets from Replit Secrets to deployment
+5. Click "Deploy"
+
+## COMMON ERRORS & SOLUTIONS
+============================
+
+### Error: "Supabase connection failed"
+Solution:
+- Check your NEXT_PUBLIC_SUPABASE_URL format (must start with https://)
+- Verify NEXT_PUBLIC_SUPABASE_ANON_KEY is correct
+- Check Supabase project is active (not paused)
+
+### Error: "42P01 table does not exist"  
+Solution:
+- Run the SQL table creation scripts again in Supabase SQL Editor
+- Check if RLS policies are enabled
+- Verify table names match exactly
+
+### Error: "42703 column does not exist"
+Solution:
+- Your database schema is outdated
+- Run the fix_database_schema.sql file in Supabase SQL Editor
+- Check column names in your queries match table structure
+
+### Error: "Gemini API authentication failed"
+Solution:  
+- Verify GEMINI_API_KEY is correct in Secrets
+- Check API key hasn't expired
+- Enable Gemini API in Google Cloud Console
+- Restart your Repl after updating secrets
+
+### Error: "Network timeout" or "500 Internal Server Error"
+Solution:
+- Check if all environment variables are set
+- Restart the Repl
+- Clear browser cache and cookies
+- Check browser console for specific errors
+
+### Error: "RLS policy violation"  
+Solution:
+- Run the RLS policy scripts again
+- For production, tighten security policies
+- Check user permissions in Supabase Auth
+
+## PART 4: AI PERSONA DETAILS
+=============================
+
+### About Kruthika AI:
+- Name: Kruthika (22-year-old Indian girl)
+- Personality: Sweet, caring, flirty, engaging
+- Language: Supports Hindi/English mix (Hinglish)
+- Response Style: Short, natural messages (like real texting)
+- Features: 
+  - Typing delays for realistic feel
+  - WhatsApp-style message status (✓✓)
+  - Emoji responses for simple inputs
+  - Smart caching to reduce API costs
+  - Rate limiting with "busy" excuses
+
+### Token Optimization Features:
+✅ Ultra-compressed prompts (mood/time codes)
+✅ Smart caching (85% similarity matching)  
+✅ Emoji-only responses (no API calls)
+✅ Short message patterns cached
+✅ User token limits with realistic "offline" behavior
+✅ Context compression (only last 2 interactions)
+✅ Max 60 tokens per response
+
+### Admin Panel Features:
+- Real-time analytics dashboard
+- Message count tracking  
+- Daily Active User (DAU) metrics
+- Ad settings management
+- AI profile customization
+- Performance monitoring
+
+## TESTING YOUR SETUP
+====================
+
+1. **Basic Chat Test:**
+   - Send "hi" - should get cached response
+   - Send "😊" - should get emoji response (no API call)
+   - Send complex question - should get AI response
+
+2. **Admin Panel Test:**
+   - Go to /admin/profile
+   - Check if analytics load
+   - Try changing AI name/status
+   - Verify changes reflect in chat
+
+3. **Database Test:**
+   - Chat for a few messages
+   - Check Supabase dashboard -> Table Editor
+   - Verify messages_log has entries
+   - Check daily_activity_log for user activity
+
+4. **Performance Test:**
+   - Send rapid messages (test rate limiting)
+   - Check cache stats in admin panel
+   - Monitor token usage
+
+## PRODUCTION SECURITY NOTES
+=============================
+
+⚠️ IMPORTANT: Current setup is for DEVELOPMENT/PROTOTYPE
+For production, you MUST:
+
+1. **Tighten RLS Policies:**
+   - Remove "Allow anon access" policies
+   - Add proper user authentication
+   - Restrict admin access to specific users
+
+2. **Add Authentication:**
+   - Set up Supabase Auth
+   - Require login for admin panel
+   - Implement user roles/permissions
+
+3. **Environment Security:**
+   - Use Replit Secrets for all sensitive data
+   - Never commit API keys to code
+   - Regular security audits
+
+4. **Rate Limiting:**
+   - Implement stricter API quotas
+   - Add CAPTCHA for high-volume users
+   - Monitor for abuse
+
+## SUPPORT & TROUBLESHOOTING
+============================
+
+If you encounter issues:
+
+1. **Check Logs:**
+   - Replit Console output
+   - Browser Developer Tools (F12)
+   - Supabase Dashboard -> Logs
+
+2. **Health Check:**
+   - Visit: yourapp.com/api/health-check
+   - Should show all systems "ready"
+
+3. **Common Commands:**
+   ```bash
+   # Clear npm cache
+   npm cache clean --force
+   
+   # Reinstall dependencies
+   rm -rf node_modules package-lock.json
+   npm install
+   
+   # Check environment
+   node test-env.js
+   ```
+
+4. **Supabase Quick Fixes:**
+   - Reset project (if needed): Project Settings -> General -> Reset
+   - Check API limits: Project Settings -> Billing
+   - View real-time logs: Supabase Dashboard -> Logs
+
+## LAUNCH CHECKLIST
+===================
+
+Before going live, ensure:
+
+✅ All environment variables set
+✅ Database tables created with proper schema  
+✅ RLS policies configured
+✅ Admin panel accessible
+✅ Chat functionality working
+✅ Analytics tracking active
+✅ Ad systems configured
+✅ Performance optimizations enabled
+✅ Error handling tested
+✅ Mobile responsiveness verified
+✅ Legal pages updated (privacy/terms)
+✅ Domain configured for production
+✅ Backup strategy planned
+
+Your app is now ready for users! 🎉
+
+========================
+Good luck with your AI chatbot! 🚀
+========================
