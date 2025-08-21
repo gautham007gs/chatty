@@ -703,92 +703,265 @@ const AdminProfilePage: React.FC = () => {
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                    <div className="space-y-4">
-                      <h4 className="font-semibold">Ad Display Controls</h4>
-                      <div className="space-y-3">
-                        <div className="flex items-center justify-between">
-                          <Label htmlFor="banner-ads">Show Banner Ads</Label>
-                          <Switch
-                            id="banner-ads"
-                            checked={adSettings.showBannerAds}
-                            onCheckedChange={(checked) => setAdSettings(prev => ({ ...prev, showBannerAds: checked }))}
-                          />
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <Label htmlFor="direct-link-ads">Show Direct Link Ads</Label>
-                          <Switch
-                            id="direct-link-ads"
-                            checked={adSettings.showDirectLinkAds}
-                            onCheckedChange={(checked) => setAdSettings(prev => ({ ...prev, showDirectLinkAds: checked }))}
-                          />
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <Label htmlFor="social-bar-ads">Show Social Bar Ads</Label>
-                          <Switch
-                            id="social-bar-ads"
-                            checked={adSettings.showSocialBarAds}
-                            onCheckedChange={(checked) => setAdSettings(prev => ({ ...prev, showSocialBarAds: checked }))}
-                          />
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <div className="space-y-4">
-                      <h4 className="font-semibold">Ad Limits</h4>
-                      <div className="space-y-3">
-                        <div className="space-y-2">
-                          <Label htmlFor="max-daily-ads">Max Direct Link Ads Per Day</Label>
-                          <Input
-                            id="max-daily-ads"
-                            type="number"
-                            value={adSettings.maxDirectLinkAdsPerDay}
-                            onChange={(e) => setAdSettings(prev => ({ ...prev, maxDirectLinkAdsPerDay: parseInt(e.target.value) || 0 }))}
-                            min="0"
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label htmlFor="max-session-ads">Max Direct Link Ads Per Session</Label>
-                          <Input
-                            id="max-session-ads"
-                            type="number"
-                            value={adSettings.maxDirectLinkAdsPerSession}
-                            onChange={(e) => setAdSettings(prev => ({ ...prev, maxDirectLinkAdsPerSession: parseInt(e.target.value) || 0 }))}
-                            min="0"
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  
                   <div className="space-y-4">
-                    <h4 className="font-semibold">Direct Link URLs</h4>
-                    <div className="grid grid-cols-1 gap-4">
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="global-ads">Enable Ads Globally</Label>
+                      <Switch
+                        id="global-ads"
+                        checked={adSettings.adsEnabledGlobally}
+                        onCheckedChange={(checked) => setAdSettings(prev => ({ ...prev, adsEnabledGlobally: checked }))}
+                      />
+                    </div>
+                  </div>
+
+                  <Separator />
+
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="text-lg">Adsterra Network</CardTitle>
+                        <CardDescription>Configure Adsterra ad settings</CardDescription>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+                        <div className="space-y-3">
+                          <div className="flex items-center justify-between">
+                            <Label htmlFor="adsterra-direct">Direct Link Ads</Label>
+                            <Switch
+                              id="adsterra-direct"
+                              checked={adSettings.adsterraDirectLinkEnabled}
+                              onCheckedChange={(checked) => setAdSettings(prev => ({ ...prev, adsterraDirectLinkEnabled: checked }))}
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="adsterra-direct-url">Direct Link URL</Label>
+                            <Input
+                              id="adsterra-direct-url"
+                              value={adSettings.adsterraDirectLink}
+                              onChange={(e) => setAdSettings(prev => ({ ...prev, adsterraDirectLink: e.target.value }))}
+                              placeholder="https://www.adsterra.com/direct/link"
+                            />
+                          </div>
+
+                          <div className="flex items-center justify-between">
+                            <Label htmlFor="adsterra-banner">Banner Ads</Label>
+                            <Switch
+                              id="adsterra-banner"
+                              checked={adSettings.adsterraBannerEnabled}
+                              onCheckedChange={(checked) => setAdSettings(prev => ({ ...prev, adsterraBannerEnabled: checked }))}
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="adsterra-banner-code">Banner Code</Label>
+                            <Textarea
+                              id="adsterra-banner-code"
+                              value={adSettings.adsterraBannerCode}
+                              onChange={(e) => setAdSettings(prev => ({ ...prev, adsterraBannerCode: e.target.value }))}
+                              placeholder="<!-- Adsterra Banner Code -->"
+                              rows={3}
+                            />
+                          </div>
+
+                          <div className="flex items-center justify-between">
+                            <Label htmlFor="adsterra-native">Native Banner</Label>
+                            <Switch
+                              id="adsterra-native"
+                              checked={adSettings.adsterraNativeBannerEnabled}
+                              onCheckedChange={(checked) => setAdSettings(prev => ({ ...prev, adsterraNativeBannerEnabled: checked }))}
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="adsterra-native-code">Native Banner Code</Label>
+                            <Textarea
+                              id="adsterra-native-code"
+                              value={adSettings.adsterraNativeBannerCode}
+                              onChange={(e) => setAdSettings(prev => ({ ...prev, adsterraNativeBannerCode: e.target.value }))}
+                              placeholder="<!-- Adsterra Native Banner Code -->"
+                              rows={3}
+                            />
+                          </div>
+
+                          <div className="flex items-center justify-between">
+                            <Label htmlFor="adsterra-social">Social Bar</Label>
+                            <Switch
+                              id="adsterra-social"
+                              checked={adSettings.adsterraSocialBarEnabled}
+                              onCheckedChange={(checked) => setAdSettings(prev => ({ ...prev, adsterraSocialBarEnabled: checked }))}
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="adsterra-social-code">Social Bar Code</Label>
+                            <Textarea
+                              id="adsterra-social-code"
+                              value={adSettings.adsterraSocialBarCode}
+                              onChange={(e) => setAdSettings(prev => ({ ...prev, adsterraSocialBarCode: e.target.value }))}
+                              placeholder="<!-- Adsterra Social Bar Code -->"
+                              rows={3}
+                            />
+                          </div>
+
+                          <div className="flex items-center justify-between">
+                            <Label htmlFor="adsterra-popunder">Pop-under</Label>
+                            <Switch
+                              id="adsterra-popunder"
+                              checked={adSettings.adsterraPopunderEnabled}
+                              onCheckedChange={(checked) => setAdSettings(prev => ({ ...prev, adsterraPopunderEnabled: checked }))}
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="adsterra-popunder-code">Pop-under Code</Label>
+                            <Textarea
+                              id="adsterra-popunder-code"
+                              value={adSettings.adsterraPopunderCode}
+                              onChange={(e) => setAdSettings(prev => ({ ...prev, adsterraPopunderCode: e.target.value }))}
+                              placeholder="<!-- Adsterra Pop-under Script -->"
+                              rows={3}
+                            />
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="text-lg">MonetAG Network</CardTitle>
+                        <CardDescription>Configure MonetAG ad settings</CardDescription>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+                        <div className="space-y-3">
+                          <div className="flex items-center justify-between">
+                            <Label htmlFor="monetag-direct">Direct Link Ads</Label>
+                            <Switch
+                              id="monetag-direct"
+                              checked={adSettings.monetagDirectLinkEnabled}
+                              onCheckedChange={(checked) => setAdSettings(prev => ({ ...prev, monetagDirectLinkEnabled: checked }))}
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="monetag-direct-url">Direct Link URL</Label>
+                            <Input
+                              id="monetag-direct-url"
+                              value={adSettings.monetagDirectLink}
+                              onChange={(e) => setAdSettings(prev => ({ ...prev, monetagDirectLink: e.target.value }))}
+                              placeholder="https://www.monetag.com/direct/link"
+                            />
+                          </div>
+
+                          <div className="flex items-center justify-between">
+                            <Label htmlFor="monetag-banner">Banner Ads</Label>
+                            <Switch
+                              id="monetag-banner"
+                              checked={adSettings.monetagBannerEnabled}
+                              onCheckedChange={(checked) => setAdSettings(prev => ({ ...prev, monetagBannerEnabled: checked }))}
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="monetag-banner-code">Banner Code</Label>
+                            <Textarea
+                              id="monetag-banner-code"
+                              value={adSettings.monetagBannerCode}
+                              onChange={(e) => setAdSettings(prev => ({ ...prev, monetagBannerCode: e.target.value }))}
+                              placeholder="<!-- MonetAG Banner Code -->"
+                              rows={3}
+                            />
+                          </div>
+
+                          <div className="flex items-center justify-between">
+                            <Label htmlFor="monetag-native">Native Banner</Label>
+                            <Switch
+                              id="monetag-native"
+                              checked={adSettings.monetagNativeBannerEnabled}
+                              onCheckedChange={(checked) => setAdSettings(prev => ({ ...prev, monetagNativeBannerEnabled: checked }))}
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="monetag-native-code">Native Banner Code</Label>
+                            <Textarea
+                              id="monetag-native-code"
+                              value={adSettings.monetagNativeBannerCode}
+                              onChange={(e) => setAdSettings(prev => ({ ...prev, monetagNativeBannerCode: e.target.value }))}
+                              placeholder="<!-- MonetAG Native Banner Code -->"
+                              rows={3}
+                            />
+                          </div>
+
+                          <div className="flex items-center justify-between">
+                            <Label htmlFor="monetag-social">Social Bar</Label>
+                            <Switch
+                              id="monetag-social"
+                              checked={adSettings.monetagSocialBarEnabled}
+                              onCheckedChange={(checked) => setAdSettings(prev => ({ ...prev, monetagSocialBarEnabled: checked }))}
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="monetag-social-code">Social Bar Code</Label>
+                            <Textarea
+                              id="monetag-social-code"
+                              value={adSettings.monetagSocialBarCode}
+                              onChange={(e) => setAdSettings(prev => ({ ...prev, monetagSocialBarCode: e.target.value }))}
+                              placeholder="<!-- MonetAG Social Bar Code -->"
+                              rows={3}
+                            />
+                          </div>
+
+                          <div className="flex items-center justify-between">
+                            <Label htmlFor="monetag-popunder">Pop-under</Label>
+                            <Switch
+                              id="monetag-popunder"
+                              checked={adSettings.monetagPopunderEnabled}
+                              onCheckedChange={(checked) => setAdSettings(prev => ({ ...prev, monetagPopunderEnabled: checked }))}
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="monetag-popunder-code">Pop-under Code</Label>
+                            <Textarea
+                              id="monetag-popunder-code"
+                              value={adSettings.monetagPopunderCode}
+                              onChange={(e) => setAdSettings(prev => ({ ...prev, monetagPopunderCode: e.target.value }))}
+                              placeholder="<!-- MonetAG Pop-under Script -->"
+                              rows={3}
+                            />
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+
+                  <Separator />
+
+                  <div className="space-y-4">
+                    <h4 className="font-semibold">Ad Frequency Limits</h4>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <Label htmlFor="adsterra-link">Adsterra Direct Link</Label>
+                        <Label htmlFor="max-daily-ads">Max Direct Link Ads Per Day</Label>
                         <Input
-                          id="adsterra-link"
-                          value={adSettings.adsterraDirectLink}
-                          onChange={(e) => setAdSettings(prev => ({ ...prev, adsterraDirectLink: e.target.value }))}
-                          placeholder={DEFAULT_ADSTERRA_DIRECT_LINK}
+                          id="max-daily-ads"
+                          type="number"
+                          value={adSettings.maxDirectLinkAdsPerDay}
+                          onChange={(e) => setAdSettings(prev => ({ ...prev, maxDirectLinkAdsPerDay: parseInt(e.target.value) || 0 }))}
+                          min="0"
+                          max="50"
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="monetag-link">MonetAG Direct Link</Label>
+                        <Label htmlFor="max-session-ads">Max Direct Link Ads Per Session</Label>
                         <Input
-                          id="monetag-link"
-                          value={adSettings.monetagDirectLink}
-                          onChange={(e) => setAdSettings(prev => ({ ...prev, monetagDirectLink: e.target.value }))}
-                          placeholder={DEFAULT_MONETAG_DIRECT_LINK}
+                          id="max-session-ads"
+                          type="number"
+                          value={adSettings.maxDirectLinkAdsPerSession}
+                          onChange={(e) => setAdSettings(prev => ({ ...prev, maxDirectLinkAdsPerSession: parseInt(e.target.value) || 0 }))}
+                          min="0"
+                          max="20"
                         />
                       </div>
                     </div>
                   </div>
                   
-                  <Button onClick={handleSaveAdSettings} className="w-full sm:w-auto min-h-[44px] touch-manipulation">
-                    <Check className="mr-2 h-4 w-4" />
-                    Save Ad Settings
-                  </Button>
+                  <div className="flex justify-center pt-4">
+                    <Button onClick={handleSaveAdSettings} className="w-full sm:w-auto min-h-[44px] touch-manipulation">
+                      <Check className="mr-2 h-4 w-4" />
+                      Save Ad Settings
+                    </Button>
+                  </div>
                 </CardContent>
               </Card>
             </TabsContent>

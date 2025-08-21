@@ -418,7 +418,7 @@ const realisticErrorHandlingFlows = {
         responses: [
           { text: "Yaar this is getting worse! 💔 Might take some time to fix", mood: "worried" },
           { text: "I think something's wrong with the network tower! 📡 Neighbors also complaining", mood: "understanding" },
-          { text: "Papa called the internet guy! 👨‍🔧 He'll be here soon!", mood: "hopeful" }
+          { text: "Papa called the internet guy! 👨‍🔧 He should be here soon!", mood: "hopeful" }
         ]
       },
       {
