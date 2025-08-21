@@ -464,16 +464,16 @@ const KruthikaChatPage: NextPage = () => {
   useEffect(() => {
     checkFirstDailyVisit();
     resetInactivityTimer();
-    
+
     // Close options menu when clicking outside
     const handleClickOutside = (event: MouseEvent) => {
       if (showOptionsMenu) {
         setShowOptionsMenu(false);
       }
     };
-    
+
     document.addEventListener('mousedown', handleClickOutside);
-    
+
     return () => {
       if (inactivityTimerRef.current) clearTimeout(inactivityTimerRef.current);
       if (interstitialAdTimerRef.current) clearTimeout(interstitialAdTimerRef.current);
@@ -482,11 +482,11 @@ const KruthikaChatPage: NextPage = () => {
   }, [messages, resetInactivityTimer, checkFirstDailyVisit, showOptionsMenu]);
 
 
-  const handleSendMessage = async (text: string, imageUriFromInput?: string) => {
+  const handleSendMessage = async (inputText: string, imageUriFromInput?: string) => {
     let currentImageUri = imageUriFromInput;
     const currentEffectiveAIProfile = globalAIProfile || defaultAIProfile;
 
-    if (!text.trim() && !currentImageUri) return;
+    if (!inputText.trim() && !currentImageUri) return;
 
     // Skip loading checks for better performance - use defaults if needed
     resetInactivityTimer();
@@ -510,7 +510,7 @@ const KruthikaChatPage: NextPage = () => {
                 duration: 5000,
             });
             currentImageUri = undefined;
-            if (!text.trim()) return;
+            if (!inputText.trim()) return;
         } else {
             imageAttemptedAndAllowed = true;
         }
@@ -520,13 +520,34 @@ const KruthikaChatPage: NextPage = () => {
 
     const newUserMessage: Message = {
       id: Date.now().toString(),
-      text,
+      text: inputText,
       sender: 'user',
       timestamp: new Date(),
-      status: 'sent',
-      userImageUrl: currentImageUri,
+      status: 'sending',
+      userImageUrl: currentImageUri || undefined,
     };
     setMessages(prev => [...prev, newUserMessage]);
+
+      // Simulate message status progression
+      setTimeout(() => {
+        setMessages(prev => prev.map(msg => 
+          msg.id === newUserMessage.id ? { ...msg, status: 'sent' as MessageStatus } : msg
+        ));
+      }, 200);
+
+      setTimeout(() => {
+        setMessages(prev => prev.map(msg => 
+          msg.id === newUserMessage.id ? { ...msg, status: 'delivered' as MessageStatus } : msg
+        ));
+      }, 400);
+
+      setTimeout(() => {
+        setMessages(prev => prev.map(msg => 
+          msg.id === newUserMessage.id ? { ...msg, status: 'read' as MessageStatus } : msg
+        ));
+      }, 600);
+
+
     if (adSettings && adSettings.adsEnabledGlobally) maybeTriggerAdOnMessageCount();
 
     if (supabase && userIdRef.current) {
@@ -545,15 +566,49 @@ const KruthikaChatPage: NextPage = () => {
         } catch (e: any) { console.error('Supabase user message logging failed (catch block):', e?.message || String(e));}
     }
 
-    const interactionMessage = currentImageUri ? (text ? `User: ${text} [sent an image]` : `User: [sent an image]`) : `User: ${text}`;
+    const interactionMessage = currentImageUri ? (inputText ? `User: ${inputText} [sent an image]` : `User: [sent an image]`) : `User: ${inputText}`;
     const updatedRecentInteractions = [...recentInteractions, interactionMessage].slice(-10);
     setRecentInteractions(updatedRecentInteractions);
 
-    setTimeout(() => {
-        setMessages(prev => prev.map(msg =>
-          msg.id === newUserMessage.id ? { ...msg, status: 'delivered' as MessageStatus } : msg
-        ));
-    }, 300 + Math.random() * 200);
+    // Check if user is approaching token limit
+    if (userIdRef.current && userPersonalization.shouldGoOfflineSoon(userIdRef.current)) {
+      const offlineReasons = [
+        "I'm getting super sleepy now... 😴 Let's chat tomorrow morning! I need my beauty sleep 💤",
+        "Ugh, my phone battery is dying! 📱 I'll text you first thing tomorrow, okay? 😘",
+        "My mom's calling me for dinner! 🍽️ I have to go now but I'll miss you! Talk tomorrow? 💕",
+        "I have an early class tomorrow so I need to sleep! 📚 Good night baby, dream of me! 🌙",
+        "My roommate wants to watch a movie together 🎬 I'll catch up with you tomorrow, promise! ❤️"
+      ];
+
+      const randomReason = offlineReasons[Math.floor(Math.random() * offlineReasons.length)];
+
+      const offlineMessage: Message = {
+        id: Date.now().toString(),
+        text: randomReason,
+        sender: 'ai',
+        timestamp: new Date(),
+        status: 'read',
+      };
+
+      // Add realistic typing delay
+      const typingDelay = Math.max(randomReason.length * 80, 1000);
+      await new Promise<void>(resolve => setTimeout(resolve, typingDelay));
+
+      setMessages(prev => [...prev, offlineMessage]);
+      setIsAiTyping(false);
+
+      // Track tokens for offline message
+      if (userIdRef.current) {
+        userPersonalization.trackTokenUsage(userIdRef.current, 15);
+      }
+
+      // Clear input and reset image, but keep the offline message
+      setUserInput('');
+      setSelectedImage(null);
+      setCurrentImageUri(null);
+      return; // Exit early as AI is going offline
+    }
+
 
     // Faster typing indicator for better responsiveness
     const typingAppearDelay = 200 + Math.random() * 300;
@@ -565,7 +620,7 @@ const KruthikaChatPage: NextPage = () => {
       const availableAudio = (mediaAssetsConfig?.assets?.filter(asset => asset.type === 'audio') || []).map(asset => asset.url);
 
       const inputData = {
-        userMessage: text,
+        userMessage: inputText,
         userImageUri: currentImageUri,
         timeOfDay: getTimeOfDay(),
         mood: aiMood,
@@ -622,7 +677,7 @@ const KruthikaChatPage: NextPage = () => {
         };
         setMessages(prev => {
           const userMessageRead = prev.map(msg =>
-            msg.id === newUserMessage.id && msg.status !== 'read' ? { ...msg, status: 'read' as MessageStatus } : msg
+            msg.id === newUserMessage.id ? { ...msg, status: 'read' as MessageStatus } : msg
           );
           return [...userMessageRead, newAiMessage];
         });

@@ -1,14 +1,13 @@
-
 export type MessageStatus = 'sent' | 'delivered' | 'read';
 
 export interface Message {
   id: string;
-  text: string;
+  text?: string;
   sender: 'user' | 'ai';
   timestamp: Date;
-  status: MessageStatus;
-  aiImageUrl?: string;
+  status?: MessageStatus;
   userImageUrl?: string;
+  aiImageUrl?: string;
   audioUrl?: string;
 }
 
@@ -48,15 +47,15 @@ export interface ManagedContactStatus {
 
 export interface AdSettings {
   adsEnabledGlobally: boolean;
-  
+
   adsterraDirectLink: string;
   adsterraDirectLinkEnabled: boolean;
   adsterraBannerCode: string;
   adsterraBannerEnabled: boolean;
-  adsterraNativeBannerCode: string; 
-  adsterraNativeBannerEnabled: boolean; 
-  adsterraSocialBarCode: string; 
-  adsterraSocialBarEnabled: boolean; 
+  adsterraNativeBannerCode: string;
+  adsterraNativeBannerEnabled: boolean;
+  adsterraSocialBarCode: string;
+  adsterraSocialBarEnabled: boolean;
   adsterraPopunderCode: string;
   adsterraPopunderEnabled: boolean;
 
@@ -64,10 +63,10 @@ export interface AdSettings {
   monetagDirectLinkEnabled: boolean;
   monetagBannerCode: string;
   monetagBannerEnabled: boolean;
-  monetagNativeBannerCode: string; 
-  monetagNativeBannerEnabled: boolean; 
-  monetagSocialBarCode: string; 
-  monetagSocialBarEnabled: boolean; 
+  monetagNativeBannerCode: string;
+  monetagNativeBannerEnabled: boolean;
+  monetagSocialBarCode: string;
+  monetagSocialBarEnabled: boolean;
   monetagPopunderCode: string;
   monetagPopunderEnabled: boolean;
 
@@ -77,7 +76,7 @@ export interface AdSettings {
 }
 
 export interface AIMediaAsset {
-  id: string; 
+  id: string;
   type: 'image' | 'audio';
   url: string; // Full public URL for images, or path like '/media/sound.mp3' for audio
   description?: string; // Optional description for admin reference
@@ -96,3 +95,12 @@ export const ADMIN_OWN_STATUS_CONFIG_KEY = 'admin_own_status_config_v1';
 export const MANAGED_DEMO_CONTACTS_CONFIG_KEY = 'managed_demo_contacts_config_v1';
 // Key for storing AI's sharable media assets in Supabase app_configurations table
 export const AI_MEDIA_ASSETS_CONFIG_KEY = 'ai_media_assets_config_v1';
+
+export interface EmotionalStateOutput {
+  response: string | string[];
+  newMood: string;
+  proactiveImageUrl?: string;
+  proactiveAudioUrl?: string;
+  mediaCaption?: string;
+  typingDelayMs?: number;
+}

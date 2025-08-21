@@ -92,7 +92,7 @@ const MessageBubble = memo(({ message, aiAvatarUrl, aiName = "AI", onImageClick,
           </div>
         )}
 
-        <div className="flex justify-end mt-1">
+        <div className="flex justify-end items-center mt-1 gap-1">
           <span className="text-xs opacity-70">
             {message.timestamp.toLocaleTimeString([], {
               hour: '2-digit',
@@ -100,6 +100,22 @@ const MessageBubble = memo(({ message, aiAvatarUrl, aiName = "AI", onImageClick,
               hour12: true
             })}
           </span>
+          {isUser && (
+            <div className="flex">
+              {message.status === 'sending' && (
+                <span className="text-xs opacity-50">⏱️</span>
+              )}
+              {message.status === 'sent' && (
+                <span className="text-xs opacity-60">✓</span>
+              )}
+              {message.status === 'delivered' && (
+                <span className="text-xs opacity-70">✓✓</span>
+              )}
+              {message.status === 'read' && (
+                <span className="text-xs text-blue-500">✓✓</span>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </div>

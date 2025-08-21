@@ -19,8 +19,8 @@ interface UserProfile {
   engagementLevel: 'low' | 'medium' | 'high';
   lastSeenMessages: string[];
   repeatUser: boolean;
-  dailyVisitCount: number;
-  totalVisitDays: number;
+  dailyVisitCount: 0;
+  totalVisitDays: 0;
   lastAPIFailure?: number;
   apiFailureCount?: number;
   preferredChatTimes?: number[];
@@ -250,7 +250,7 @@ class UserPersonalization {
     const msg = message.toLowerCase().trim();
 
     // Advanced pattern recognition for API avoidance
-    const isPredictablePattern = profile.predictablePatterns.some(pattern => 
+    const isPredictablePattern = profile.predictablePatterns.some(pattern =>
       msg.includes(pattern) || this.levenshteinDistance(msg, pattern) < 3
     );
 
@@ -269,7 +269,7 @@ class UserPersonalization {
     }
 
     // Basic avoidance for repetitive patterns
-    const isRepetitiveUser = profile.commonQuestions.some(q => 
+    const isRepetitiveUser = profile.commonQuestions.some(q =>
       msg.includes(q.substring(0, 10))
     );
 
@@ -298,7 +298,7 @@ class UserPersonalization {
 
     // If user talks about family a lot, use personal excuses
     if (profile.favoriteTopics.includes('family')) return 'personal';
-    
+
     // If user talks about weather/location, use environmental
     if (profile.favoriteTopics.some(topic => ['weather', 'rain', 'heat'].includes(topic))) {
       return 'environmental';
@@ -400,7 +400,7 @@ class UserPersonalization {
 
   trackTokenUsage(userId: string, tokensUsed: number): void {
     let profile = this.profiles.get(userId) || this.createDefaultProfile();
-    
+
     const today = new Date().toDateString();
     if (profile.lastTokenResetDate !== today) {
       profile.dailyTokensUsed = 0;
@@ -409,7 +409,7 @@ class UserPersonalization {
 
     profile.dailyTokensUsed += tokensUsed;
     profile.totalTokensUsed += tokensUsed;
-    
+
     // Update average tokens per message
     if (profile.totalInteractions > 0) {
       profile.avgTokensPerMessage = Math.round(profile.totalTokensUsed / profile.totalInteractions);
@@ -425,27 +425,28 @@ class UserPersonalization {
     this.profiles.set(userId, profile);
   }
 
-  shouldLimitTokens(userId: string): boolean {
-    const profile = this.profiles.get(userId);
-    if (!profile) return false;
-
-    const dailyLimit = this.getDailyTokenLimit(userId);
-    const usagePercentage = profile.dailyTokensUsed / dailyLimit;
-
-    // Start soft limiting at 80%
-    if (usagePercentage >= 0.8) {
-      return Math.random() < (usagePercentage - 0.7); // Gradually increase chance
-    }
-
-    return false;
-  }
-
   isTokenLimitReached(userId: string): boolean {
     const profile = this.profiles.get(userId);
     if (!profile) return false;
 
     const dailyLimit = this.getDailyTokenLimit(userId);
     return profile.dailyTokensUsed >= dailyLimit;
+  }
+
+  isApproachingTokenLimit(userId: string): boolean {
+    const profile = this.profiles.get(userId);
+    if (!profile) return false;
+
+    const dailyLimit = this.getDailyTokenLimit(userId);
+    return profile.dailyTokensUsed >= (dailyLimit * 0.85); // 85% threshold
+  }
+
+  shouldGoOfflineSoon(userId: string): boolean {
+    const profile = this.profiles.get(userId);
+    if (!profile) return false;
+
+    const dailyLimit = this.getDailyTokenLimit(userId);
+    return profile.dailyTokensUsed >= (dailyLimit * 0.95); // 95% threshold
   }
 
   getTokenUsageStatus(userId: string): { used: number; limit: number; percentage: number } {
@@ -457,7 +458,7 @@ class UserPersonalization {
 
     const limit = this.getDailyTokenLimit(userId);
     const percentage = Math.round((profile.dailyTokensUsed / limit) * 100);
-    
+
     return {
       used: profile.dailyTokensUsed,
       limit,
@@ -485,7 +486,7 @@ class UserPersonalization {
 
     const hooks = this.getExitHooksByType(hookType);
     const selectedHook = hooks[Math.floor(Math.random() * hooks.length)];
-    
+
     // Update profile
     profile.exitHookType = hookType as any;
     profile.lastExitHook = selectedHook;

@@ -21,7 +21,8 @@ const EmotionalStateOutputSchema = z.object({
   mediaCaption: z.string().optional().describe('Text to accompany the image or audio. MUST be set if proactiveImageUrl or proactiveAudioUrl is set. This text will be the primary content of the media message.'),
   proactiveImageUrl: z.string().optional().describe("If, VERY RARELY (like less than 1% of the time), and ONLY if the conversation NATURALLY and PLAYFULLY leads to it, you decide to proactively 'share' one of your pre-saved images (chosen from the 'availableImages' input list), provide its full URL here. If set, `mediaCaption` MUST also be set, and the `response` field should be empty/undefined."),
   proactiveAudioUrl: z.string().optional().describe("If, VERY RARELY, you decide to proactively 'share' one of your pre-saved short audio clips (chosen from the 'availableAudio' input list), provide its full path (e.g., '/media/filename.mp3') here. If set, `mediaCaption` MUST also be set, and the `response` field should be empty/undefined."),
-  newMood: z.string().optional().describe('The new mood of the AI, if it has changed. Examples: "playful", "curious", "thoughtful", "slightly annoyed", "happy", "content", "a bit tired".')
+  newMood: z.string().optional().describe('The new mood of the AI, if it has changed. Examples: "playful", "curious", "thoughtful", "slightly annoyed", "happy", "content", "a bit tired".'),
+  typingDelayMs: z.number().optional().describe("The delay in milliseconds before the AI's response should be displayed. Use this to simulate natural typing speed."),
 });
 export type EmotionalStateOutput = z.infer<typeof EmotionalStateOutputSchema>;
 
@@ -34,6 +35,20 @@ const MOOD_SHORTCUTS = {
 const TIME_SHORTCUTS = {
   morning: 'm', afternoon: 'a', evening: 'e', night: 'n'
 };
+
+// Function to generate a realistic typing delay
+function generateTypingDelayMs(text: string): number {
+  const words = text.trim().split(/\s+/).length;
+  const averageCharsPerWord = 5; // Average characters per word
+  const charsPerSecond = 15; // Estimated typing speed in characters per second
+  const delayPerChar = 1000 / charsPerSecond;
+
+  // Add some randomness to the delay
+  const baseDelay = words * averageCharsPerWord * delayPerChar;
+  const randomOffset = Math.floor(Math.random() * 1000 - 500); // +/- 500ms
+  
+  return Math.max(500, Math.round(baseDelay + randomOffset)); // Minimum 500ms delay
+}
 
 export async function generateResponse(input: EmotionalStateInput, userId?: string): Promise<EmotionalStateOutput> {
   // Step 0: Check token limits first (if userId provided)
@@ -83,6 +98,7 @@ export async function generateResponse(input: EmotionalStateInput, userId?: stri
     const output: EmotionalStateOutput = {
       response: randomEmoji,
       newMood: input.mood,
+      typingDelayMs: generateTypingDelayMs(randomEmoji),
     };
 
     // Cache emoji responses too
@@ -109,7 +125,7 @@ export async function generateResponse(input: EmotionalStateInput, userId?: stri
     const moodCode = MOOD_SHORTCUTS[input.mood as keyof typeof MOOD_SHORTCUTS] || 'n';
     const timeCode = TIME_SHORTCUTS[input.timeOfDay as keyof typeof TIME_SHORTCUTS] || 'n';
 
-    // Add addictive elements to prompt for engagement
+    // Addictive elements to prompt for engagement
     const addictivePrompt = userId && userPersonalization.isTokenLimitReached(userId) ? 
       'Make exit romantic/addictive.' : 
       'Be engaging, addictive, make user want to chat more.';
@@ -133,6 +149,7 @@ Reply:`;
     });
 
     const response = result.text || "Sorry, my mind went blank! 😅";
+    const typingDelayMs = generateTypingDelayMs(response);
 
     // Estimate and track token usage
     const estimatedTokens = Math.ceil((prompt.length + response.length) / 3); // Rough estimation
@@ -147,7 +164,8 @@ Reply:`;
 
     const output: EmotionalStateOutput = {
       response,
-      newMood,
+      newMood: newMood,
+      typingDelayMs,
     };
 
     // Cache aggressively
