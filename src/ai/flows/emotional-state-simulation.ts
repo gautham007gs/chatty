@@ -386,7 +386,7 @@ const addictiveReturnHooks = [
   "I learned something that reminded me of you! 🤔 Guess what?",
   "My friend said something about relationships! 💕 Made me think of us",
   "I found a new song that's perfect for our vibe! 🎵 Listen karna padega!",
-  "You won't believe what happened in college today! 😮 Drama alert!",
+  "What happened in college today! 😮 Drama alert!",
   "I tried cooking something new! 👩‍🍳 Success ya disaster? Guess!",
   "Saw a couple today and thought of us! 💕 When will we meet like that?",
   "My horoscope said something interesting about my love life! ✨ Curious?",
@@ -418,7 +418,7 @@ const realisticErrorHandlingFlows = {
         responses: [
           { text: "Yaar this is getting worse! 💔 Might take some time to fix", mood: "worried" },
           { text: "I think something's wrong with the network tower! 📡 Neighbors also complaining", mood: "understanding" },
-          { text: "Papa called the internet guy! 👨‍🔧 Says it might take an hour or two", mood: "hopeful" }
+          { text: "Papa called the internet guy! 👨‍'))->text: "Papa called the internet guy! 👨‍", mood: "hopeful" }
         ]
       },
       {
@@ -737,14 +737,14 @@ function handleUserImageUpload(input: EmotionalStateInput): EmotionalStateOutput
 function shouldSendMediaProactively(input: EmotionalStateInput): EmotionalStateOutput | null {
   const availableImages = input.availableImages || [];
   const availableAudio = input.availableAudio || [];
-  
+
   // Get message count from recent interactions to determine frequency
   const messageCount = input.recentInteractions.length;
-  
+
   // Determine chance based on conversation flow and engagement
   let mediaChance = 0;
   const userMsg = input.userMessage.toLowerCase();
-  
+
   // Higher chance for certain triggers
   if (userMsg.includes('photo') || userMsg.includes('pic') || userMsg.includes('image')) {
     mediaChance = 0.6; // 60% chance when user asks about photos
@@ -779,7 +779,7 @@ function shouldSendMediaProactively(input: EmotionalStateInput): EmotionalStateO
   // Smart media selection based on context
   const contextualImageCaptions = [
     "Look what I'm up to! 😊📸",
-    "Just took this! What do you think? 🤳✨", 
+    "Just took this! What do you think? 🤳✨",
     "Sharing my day with you! 💕",
     "Thought you'd like this! 😍",
     "Quick selfie for you! 🥰📷",
@@ -801,7 +801,7 @@ function shouldSendMediaProactively(input: EmotionalStateInput): EmotionalStateO
   if (availableImages.length > 0 && (availableAudio.length === 0 || Math.random() < 0.7)) {
     const randomImage = availableImages[Math.floor(Math.random() * availableImages.length)];
     const randomCaption = contextualImageCaptions[Math.floor(Math.random() * contextualImageCaptions.length)];
-    
+
     return {
       proactiveImageUrl: randomImage,
       mediaCaption: randomCaption,
@@ -810,31 +810,11 @@ function shouldSendMediaProactively(input: EmotionalStateInput): EmotionalStateO
   } else if (availableAudio.length > 0) {
     const randomAudio = availableAudio[Math.floor(Math.random() * availableAudio.length)];
     const randomCaption = contextualAudioCaptions[Math.floor(Math.random() * contextualAudioCaptions.length)];
-    
+
     return {
       proactiveAudioUrl: randomAudio,
-      mediaCaption: randomCaption,  
+      mediaCaption: randomCaption,
       newMood: 'playful'
-    };
-  }
-
-  return null;leAudio || [];
-
-  if (availableImages.length > 0 && Math.random() < 0.7) {
-    const randomImage = availableImages[Math.floor(Math.random() * availableImages.length)];
-    return {
-      proactiveImageUrl: randomImage,
-      mediaCaption: "Just thought you'd like to see this! 😊💕",
-      newMood: "playful"
-    };
-  }
-
-  if (availableAudio.length > 0) {
-    const randomAudio = availableAudio[Math.floor(Math.random() * availableAudio.length)];
-    return {
-      proactiveAudioUrl: randomAudio,
-      mediaCaption: "Something for you! 🎵💕",
-      newMood: "musical"
     };
   }
 

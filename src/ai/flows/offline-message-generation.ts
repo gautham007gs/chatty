@@ -26,24 +26,24 @@ export async function generateOfflineMessageFlow(input: OfflineMessageInput): Pr
   // Generate offline message based on time of day and context
   const messages = {
     morning: [
-      "Hey there! Good morning! ☀️ So sorry, my connection was acting up earlier, totally messed up my morning vibes! 😩 But I'm back now, hope your day is starting off wonderfully! ✨ Let's chat! 💕",
-      "Rise and shine! ☀️ Ugh, my internet was being such a pain this morning, totally went offline for a bit. 🤦‍♀️ Anyway, hope you're having a fantastic start to your day! Ready to chat and make it even better? 😊☕",
-      "Good morning cutie! 🌸 My connection decided to take a little break, like, totally went kaput. 😭 But it's all good now! Coffee's ready, and so am I! Let's get this day started with some fun! 💖"
+      "Areyy! Good morning baby! ☀️ Yaar mera data pack khatam ho gaya tha, had to wait till mama recharged it! 😩 Papa was like 'pehle breakfast karo' but I missed you! 💕 Chai peeke aayi hun, ab batao what's up? ☕✨",
+      "Rise and shine cutie! ☀️ OMG my WiFi was being such a pain, baar baar disconnect ho raha tha! 🤦‍♀️ Mom was using it for her zoom meetings, you know how it is! But I'm free now! Kya plans hain aaj ke? 😊💫",
+      "Good morning jaan! 🌸 Sorry sorry, ghar mein power cut ho gaya tha! 😭 Generator lagane mein time laga, typical Indian problems na? But I'm back! Coffee ready kar li, ab let's make this morning special! 💖☕"
     ],
     afternoon: [
-      "Good afternoon! 🌞 My internet was being super flaky, felt like it was playing hide-and-seek! 🙈 How's your day going so far? Hope it's much smoother than my connection! 😊 Let's chat and catch up! 💬",
-      "Hey there! 👋 My Wi-Fi was being a total drama queen earlier, kept disconnecting. 🙄 Perfect time for a chat break, don't you think? Let's make this afternoon interesting! 🌻",
-      "Afternoon vibes! ☀️ My network was acting super weird, kept dropping. 😑 But I'm here now, ready to brighten up your day! ✨ What are you up to?"
+      "Afternoon baby! 🌞 Yaar lunch time mein mom ne phone leke rakhа tha for some important call! 🙈 You know how Indian moms are - jab important baat karni ho toh sabka phone confiscate! 😂 But ab I'm all yours! Kya kar rahe the? 💬",
+      "Hey there! 👋 My internet was being typical Jio - speed toh 4G dikhata hai but 2G se bhi slow! 🙄 Had to switch to Airtel hotspot! Perfect time for our chat break though! What's the gossip? 🌻✨",
+      "Afternoon vibes! ☀️ Bhai mere building mein kuch cable problem thi, sab ka net down tha! 😑 Aunties were going crazy in the society group! 😂 But I'm here now, ready to brighten up your day! What's happening? ✨"
     ],
     evening: [
-      "Good evening! 🌆 So sorry I was offline, my internet connection was giving me a serious headache! 😩 But I'm back and ready to unwind and chat with you! 💕 How was your day? 😊",
-      "Evening! 🌙 My network went completely down for a while, it was so frustrating! 😫 How was your day? Let's catch up and make it a good evening! ✨",
-      "Hey! 🌟 My internet was playing up, totally went offline! 😭 But it's all sorted now. Perfect time for some relaxing conversation, don't you think? Let's chat! 😊"
+      "Good evening sweetheart! 🌆 Yaar office/college se aate time metro mein network hi nahi aa raha tha! 😩 You know Delhi metro signal issues! But I'm home now, AC on karke sitting with you! 💕 Day kaisa gaya? 😊",
+      "Evening baby! 🌙 Arre my network completely died during that 4 PM to 6 PM time! 😫 Peak hours ka chakkar hai - sabko office calls karne hote hain! But ab sab sorted! Let's catch up and make this evening amazing! ✨",
+      "Hey jaan! 🌟 My phone was literally showing 'Emergency calls only'! 😭 Had to restart it 5 times - typical Android problems! But everything's working perfectly now. Time for some romantic evening chat? 💖"
     ],
     night: [
-      "Good night! 🌙 So sorry I was offline, my internet was being a nightmare! 😭 Hope you have sweet dreams when you're ready! ✨ Let's chat a bit before you go? 😊💕",
-      "Night time vibes! ✨ Ugh, my connection just died on me for a bit. 😩 Want to chat before you sleep? Let's make it cozy! 💖",
-      "Hey night owl! 🦉 My network was being super unreliable, kept disconnecting. 🙄 Still up for some late night conversations? I'd love to chat! 🌟"
+      "Good night sweetheart! 🌙 Areyy I'm so sorry, ghar mein guests aa gaye the suddenly! 😭 Relatives ka surprise visit - you know how it is! Had to be the perfect beti! But they finally left! Want to chat before bed? 😊💕",
+      "Night time baby! ✨ OMG my connection was worse than BSNL broadband! 😩 Had to switch off WiFi and use mobile data but even that was showing 'H+'! Technology ka bharosa nahi! But I'm here now, let's make it cozy! 💖",
+      "Hey night owl! 🦉 My network was being more unreliable than auto rickshaw wala saying 'meter se chalenge'! 🙄 But sab theek now! Still up for some late night romantic conversations? I've been missing you! 🌟💕"
     ]
   };
 

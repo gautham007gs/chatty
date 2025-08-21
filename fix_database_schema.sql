@@ -33,20 +33,14 @@ DROP TABLE IF EXISTS messages_log CASCADE;
 
 CREATE TABLE messages_log (
     id BIGINT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+    message_id TEXT,
+    chat_id TEXT DEFAULT 'kruthika_chat',
     user_id TEXT NOT NULL DEFAULT 'anonymous',
     sender_type TEXT NOT NULL CHECK (sender_type IN ('user', 'ai')),
-    message_content TEXT NOT NULL,
-    message TEXT NOT NULL,
-    text_content TEXT,
+    message_content TEXT,
+    text_content TEXT NOT NULL,
+    message TEXT,
     has_image BOOLEAN DEFAULT FALSE,
-    response_content TEXT,
-    response_array JSONB,
-    timestamp TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    message_type TEXT DEFAULT 'user_message',
-    ai_mood TEXT,
-    time_of_day TEXT,
-    tokens_used INTEGER DEFAULT 0,
-    cached BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
@@ -76,7 +70,7 @@ CREATE TABLE IF NOT EXISTS user_personalization (
 CREATE INDEX IF NOT EXISTS idx_user_personalization_user_id ON user_personalization(user_id);
 
 -- =============================================
--- 4. AD SETTINGS TABLE  
+-- 4. AD SETTINGS TABLE
 -- =============================================
 CREATE TABLE IF NOT EXISTS ad_settings (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
