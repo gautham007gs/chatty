@@ -33,7 +33,6 @@ import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
 import AdminLayout from '@/components/admin/AdminLayout';
 
-
 const ADMIN_AUTH_KEY = 'isAdminLoggedIn_KruthikaChat';
 
 const messagesChartConfig = { messages: { label: "Messages Sent", color: "hsl(var(--chart-2))" } } satisfies ChartConfig;
@@ -81,7 +80,6 @@ const AdminProfilePage: React.FC = () => {
 
   const combinedIsLoadingSupabaseData = isLoadingAIProfile || isLoadingGlobalStatuses || isLoadingMediaAssets;
 
-
   useEffect(() => {
     try {
         const authStatus = sessionStorage.getItem(ADMIN_AUTH_KEY);
@@ -100,7 +98,7 @@ const AdminProfilePage: React.FC = () => {
     if (contextAIProfile) {
       console.log("[AdminProfilePage] Context AIProfile updated, setting currentGlobalAIProfile. AvatarURL from context:", contextAIProfile.avatarUrl);
       setCurrentGlobalAIProfile(contextAIProfile);
-    } else if (!isLoadingAIProfile) { // Only use default if not loading and context is null
+    } else if (!isLoadingAIProfile) {
       console.log("[AdminProfilePage] Context AIProfile is null and not loading, using defaultAIProfile for currentGlobalAIProfile.");
       setCurrentGlobalAIProfile(defaultAIProfile);
     }
@@ -118,18 +116,15 @@ const AdminProfilePage: React.FC = () => {
     if (contextMediaAssets) setAiMediaAssets(contextMediaAssets);
   }, [contextMediaAssets]);
 
-
   const fetchAllNonAnalyticsConfigs = useCallback(async () => {
     if (!supabase) {
       toast({ title: "Supabase Error", description: "Supabase client not available. Cannot load some global configurations.", variant: "destructive" });
       setAdSettings(defaultAdSettings); 
-      setCurrentGlobalAIProfile(defaultAIProfile); // Ensure fallback
+      setCurrentGlobalAIProfile(defaultAIProfile);
       return;
     }
     try {
-      // Use the external setter from context if available
       if (setExternalIsLoadingAIProfile) setExternalIsLoadingAIProfile(true);
-
 
       const { data: adConfigData, error: adConfigError } = await supabase
         .from('app_configurations')
@@ -148,7 +143,7 @@ const AdminProfilePage: React.FC = () => {
       };
       setAdSettings(mergedAdSettings);
 
-      await fetchAIProfile(); // This will set its own loading state internally
+      await fetchAIProfile();
       await fetchGlobalStatuses();
       await fetchMediaAssets();
 
@@ -165,14 +160,13 @@ const AdminProfilePage: React.FC = () => {
     }
   }, [toast, fetchAIProfile, fetchGlobalStatuses, fetchMediaAssets]);
 
-
   useEffect(() => {
     if (isAuthenticated) {
       fetchAllNonAnalyticsConfigs();
     }
   }, [isAuthenticated, fetchAllNonAnalyticsConfigs]);
 
-   useEffect(() => {
+  useEffect(() => {
     if (!isAuthenticated) return;
 
     async function fetchRealAnalytics() {
@@ -255,326 +249,6 @@ const AdminProfilePage: React.FC = () => {
     }
   }, [toast, isAuthenticated]);
 
-  // --- Backup and Restore Functions ---
-  const handleExportData = () => {
-    const dataToExport = {
-      aiProfile: currentGlobalAIProfile,
-      adminStatus: adminStatus,
-      managedContactStatuses: managedContactStatuses,
-      adSettings: adSettings,
-      aiMediaAssets: aiMediaAssets,
-    };
-
-    const jsonString = JSON.stringify(dataToExport, null, 2);
-    const blob = new Blob([jsonString], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = `admin_config_backup_${format(new Date(), 'yyyyMMdd_HHmmss')}.json`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-    toast({ title: "Data Exported", description: "Your current admin configurations have been exported." });
-  };
-
-  const handleBackupSettings = async () => {
-    if (!supabase) {
-      toast({ title: "Supabase Error", description: "Supabase client not available. Cannot perform backup.", variant: "destructive" });
-      return;
-    }
-    const configData = {
-      aiProfile: currentGlobalAIProfile,
-      adminStatus: adminStatus,
-      managedContactStatuses: managedContactStatuses,
-      adSettings: adSettings,
-      aiMediaAssets: aiMediaAssets,
-    };
-
-    try {
-      const { error } = await supabase
-        .from('app_configurations')
-        .upsert(
-          { id: 'admin_settings_backup', settings: configData, updated_at: new Date().toISOString() },
-          { onConflict: 'id' }
-        );
-      if (error) throw error;
-      toast({ title: "Settings Backed Up", description: "Your current admin settings are backed up in Supabase." });
-    } catch (error: any) {
-      console.error("Failed to backup settings to Supabase:", error);
-      toast({ title: "Error Backing Up Settings", description: `Could not back up settings to Supabase. ${error.message || ''}`, variant: "destructive" });
-    }
-  };
-
-  const handleRestoreSettings = async () => {
-    if (!supabase) {
-      toast({ title: "Supabase Error", description: "Supabase client not available. Cannot restore settings.", variant: "destructive" });
-      return;
-    }
-    try {
-      const { data, error } = await supabase
-        .from('app_configurations')
-        .select('settings')
-        .eq('id', 'admin_settings_backup')
-        .single();
-
-      if (error && error.code !== 'PGRST116') throw error;
-      if (!data || !data.settings) {
-        toast({ title: "No Backup Found", description: "No previous settings backup found in Supabase.", variant: "warning" });
-        return;
-      }
-
-      const { aiProfile, adminStatus, managedContactStatuses, adSettings, aiMediaAssets } = data.settings;
-
-      // Update states
-      setCurrentGlobalAIProfile(aiProfile || defaultAIProfile);
-      setAdminStatus(adminStatus || defaultAdminStatusDisplay);
-      setManagedContactStatuses(managedContactStatuses || defaultManagedContactStatuses);
-      setAdSettings(adSettings || defaultAdSettings);
-      setAiMediaAssets(aiMediaAssets || defaultAIMediaAssetsConfig);
-
-      toast({ title: "Settings Restored", description: "Previous admin settings have been restored. Please save to apply globally." });
-
-    } catch (error: any) {
-      console.error("Failed to restore settings from Supabase:", error);
-      toast({ title: "Error Restoring Settings", description: `Could not restore settings from Supabase. ${error.message || ''}`, variant: "destructive" });
-    }
-  };
-
-
-  const handleSaveKruthikaCoreProfile = async (updatedCoreProfileData: Partial<AIProfile>) => {
-    // Construct the data to update, ensuring empty avatarUrl is treated as undefined
-    const profileDataToUpdate: Partial<AIProfile> = {
-      name: updatedCoreProfileData.name, 
-      status: updatedCoreProfileData.status,
-      avatarUrl: updatedCoreProfileData.avatarUrl?.trim() === '' ? undefined : updatedCoreProfileData.avatarUrl,
-    };
-    console.log("[AdminProfilePage] handleSaveKruthikaCoreProfile - profileDataToUpdate before calling context update:", JSON.stringify(profileDataToUpdate, null, 2));
-    await updateAIProfile(profileDataToUpdate); 
-    setIsProfileEditorOpen(false);
-  };
-
-  const handleSaveKruthikaStory = async () => { 
-    const storyDataToUpdate: Partial<AIProfile> = {
-        statusStoryText: currentGlobalAIProfile.statusStoryText,
-        statusStoryImageUrl: currentGlobalAIProfile.statusStoryImageUrl?.trim() === '' ? undefined : currentGlobalAIProfile.statusStoryImageUrl,
-        statusStoryHasUpdate: currentGlobalAIProfile.statusStoryHasUpdate,
-    };
-    console.log("[AdminProfilePage] handleSaveKruthikaStory - storyDataToUpdate before calling context update:", JSON.stringify(storyDataToUpdate, null, 2));
-    await updateAIProfile(storyDataToUpdate);
-  };
-
-  const handleClearKruthikaStoryField = (field: 'statusStoryText' | 'statusStoryImageUrl') => {
-    setCurrentGlobalAIProfile(p => ({
-      ...p,
-      [field]: field === 'statusStoryText' ? "" : undefined,
-    }));
-  };
-
-
-  const handleSaveAdminStatus = async () => {
-    if (!supabase) {
-      toast({ title: "Supabase Error", description: "Supabase client not available.", variant: "destructive" });
-      return;
-    }
-    const statusToSave = {
-        ...adminStatus,
-        statusImageUrl: adminStatus.statusImageUrl?.trim() === '' ? undefined : adminStatus.statusImageUrl,
-    };
-    try {
-      const { error } = await supabase
-        .from('app_configurations')
-        .upsert(
-          { id: ADMIN_OWN_STATUS_CONFIG_KEY, settings: statusToSave, updated_at: new Date().toISOString() },
-          { onConflict: 'id' }
-        );
-      if (error) throw error;
-      await fetchGlobalStatuses(); 
-      toast({ title: "Global 'My Status' Saved!", description: "Your status for the Status Page has been updated universally." });
-    } catch (error: any)
-      {
-      console.error("Failed to save 'My Status' to Supabase:", error);
-      toast({ title: "Error Saving 'My Status'", description: `Could not save your status globally. ${error.message || ''}`, variant: "destructive" });
-    }
-  };
-
-  const handleClearAdminStatusField = (field: 'statusText' | 'statusImageUrl') => {
-    setAdminStatus(s => ({
-        ...s,
-        [field]: field === 'statusText' ? "" : undefined,
-    }));
-  };
-
-
-  const handleManagedContactChange = (id: string, field: keyof ManagedContactStatus, value: string | boolean) => {
-    setManagedContactStatuses(prev =>
-      prev.map(contact => {
-        if (contact.id === id) {
-          if (field === 'statusImageUrl') {
-            return { ...contact, [field]: (value as string)?.trim() === '' ? undefined : value };
-          }
-          return { ...contact, [field]: value };
-        }
-        return contact;
-      })
-    );
-  };
-
-  const handleClearManagedContactField = (id: string, field: 'statusText' | 'statusImageUrl') => {
-    setManagedContactStatuses(prev =>
-      prev.map(contact =>
-        contact.id === id
-          ? { ...contact, [field]: field === 'statusText' ? "" : undefined }
-          : contact
-      )
-    );
-  };
-
-  const handleSaveManagedContactStatuses = async () => {
-    if (!supabase) {
-      toast({ title: "Supabase Error", description: "Supabase client not available.", variant: "destructive" });
-      return;
-    }
-    try {
-      const { error } = await supabase
-        .from('app_configurations')
-        .upsert(
-          { id: MANAGED_DEMO_CONTACTS_CONFIG_KEY, settings: managedContactStatuses, updated_at: new Date().toISOString() },
-          { onConflict: 'id' }
-        );
-      if (error) throw error;
-      await fetchGlobalStatuses(); 
-      toast({ title: "Global Demo Contacts Saved!", description: "Status details for demo contacts have been updated universally." });
-    } catch (error: any) {
-      console.error("Failed to save managed contact statuses to Supabase:", error);
-      toast({ title: "Error Saving Demo Contacts", description: `Could not save demo contact statuses globally. ${error.message || ''}`, variant: "destructive" });
-    }
-  };
-
-  const handleAdSettingChange = (field: keyof AdSettings, value: string | boolean | number | undefined) => {
-    if (field === 'maxDirectLinkAdsPerDay' || field === 'maxDirectLinkAdsPerSession') {
-        const numValue = Number(value);
-        setAdSettings(prev => ({ ...prev, [field]: isNaN(numValue) ? 0 : numValue }));
-    } else {
-        setAdSettings(prev => ({ ...prev, [field]: value }));
-    }
-  };
-
-  const handleResetDirectLink = (network: 'adsterra' | 'monetag') => {
-    if (network === 'adsterra') {
-      setAdSettings(prev => ({ ...prev, adsterraDirectLink: DEFAULT_ADSTERRA_DIRECT_LINK }));
-      toast({ title: "Adsterra Link Reset", description: "Adsterra direct link reset to default in form. Click 'Save Ad Settings' to apply." });
-    } else if (network === 'monetag') {
-      setAdSettings(prev => ({ ...prev, monetagDirectLink: DEFAULT_MONETAG_DIRECT_LINK }));
-      toast({ title: "Monetag Link Reset", description: "Monetag direct link reset to default in form. Click 'Save Ad Settings' to apply." });
-    }
-  };
-
-  const handleSaveAdSettings = async () => {
-    if (!supabase) {
-      toast({ title: "Supabase Error", description: "Supabase client not available. Cannot save ad settings.", variant: "destructive" });
-      return;
-    }
-    const settingsToSave: AdSettings = {
-      ...adSettings,
-      adsterraDirectLink: adSettings.adsterraDirectLink?.trim() || DEFAULT_ADSTERRA_DIRECT_LINK,
-      monetagDirectLink: adSettings.monetagDirectLink?.trim() || DEFAULT_MONETAG_DIRECT_LINK,
-      maxDirectLinkAdsPerDay: Number(adSettings.maxDirectLinkAdsPerDay) || 0,
-      maxDirectLinkAdsPerSession: Number(adSettings.maxDirectLinkAdsPerSession) || 0,
-    };
-    try {
-      const { error } = await supabase
-        .from('app_configurations')
-        .upsert(
-          { id: AD_SETTINGS_CONFIG_KEY, settings: settingsToSave, updated_at: new Date().toISOString() },
-          { onConflict: 'id' }
-        );
-      if (error) throw error;
-      toast({ title: "Global Ad Settings Saved!", description: "Ad configurations have been saved to Supabase and will apply universally." });
-    } catch (error: any) {
-      console.error("Failed to save ad settings to Supabase:", error);
-      toast({ title: "Error Saving Ad Settings", description: `Could not save global ad settings to Supabase. ${error.message || ''}`, variant: "destructive" });
-    }
-  };
-
-  const handleAddMediaAsset = (type: 'image' | 'audio') => {
-    let urlToAdd = '';
-    if (type === 'image') {
-      if (!newImageUrl.trim() || !newImageUrl.startsWith('http')) {
-        toast({ title: "Invalid Image URL", description: "Please enter a valid, full public URL for the image (starting with http/https).", variant: "destructive" });
-        return;
-      }
-      urlToAdd = newImageUrl.trim();
-    } else { 
-      if (!newAudioPath.trim() || !newAudioPath.startsWith('/media/')) {
-        toast({ title: "Invalid Audio Path", description: "Audio path must start with /media/ (e.g., /media/sound.mp3). Ensure file is in public/media/.", variant: "destructive" });
-        return;
-      }
-      urlToAdd = newAudioPath.trim();
-    }
-
-    const newAsset: AIMediaAsset = {
-      id: `${type}_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
-      type,
-      url: urlToAdd,
-    };
-    setAiMediaAssets(prev => ({ assets: [...prev.assets, newAsset] }));
-    if (type === 'image') setNewImageUrl('');
-    else setNewAudioPath('');
-  };
-
-  const handleDeleteMediaAsset = (assetId: string) => {
-    setAiMediaAssets(prev => ({ assets: prev.assets.filter(asset => asset.id !== assetId) }));
-  };
-
-  const handleSaveAIMediaAssets = async () => {
-    if (!supabase) {
-      toast({ title: "Supabase Error", description: "Supabase client not available.", variant: "destructive" });
-      return;
-    }
-    try {
-      const { error } = await supabase
-        .from('app_configurations')
-        .upsert(
-          { id: AI_MEDIA_ASSETS_CONFIG_KEY, settings: aiMediaAssets, updated_at: new Date().toISOString() },
-          { onConflict: 'id' }
-        );
-      if (error) throw error;
-      await fetchMediaAssets(); 
-      toast({ title: "Global AI Media Assets Saved!", description: "Kruthika's sharable images and audio have been updated universally." });
-    } catch (error: any) {
-      console.error("Failed to save AI Media Assets to Supabase:", error);
-      toast({ title: "Error Saving AI Media", description: `Could not save AI media assets globally. ${error.message || ''}`, variant: "destructive" });
-    }
-  };
-
-  const handleSaveApiSettings = async () => {
-    if (!supabase) {
-      toast({ title: "Supabase Error", description: "Supabase client not available. Check environment variables.", variant: "destructive" });
-      return;
-    }
-    
-    try {
-      // Test connection first
-      const { error: testError } = await supabase.from('app_configurations').select('id').limit(1);
-      if (testError) {
-        throw new Error(`Connection failed: ${testError.message}`);
-      }
-
-      const { error } = await supabase
-        .from('app_configurations')
-        .upsert(
-          { id: 'api_settings', settings: apiSettings, updated_at: new Date().toISOString() },
-          { onConflict: 'id' }
-        );
-      if (error) throw error;
-      toast({ title: "API Settings Saved!", description: "API configuration has been updated. Restart the application to apply changes." });
-    } catch (error: any) {
-      console.error("Failed to save API settings:", error);
-      toast({ title: "Error Saving API Settings", description: `Could not save API settings. ${error.message || 'Unknown error'}`, variant: "destructive" });
-    }
-  };
-
   const handleLogout = () => {
     try {
         sessionStorage.removeItem(ADMIN_AUTH_KEY);
@@ -585,904 +259,120 @@ const AdminProfilePage: React.FC = () => {
     router.replace('/admin/login');
   };
 
-  const handleForceRefreshGlobalData = async () => {
-    toast({ title: "Refreshing...", description: "Manually fetching latest global data from Supabase."});
-    await fetchAllNonAnalyticsConfigs(); 
-    toast({ title: "Refreshed!", description: "Global data updated."});
-  };
-
-
   if (!isAuthenticated || combinedIsLoadingSupabaseData) {
-    return <div className="flex justify-center items-center h-screen bg-background text-foreground">Loading admin settings...</div>;
+    return (
+      <div className="flex justify-center items-center h-screen bg-background text-foreground">
+        Loading admin settings...
+      </div>
+    );
   }
-
-  const scriptPasteInstruction = "Paste the full ad script code provided by the ad network here. Include any <!-- comments --> or <script> tags as provided.";
-
-  let adminPageAvatarUrlToUse = currentGlobalAIProfile.avatarUrl;
-  if (!adminPageAvatarUrlToUse || typeof adminPageAvatarUrlToUse !== 'string' || adminPageAvatarUrlToUse.trim() === '' || (!adminPageAvatarUrlToUse.startsWith('http') && !adminPageAvatarUrlToUse.startsWith('data:'))) {
-    adminPageAvatarUrlToUse = defaultAIProfile.avatarUrl;
-  }
-  console.log("[AdminProfilePage] Rendering main avatar. currentGlobalAIProfile.avatarUrl:", currentGlobalAIProfile.avatarUrl, "adminPageAvatarUrlToUse:", adminPageAvatarUrlToUse);
-
 
   return (
-    <AdminLayout>
+    <div className="admin-panel-wrapper" data-admin-panel="true">
+      <style jsx global>{`
+        .admin-panel-wrapper [data-ad],
+        .admin-panel-wrapper .ad-banner,
+        .admin-panel-wrapper .ad-container,
+        .admin-panel-wrapper .banner-ad,
+        .admin-panel-wrapper .social-bar-ad {
+          display: none !important;
+        }
+      `}</style>
       <TooltipProvider>
         <div className="container mx-auto p-2 sm:p-4 lg:p-6 bg-background min-h-screen">
-      <div className="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">
-        <h1 className="text-2xl sm:text-3xl font-bold text-primary flex items-center">
-          <Sparkles className="mr-3 h-7 w-7" /> Kruthika Chat Admin Panel
-        </h1>
-        <div className="flex gap-2">
-          <Button onClick={handleForceRefreshGlobalData} variant="outline" size="sm" title="Force refresh all global data from Supabase">
-            <RefreshCcw className="mr-2 h-4 w-4" /> Refresh Data
-          </Button>
-          <Button onClick={handleLogout} variant="outline" size="sm">
-            <LogOut className="mr-2 h-4 w-4" /> Logout
-          </Button>
-        </div>
-      </div>
-      <Alert variant="default" className="mb-8 bg-primary/10 border-primary/30">
-        <Globe className="h-5 w-5 !text-primary" />
-        <AlertTitle className="text-primary font-semibold">Global Settings Notice</AlertTitle>
-        <AlertDescription className="text-primary/80 text-sm">
-           Settings for Kruthika's Profile, Story, Sharable Media, Ad Settings, "My Status", and "Demo Contacts" are GLOBAL and saved to Supabase. Changes here will affect all users of the app.
-        </AlertDescription>
-      </Alert>
-      <Alert variant="destructive" className="mb-8">
-        <ShieldAlert className="h-5 w-5" />
-        <AlertTitle>Admin Panel Security</AlertTitle>
-        <AlertDescription>
-           The current admin login mechanism is **NOT SECURE** for a live application. Please implement proper server-side authentication (e.g., using Supabase Auth with roles) and update Supabase RLS policies before deploying publicly.
-        </AlertDescription>
-      </Alert>
-
-
-      <Tabs defaultValue="kruthika" className="w-full">
-        <TabsList className="grid w-full grid-cols-2 md:grid-cols-7 mb-8 h-auto py-2">
-          <TabsTrigger value="kruthika" className="text-xs sm:text-sm py-2.5"><UserCircle className="mr-1 sm:mr-2 h-4 w-4"/>Kruthika's Settings</TabsTrigger>
-          <TabsTrigger value="ads" className="text-xs sm:text-sm py-2.5"><Settings className="mr-1 sm:mr-2 h-4 w-4"/>Ad Settings</TabsTrigger>
-          <TabsTrigger value="api" className="text-xs sm:text-sm py-2.5"><Database className="mr-1 sm:mr-2 h-4 w-4"/>API Settings</TabsTrigger>
-          <TabsTrigger value="status_content" className="text-xs sm:text-sm py-2.5"><FileText className="mr-1 sm:mr-2 h-4 w-4"/>Status Page</TabsTrigger>
-          <TabsTrigger value="analytics" className="text-xs sm:text-sm py-2.5"><BarChartHorizontalBig className="mr-1 sm:mr-2 h-4 w-4"/>Analytics</TabsTrigger>
-          <TabsTrigger value="system" className="text-xs sm:text-sm py-2.5"><Terminal className="mr-1 sm:mr-2 h-4 w-4"/>System</TabsTrigger>
-          <TabsTrigger value="security" className="text-xs sm:text-sm py-2.5"><ShieldAlert className="mr-1 sm:mr-2 h-4 w-4"/>Security</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="kruthika">
-          <Card className="bg-card text-card-foreground mb-8 shadow-lg">
-            <CardHeader className="pb-4">
-              <CardTitle className="flex items-center text-xl font-semibold"><Edit3 className="mr-2 h-5 w-5 text-primary"/> Manage Kruthika's Global Profile</CardTitle>
-              <CardDescription className="text-sm">
-                Modify Kruthika's main identity (name, avatar, status line). These settings are fetched by all users.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-5 pt-2">
-              <div className="flex flex-col sm:flex-row items-center gap-4 p-3 bg-secondary/20 rounded-md">
-                <div 
-                  className={cn(
-                    "relative rounded-full shrink-0",
-                    currentGlobalAIProfile.name === "Kruthika" && "border-2 border-primary p-0.5" 
-                  )}
-                  key={`admin-page-avatar-wrapper-${adminPageAvatarUrlToUse || 'default_wrapper_key_admin'}`}
-                >
-                  <Avatar 
-                    className="h-24 w-24 shadow-md" 
-                    key={`admin-page-avatar-comp-${adminPageAvatarUrlToUse || 'default_avatar_comp_key_admin'}`}
-                  >
-                      <AvatarImage 
-                        src={adminPageAvatarUrlToUse || undefined} 
-                        alt={currentGlobalAIProfile.name} 
-                        data-ai-hint="profile woman"
-                        key={`admin-page-avatar-img-${adminPageAvatarUrlToUse || 'default_img_key_admin_final'}`}
-                        onError={(e) => console.error(`Admin Page - AvatarImage load error for ${currentGlobalAIProfile.name}. URL: ${adminPageAvatarUrlToUse}`, e)}
-                      />
-                      <AvatarFallback>{(currentGlobalAIProfile.name || 'K').charAt(0)}</AvatarFallback>
-                  </Avatar>
-                </div>
-                <div className="text-center sm:text-left">
-                  <h3 className="text-2xl font-semibold">{currentGlobalAIProfile.name}</h3>
-                  <p className="text-md text-muted-foreground italic">&quot;{currentGlobalAIProfile.status}&quot;</p>
-                </div>
-              </div>
-               <Button onClick={() => setIsProfileEditorOpen(true)} className="mt-3 w-full sm:w-auto"><Edit className="mr-2 h-4 w-4" />Edit Kruthika's Core Profile (Global)</Button>
-               <p className="text-xs text-muted-foreground flex items-center mt-1"><Info size={13} className="mr-1 shrink-0"/>Kruthika's name is primarily defined by her AI persona logic. Editing it here might have limited effect if the AI's core prompt overrides it.</p>
-            </CardContent>
-            {isProfileEditorOpen && (
-              <ProfileEditor
-                currentProfile={currentGlobalAIProfile}
-                onSave={handleSaveKruthikaCoreProfile}
-                onClose={() => setIsProfileEditorOpen(false)}
-                isAdminEditor={true}
-                isOpen={isProfileEditorOpen}
-                onOpenChange={setIsProfileEditorOpen}
-              />
-            )}
-          </Card>
-
-          <Card className="bg-card text-card-foreground mb-8 shadow-lg">
-            <CardHeader className="pb-4">
-               <CardTitle className="flex items-center text-xl font-semibold"><Palette className="mr-2 h-5 w-5 text-primary"/>Kruthika's Status Story (Global)</CardTitle>
-               <CardDescription className="text-sm">Set the ephemeral story (text and image) that appears for Kruthika on the Status page for all users.</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-5 pt-2">
-                <div className="space-y-1.5">
-                  <Label htmlFor="kruthikaStoryText" className="font-medium text-sm">Story Text</Label>
-                  <Textarea
-                    id="kruthikaStoryText"
-                    value={currentGlobalAIProfile.statusStoryText || ""}
-                    onChange={(e) => setCurrentGlobalAIProfile(p => ({ ...p, statusStoryText: e.target.value }))}
-                    placeholder="What's Kruthika up to for her story?"
-                    className="min-h-[70px]"
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor="kruthikaStoryImageUrl" className="font-medium text-sm">Story Image URL (Optional, Publicly Accessible)</Label>
-                  <Input
-                    id="kruthikaStoryImageUrl"
-                    type="url"
-                    value={currentGlobalAIProfile.statusStoryImageUrl || ""}
-                    onChange={(e) => setCurrentGlobalAIProfile(p => ({ ...p, statusStoryImageUrl: e.target.value }))}
-                    placeholder="https://placehold.co/300x500.png"
-                  />
-                  {currentGlobalAIProfile.statusStoryImageUrl && currentGlobalAIProfile.statusStoryImageUrl.trim() !== '' && (
-                      <Avatar className="w-24 h-40 mt-2 border rounded-md shadow" key={`admin-story-image-${currentGlobalAIProfile.statusStoryImageUrl || 'default_story_img_key'}`}>
-                          <AvatarImage 
-                            src={currentGlobalAIProfile.statusStoryImageUrl} 
-                            alt="Kruthika story preview" 
-                            data-ai-hint="story image content" 
-                            className="object-contain"
-                            onError={(e) => console.error(`Admin Page - Kruthika Story Image load error. URL: ${currentGlobalAIProfile.statusStoryImageUrl}`, e)}
-                          />
-                          <AvatarFallback>Preview</AvatarFallback>
-                      </Avatar>
-                  )}
-                </div>
-                <div className="flex items-center space-x-3 pt-2">
-                  <Switch
-                    id="kruthikaStoryHasUpdate"
-                    checked={currentGlobalAIProfile.statusStoryHasUpdate || false}
-                    onCheckedChange={(checked) => setCurrentGlobalAIProfile(p => ({ ...p, statusStoryHasUpdate: checked }))}
-                  />
-                  <Label htmlFor="kruthikaStoryHasUpdate" className="text-sm font-medium">Show as new/unread update (ring on Status Page)</Label>
-                </div>
-                <div className="flex flex-wrap gap-2 pt-2">
-                    <Button onClick={() => handleClearKruthikaStoryField('statusStoryText')} variant="outline" size="sm"><Trash2 className="mr-1 h-3 w-3"/>Clear Story Text</Button>
-                    <Button onClick={() => handleClearKruthikaStoryField('statusStoryImageUrl')} variant="outline" size="sm"><Trash2 className="mr-1 h-3 w-3"/>Clear Story Image</Button>
-                </div>
-            </CardContent>
-            <CardFooter className="mt-2">
-                <Button onClick={handleSaveKruthikaStory} className="w-full sm:w-auto"><Palette className="mr-2 h-4 w-4" /> Save Kruthika's Story (Global)</Button>
-            </CardFooter>
-          </Card>
-
-          <Card className="bg-card text-card-foreground mb-6 shadow-lg">
-            <CardHeader className="pb-4">
-              <CardTitle className="flex items-center text-xl font-semibold"><ImagePlus className="mr-2 h-5 w-5 text-primary"/>Kruthika's Sharable Media (Global)</CardTitle>
-              <CardDescription className="text-sm">Add or remove images and audio clips Kruthika can proactively share during chats. These are fetched by all users.</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6 pt-2">
-              <div className="space-y-4 p-4 border rounded-md shadow-sm bg-secondary/20">
-                <h4 className="text-lg font-semibold text-primary flex items-center"><ImagePlus className="mr-2 h-4 w-4"/>Images</h4>
-                <div className="space-y-1.5">
-                  <Label htmlFor="newImageUrl" className="text-sm font-medium">New Image URL (Publicly Accessible)</Label>
-                  <div className="flex gap-2">
-                    <Input id="newImageUrl" type="url" value={newImageUrl} onChange={(e) => setNewImageUrl(e.target.value)} placeholder="https://example.com/image.png" className="flex-grow text-sm"/>
-                    <Button onClick={() => handleAddMediaAsset('image')} variant="outline" size="icon"><PlusCircle className="h-4 w-4" /></Button>
-                  </div>
-                </div>
-                {aiMediaAssets.assets.filter(asset => asset.type === 'image').length > 0 ? (
-                  <div className="space-y-2 max-h-60 overflow-y-auto custom-scrollbar p-2 bg-background rounded border">
-                    {aiMediaAssets.assets.filter(asset => asset.type === 'image').map(asset => (
-                      <div key={asset.id} className="flex items-center justify-between p-2 bg-card border rounded-md hover:bg-secondary/30">
-                        <div className="flex items-center gap-3 overflow-hidden">
-                           <Avatar className="h-10 w-10 rounded border" key={`${asset.id}-thumb-${asset.url}`}><AvatarImage src={asset.url} alt="Thumbnail" data-ai-hint="thumbnail image" onError={(e) => console.error(`Admin Page - AI Media Image thumb load error. URL: ${asset.url}`, e)} /><AvatarFallback><ImagePlus size={16}/></AvatarFallback></Avatar>
-                           <span className="text-xs truncate text-muted-foreground">{asset.url}</span>
-                        </div>
-                        <Button onClick={() => handleDeleteMediaAsset(asset.id)} variant="ghost" size="icon" className="text-destructive hover:bg-destructive/10"><Trash2 className="h-4 w-4" /></Button>
-                      </div>
-                    ))}
-                  </div>
-                ) : <p className="text-sm text-muted-foreground p-2">No images added yet. Add public image URLs for Kruthika to share.</p>}
-              </div>
-              <div className="space-y-4 p-4 border rounded-md shadow-sm bg-secondary/20">
-                <h4 className="text-lg font-semibold text-primary flex items-center"><Music2 className="mr-2 h-4 w-4"/>Audio Clips</h4>
-                <div className="space-y-1.5">
-                  <Label htmlFor="newAudioPath" className="text-sm font-medium">New Audio File Path (from `public/media/`)</Label>
-                  <div className="flex gap-2">
-                    <Input id="newAudioPath" type="text" value={newAudioPath} onChange={(e) => setNewAudioPath(e.target.value)} placeholder="/media/sound.mp3" className="flex-grow text-sm"/>
-                    <Button onClick={() => handleAddMediaAsset('audio')} variant="outline" size="icon"><PlusCircle className="h-4 w-4" /></Button>
-                  </div>
-                  <Alert variant="default" className="mt-2 py-2 px-3 text-xs bg-background/70 border-border">
-                    <Info size={14} className="mr-1 !text-muted-foreground" />
-                    <AlertDescription className="!text-muted-foreground">Audio files must be placed in the `public/media/` folder of your project first. Then, add the path here (e.g., `/media/your_clip.mp3`).</AlertDescription>
-                  </Alert>
-                </div>
-                 {aiMediaAssets.assets.filter(asset => asset.type === 'audio').length > 0 ? (
-                  <div className="space-y-2 max-h-60 overflow-y-auto custom-scrollbar p-2 bg-background rounded border">
-                    {aiMediaAssets.assets.filter(asset => asset.type === 'audio').map(asset => (
-                      <div key={asset.id} className="flex items-center justify-between p-2 bg-card border rounded-md hover:bg-secondary/30">
-                        <div className="flex items-center gap-3 overflow-hidden">
-                            <Music2 className="h-5 w-5 text-muted-foreground shrink-0"/>
-                            <span className="text-xs truncate text-muted-foreground">{asset.url}</span>
-                        </div>
-                        <Button onClick={() => handleDeleteMediaAsset(asset.id)} variant="ghost" size="icon" className="text-destructive hover:bg-destructive/10"><Trash2 className="h-4 w-4" /></Button>
-                      </div>
-                    ))}
-                  </div>
-                ) : <p className="text-sm text-muted-foreground p-2">No audio clips added yet. Upload files to `public/media/` and add their paths.</p>}
-              </div>
-            </CardContent>
-            <CardFooter className="mt-2">
-              <Button onClick={handleSaveAIMediaAssets} className="w-full sm:w-auto"><ImagePlus className="mr-2 h-4 w-4"/>Save AI Media Assets (Global)</Button>
-            </CardFooter>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="ads">
-           <Card className="bg-card text-card-foreground mb-8 shadow-lg">
-            <CardHeader className="pb-4">
-              <CardTitle className="flex items-center text-xl font-semibold"><Settings className="mr-2 h-5 w-5 text-primary"/>Manage Global Ad Settings</CardTitle>
-              <CardDescription className="text-sm">
-                Control global ad visibility, direct links, and various ad types. These settings are fetched by all users.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6 pt-2">
-              <div className="flex items-center space-x-3 p-4 bg-secondary/30 rounded-md shadow-inner">
-                <Switch id="adsEnabledGlobally" checked={adSettings.adsEnabledGlobally} onCheckedChange={(checked) => handleAdSettingChange('adsEnabledGlobally', checked)}/>
-                <Label htmlFor="adsEnabledGlobally" className="text-md font-semibold">Enable All Ads Globally</Label>
-              </div>
-
-              <Card className="bg-secondary/10 border-border shadow-sm">
-                <CardHeader className="pb-3 pt-4">
-                  <CardTitle className="text-lg font-semibold text-primary flex items-center"><TrendingUp className="mr-2 h-5 w-5"/>Direct Link Ad Frequency</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4 px-4 pb-4">
-                  <div className="space-y-1.5">
-                    <Label htmlFor="maxDirectLinkAdsPerDay" className="font-medium text-sm">Max Direct Link Ads Per User Per Day</Label>
-                    <Input 
-                      id="maxDirectLinkAdsPerDay" 
-                      type="number" 
-                      value={adSettings.maxDirectLinkAdsPerDay} 
-                      onChange={(e) => handleAdSettingChange('maxDirectLinkAdsPerDay', e.target.value)} 
-                      placeholder="e.g., 6" 
-                      className="text-sm" 
-                      disabled={!adSettings.adsEnabledGlobally}
-                      min="0"
-                    />
-                    <p className="text-xs text-muted-foreground">Total direct link pop-ups a user might see in 24 hours.</p>
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label htmlFor="maxDirectLinkAdsPerSession" className="font-medium text-sm">Max Direct Link Ads Per User Per Session</Label>
-                    <Input 
-                      id="maxDirectLinkAdsPerSession" 
-                      type="number" 
-                      value={adSettings.maxDirectLinkAdsPerSession} 
-                      onChange={(e) => handleAdSettingChange('maxDirectLinkAdsPerSession', e.target.value)} 
-                      placeholder="e.g., 3" 
-                      className="text-sm" 
-                      disabled={!adSettings.adsEnabledGlobally}
-                      min="0"
-                    />
-                    <p className="text-xs text-muted-foreground">Max direct link pop-ups in a single browser session.</p>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Adsterra Settings Group */}
-              <Card className="bg-secondary/10 border-border shadow-sm">
-                <CardHeader className="pb-3 pt-4">
-                    <CardTitle className="text-lg font-semibold text-primary flex items-center"><ExternalLink className="mr-2 h-5 w-5"/>Adsterra Settings</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-5 px-4 pb-4">
-                    {/* Adsterra Direct Link */}
-                    <div className="border-b border-border/50 pb-4 space-y-2">
-                      <div className="flex items-center justify-between">
-                        <Label htmlFor="adsterraDirectLink" className="font-medium text-sm">Direct Link URL</Label>
-                        <Tooltip><TooltipTrigger asChild><Button variant="ghost" size="icon" onClick={() => handleResetDirectLink('adsterra')} disabled={!adSettings.adsEnabledGlobally} className="h-7 w-7 text-muted-foreground hover:text-primary"><RotateCcw size={16}/></Button></TooltipTrigger><TooltipContent side="top"><p>Reset to Default Link</p></TooltipContent></Tooltip>
-                      </div>
-                      <Input id="adsterraDirectLink" type="url" value={adSettings.adsterraDirectLink} onChange={(e) => handleAdSettingChange('adsterraDirectLink', e.target.value)} placeholder={DEFAULT_ADSTERRA_DIRECT_LINK} className="text-sm" disabled={!adSettings.adsEnabledGlobally}/>
-                      <div className="flex items-center space-x-2 pt-1"><Switch id="adsterraDirectLinkEnabled" checked={adSettings.adsterraDirectLinkEnabled} onCheckedChange={(checked) => handleAdSettingChange('adsterraDirectLinkEnabled', checked)} disabled={!adSettings.adsEnabledGlobally}/><Label htmlFor="adsterraDirectLinkEnabled" className="text-sm font-medium">Enable Adsterra Direct Link</Label></div>
-                    </div>
-                    {/* Adsterra Banner Ad */}
-                    <div className="border-b border-border/50 pb-4 space-y-2">
-                      <Label htmlFor="adsterraBannerCode" className="font-medium text-sm">Banner Ad Code</Label>
-                      <Textarea id="adsterraBannerCode" value={adSettings.adsterraBannerCode} onChange={(e) => handleAdSettingChange('adsterraBannerCode', e.target.value)} placeholder="<!-- Adsterra Banner Code -->" className="min-h-[100px] font-mono text-xs" disabled={!adSettings.adsEnabledGlobally}/>
-                      <p className="text-xs text-muted-foreground mt-1 flex items-center"><Info size={13} className="mr-1 shrink-0"/>{scriptPasteInstruction}</p>
-                      <div className="flex items-center space-x-2 pt-1"><Switch id="adsterraBannerEnabled" checked={adSettings.adsterraBannerEnabled} onCheckedChange={(checked) => handleAdSettingChange('adsterraBannerEnabled', checked)} disabled={!adSettings.adsEnabledGlobally}/><Label htmlFor="adsterraBannerEnabled" className="text-sm font-medium">Enable Adsterra Banner Ad</Label></div>
-                    </div>
-                     {/* Adsterra Native Banner */}
-                    <div className="border-b border-border/50 pb-4 space-y-2">
-                        <Label htmlFor="adsterraNativeBannerCode" className="font-medium text-sm">Native Banner Code</Label>
-                        <Textarea id="adsterraNativeBannerCode" value={adSettings.adsterraNativeBannerCode} onChange={(e) => handleAdSettingChange('adsterraNativeBannerCode', e.target.value)} placeholder="<!-- Adsterra Native Banner Code -->" className="min-h-[100px] font-mono text-xs" disabled={!adSettings.adsEnabledGlobally}/>
-                        <p className="text-xs text-muted-foreground mt-1 flex items-center"><Info size={13} className="mr-1 shrink-0"/>{scriptPasteInstruction}</p>
-                        <div className="flex items-center space-x-2 pt-1"><Switch id="adsterraNativeBannerEnabled" checked={adSettings.adsterraNativeBannerEnabled} onCheckedChange={(checked) => handleAdSettingChange('adsterraNativeBannerEnabled', checked)} disabled={!adSettings.adsEnabledGlobally}/><Label htmlFor="adsterraNativeBannerEnabled" className="text-sm font-medium">Enable Adsterra Native Banner</Label></div>
-                    </div>
-                    {/* Adsterra Social Bar */}
-                    <div className="border-b border-border/50 pb-4 space-y-2">
-                        <Label htmlFor="adsterraSocialBarCode" className="font-medium text-sm">Social Bar Code</Label>
-                        <Textarea id="adsterraSocialBarCode" value={adSettings.adsterraSocialBarCode} onChange={(e) => handleAdSettingChange('adsterraSocialBarCode', e.target.value)} placeholder="<!-- Adsterra Social Bar Code -->" className="min-h-[100px] font-mono text-xs" disabled={!adSettings.adsEnabledGlobally}/>
-                        <p className="text-xs text-muted-foreground mt-1 flex items-center"><Info size={13} className="mr-1 shrink-0"/>{scriptPasteInstruction}</p>
-                        <div className="flex items-center space-x-2 pt-1"><Switch id="adsterraSocialBarEnabled" checked={adSettings.adsterraSocialBarEnabled} onCheckedChange={(checked) => handleAdSettingChange('adsterraSocialBarEnabled', checked)} disabled={!adSettings.adsEnabledGlobally}/><Label htmlFor="adsterraSocialBarEnabled" className="text-sm font-medium">Enable Adsterra Social Bar</Label></div>
-                    </div>
-                    {/* Adsterra Pop-under */}
-                    <div className="space-y-2">
-                      <Label htmlFor="adsterraPopunderCode" className="font-medium text-sm">Pop-under Script Code</Label>
-                      <Textarea id="adsterraPopunderCode" value={adSettings.adsterraPopunderCode} onChange={(e) => handleAdSettingChange('adsterraPopunderCode', e.target.value)} placeholder="<!-- Adsterra Pop-under Script -->" className="min-h-[100px] font-mono text-xs" disabled={!adSettings.adsEnabledGlobally}/>
-                      <p className="text-xs text-muted-foreground mt-1 flex items-center"><Info size={13} className="mr-1 shrink-0"/>{scriptPasteInstruction}</p>
-                      <div className="flex items-center space-x-2 pt-1"><Switch id="adsterraPopunderEnabled" checked={adSettings.adsterraPopunderEnabled} onCheckedChange={(checked) => handleAdSettingChange('adsterraPopunderEnabled', checked)} disabled={!adSettings.adsEnabledGlobally}/><Label htmlFor="adsterraPopunderEnabled" className="text-sm font-medium">Enable Adsterra Pop-under</Label></div>
-                    </div>
-                </CardContent>
-              </Card>
-
-              {/* Monetag Settings Group */}
-              <Card className="bg-secondary/10 border-border shadow-sm mt-6">
-                <CardHeader className="pb-3 pt-4">
-                    <CardTitle className="text-lg font-semibold text-primary flex items-center"><LinkIcon className="mr-2 h-5 w-5"/>Monetag Settings</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-5 px-4 pb-4">
-                    {/* Monetag Direct Link */}
-                    <div className="border-b border-border/50 pb-4 space-y-2">
-                      <div className="flex items-center justify-between">
-                        <Label htmlFor="monetagDirectLink" className="font-medium text-sm">Direct Link URL</Label>
-                        <Tooltip><TooltipTrigger asChild><Button variant="ghost" size="icon" onClick={() => handleResetDirectLink('monetag')} disabled={!adSettings.adsEnabledGlobally} className="h-7 w-7 text-muted-foreground hover:text-primary"><RotateCcw size={16}/></Button></TooltipTrigger><TooltipContent side="top"><p>Reset to Default Link</p></TooltipContent></Tooltip>
-                      </div>
-                      <Input id="monetagDirectLink" type="url" value={adSettings.monetagDirectLink} onChange={(e) => handleAdSettingChange('monetagDirectLink', e.target.value)} placeholder={DEFAULT_MONETAG_DIRECT_LINK} className="text-sm" disabled={!adSettings.adsEnabledGlobally}/>
-                      <div className="flex items-center space-x-2 pt-1"><Switch id="monetagDirectLinkEnabled" checked={adSettings.monetagDirectLinkEnabled} onCheckedChange={(checked) => handleAdSettingChange('monetagDirectLinkEnabled', checked)} disabled={!adSettings.adsEnabledGlobally}/><Label htmlFor="monetagDirectLinkEnabled" className="text-sm font-medium">Enable Monetag Direct Link</Label></div>
-                    </div>
-                    {/* Monetag Banner Ad */}
-                    <div className="border-b border-border/50 pb-4 space-y-2">
-                      <Label htmlFor="monetagBannerCode" className="font-medium text-sm">Banner Ad Code</Label>
-                      <Textarea id="monetagBannerCode" value={adSettings.monetagBannerCode} onChange={(e) => handleAdSettingChange('monetagBannerCode', e.target.value)} placeholder="<!-- Monetag Banner Code -->" className="min-h-[100px] font-mono text-xs" disabled={!adSettings.adsEnabledGlobally}/>
-                      <p className="text-xs text-muted-foreground mt-1 flex items-center"><Info size={13} className="mr-1 shrink-0"/>{scriptPasteInstruction}</p>
-                      <div className="flex items-center space-x-2 pt-1"><Switch id="monetagBannerEnabled" checked={adSettings.monetagBannerEnabled} onCheckedChange={(checked) => handleAdSettingChange('monetagBannerEnabled', checked)} disabled={!adSettings.adsEnabledGlobally}/><Label htmlFor="monetagBannerEnabled" className="text-sm font-medium">Enable Monetag Banner Ad</Label></div>
-                    </div>
-                    {/* Monetag Native Banner */}
-                    <div className="border-b border-border/50 pb-4 space-y-2">
-                        <Label htmlFor="monetagNativeBannerCode" className="font-medium text-sm">Native Banner Code</Label>
-                        <Textarea id="monetagNativeBannerCode" value={adSettings.monetagNativeBannerCode} onChange={(e) => handleAdSettingChange('monetagNativeBannerCode', e.target.value)} placeholder="<!-- Monetag Native Banner Code -->" className="min-h-[100px] font-mono text-xs" disabled={!adSettings.adsEnabledGlobally}/>
-                        <p className="text-xs text-muted-foreground mt-1 flex items-center"><Info size={13} className="mr-1 shrink-0"/>{scriptPasteInstruction}</p>
-                        <div className="flex items-center space-x-2 pt-1"><Switch id="monetagNativeBannerEnabled" checked={adSettings.monetagNativeBannerEnabled} onCheckedChange={(checked) => handleAdSettingChange('monetagNativeBannerEnabled', checked)} disabled={!adSettings.adsEnabledGlobally}/><Label htmlFor="monetagNativeBannerEnabled" className="text-sm font-medium">Enable Monetag Native Banner</Label></div>
-                    </div>
-                    {/* Monetag Social Bar */}
-                    <div className="border-b border-border/50 pb-4 space-y-2">
-                        <Label htmlFor="monetagSocialBarCode" className="font-medium text-sm">Social Bar Code</Label>
-                        <Textarea id="monetagSocialBarCode" value={adSettings.monetagSocialBarCode} onChange={(e) => handleAdSettingChange('monetagSocialBarCode', e.target.value)} placeholder="<!-- Monetag Social Bar Code -->" className="min-h-[100px] font-mono text-xs" disabled={!adSettings.adsEnabledGlobally}/>
-                        <p className="text-xs text-muted-foreground mt-1 flex items-center"><Info size={13} className="mr-1 shrink-0"/>{scriptPasteInstruction}</p>
-                        <div className="flex items-center space-x-2 pt-1"><Switch id="monetagSocialBarEnabled" checked={adSettings.monetagSocialBarEnabled} onCheckedChange={(checked) => handleAdSettingChange('monetagSocialBarEnabled', checked)} disabled={!adSettings.adsEnabledGlobally}/><Label htmlFor="monetagSocialBarEnabled" className="text-sm font-medium">Enable Monetag Social Bar</Label></div>
-                    </div>
-                    {/* Monetag Pop-under */}
-                    <div className="space-y-2">
-                      <Label htmlFor="monetagPopunderCode" className="font-medium text-sm">Pop-under Script Code</Label>
-                      <Textarea id="monetagPopunderCode" value={adSettings.monetagPopunderCode} onChange={(e) => handleAdSettingChange('monetagPopunderCode', e.target.value)} placeholder="<!-- Monetag Pop-under Script -->" className="min-h-[100px] font-mono text-xs" disabled={!adSettings.adsEnabledGlobally}/>
-                       <p className="text-xs text-muted-foreground mt-1 flex items-center"><Info size={13} className="mr-1 shrink-0"/>{scriptPasteInstruction}</p>
-                      <div className="flex items-center space-x-2 pt-1"><Switch id="monetagPopunderEnabled" checked={adSettings.monetagPopunderEnabled} onCheckedChange={(checked) => handleAdSettingChange('monetagPopunderEnabled', checked)} disabled={!adSettings.adsEnabledGlobally}/><Label htmlFor="monetagPopunderEnabled" className="text-sm font-medium">Enable Monetag Pop-under</Label></div>
-                    </div>
-                </CardContent>
-              </Card>
-
-            </CardContent>
-            <CardFooter className="mt-4">
-              <Button onClick={handleSaveAdSettings} className="w-full sm:w-auto text-base py-3 px-6"><Settings className="mr-2 h-5 w-5" /> Save Global Ad Settings</Button>
-            </CardFooter>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="api">
-          <Card className="bg-card text-card-foreground mb-8 shadow-lg">
-            <CardHeader className="pb-4">
-              <CardTitle className="flex items-center text-xl font-semibold"><Database className="mr-2 h-5 w-5 text-primary"/>API Configuration</CardTitle>
-              <CardDescription className="text-sm">
-                Manage API keys and external service configurations
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6 pt-2">
-              <Alert variant="default" className="bg-yellow-50 border-yellow-200">
-                <Info className="h-4 w-4 !text-yellow-600" />
-                <AlertTitle className="text-yellow-800 font-semibold">Security Notice</AlertTitle>
-                <AlertDescription className="text-yellow-700 text-sm">
-                  API keys are sensitive. Changes require application restart to take effect.
-                </AlertDescription>
-              </Alert>
-
-              <div className="space-y-4">
-                <div className="space-y-1.5">
-                  <Label htmlFor="geminiApiKey" className="font-medium text-sm">Gemini API Key</Label>
-                  <Input
-                    id="geminiApiKey"
-                    type="password"
-                    value={apiSettings.geminiApiKey}
-                    onChange={(e) => setApiSettings(prev => ({ ...prev, geminiApiKey: e.target.value }))}
-                    placeholder="AIzaSy..."
-                    className="text-sm"
-                  />
-                  <p className="text-xs text-muted-foreground">Google Gemini API key for AI responses</p>
-                </div>
-
-                <div className="space-y-1.5">
-                  <Label htmlFor="supabaseUrl" className="font-medium text-sm">Supabase URL</Label>
-                  <Input
-                    id="supabaseUrl"
-                    type="url"
-                    value={apiSettings.supabaseUrl}
-                    onChange={(e) => setApiSettings(prev => ({ ...prev, supabaseUrl: e.target.value }))}
-                    placeholder="https://your-project.supabase.co"
-                    className="text-sm"
-                  />
-                </div>
-
-                <div className="space-y-1.5">
-                  <Label htmlFor="supabaseKey" className="font-medium text-sm">Supabase Anon Key</Label>
-                  <Input
-                    id="supabaseKey"
-                    type="password"
-                    value={apiSettings.supabaseKey}
-                    onChange={(e) => setApiSettings(prev => ({ ...prev, supabaseKey: e.target.value }))}
-                    placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-                    className="text-sm"
-                  />
-                </div>
-              </div>
-            </CardContent>
-            <CardFooter className="mt-4">
-              <Button onClick={handleSaveApiSettings} className="w-full sm:w-auto text-base py-3 px-6">
-                <Database className="mr-2 h-5 w-5" /> Save API Settings
+          <div className="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">
+            <h1 className="text-2xl sm:text-3xl font-bold text-primary flex items-center">
+              <Sparkles className="mr-3 h-7 w-7" /> Kruthika Chat Admin Panel
+            </h1>
+            <div className="flex gap-2">
+              <Button onClick={handleLogout} variant="outline" size="sm">
+                <LogOut className="mr-2 h-4 w-4" /> Logout
               </Button>
-            </CardFooter>
-          </Card>
-        </TabsContent>
+            </div>
+          </div>
 
-        <TabsContent value="status_content">
-          <Card className="bg-card text-card-foreground mb-8 shadow-lg">
-            <CardHeader className="pb-4">
-              <CardTitle className="flex items-center text-xl font-semibold"><UserCircle className="mr-2 h-5 w-5 text-primary"/>Admin: Your Display on Status Page (Global)</CardTitle>
-              <CardDescription className="text-sm">Set your own entry that appears under "My Status" on the Status page. This is visible to all users.</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-5 pt-2">
-              <div className="space-y-1.5">
-                <Label htmlFor="adminStatusName" className="font-medium text-sm">Display Name for "My Status"</Label>
-                <Input id="adminStatusName" value={adminStatus.name} onChange={(e) => setAdminStatus(s => ({ ...s, name: e.target.value }))} placeholder="e.g., My Status, John Doe" className="text-sm"/>
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="adminStatusAvatarUrl" className="font-medium text-sm">Your Avatar URL (Publicly Accessible)</Label>
-                <Input id="adminStatusAvatarUrl" type="url" value={adminStatus.avatarUrl} onChange={(e) => setAdminStatus(s => ({ ...s, avatarUrl: e.target.value }))} placeholder="https://placehold.co/100x100.png" className="text-sm"/>
-                 {adminStatus.avatarUrl && adminStatus.avatarUrl.trim() !== '' && (<Avatar className="w-20 h-20 mt-2 border rounded-full shadow" key={`admin-status-avatar-${adminStatus.avatarUrl}`}><AvatarImage src={adminStatus.avatarUrl} alt="Your avatar preview" data-ai-hint="profile self admin" onError={(e) => console.error(`Admin Page - Admin Status Avatar load error. URL: ${adminStatus.avatarUrl}`, e)} /><AvatarFallback>{(adminStatus.name || 'A').charAt(0)}</AvatarFallback></Avatar>)}
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="adminStatusText" className="font-medium text-sm">Your Status Text</Label>
-                <Textarea id="adminStatusText" value={adminStatus.statusText} onChange={(e) => setAdminStatus(s => ({ ...s, statusText: e.target.value }))} placeholder="What's your current status story?" className="min-h-[70px]"/>
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="adminStatusImageUrl" className="font-medium text-sm">Your Story Image URL (Optional, Publicly Accessible)</Label>
-                <Input id="adminStatusImageUrl" type="url" value={adminStatus.statusImageUrl || ""} onChange={(e) => setAdminStatus(s => ({ ...s, statusImageUrl: e.target.value }))} placeholder="https://placehold.co/300x500.png" className="text-sm"/>
-                 {adminStatus.statusImageUrl && adminStatus.statusImageUrl.trim() !== '' && (<Avatar className="w-24 h-40 mt-2 border rounded-md shadow" key={`admin-status-image-${adminStatus.statusImageUrl}`}><AvatarImage src={adminStatus.statusImageUrl} alt="Your story preview" data-ai-hint="story image content" className="object-contain" onError={(e) => console.error(`Admin Page - Admin Story Image load error. URL: ${adminStatus.statusImageUrl}`, e)} /><AvatarFallback>Preview</AvatarFallback></Avatar>)}
-              </div>
-              <div className="flex items-center space-x-3 pt-2">
-                <Switch id="adminStatusHasUpdate" checked={adminStatus.hasUpdate} onCheckedChange={(checked) => setAdminStatus(s => ({ ...s, hasUpdate: checked }))}/>
-                <Label htmlFor="adminStatusHasUpdate" className="text-sm font-medium">Show as new/unread update</Label>
-              </div>
-              <div className="flex flex-wrap gap-2 pt-2">
-                <Button onClick={() => handleClearAdminStatusField('statusText')} variant="outline" size="sm"><Trash2 className="mr-1 h-3 w-3"/>Clear Status Text</Button>
-                <Button onClick={() => handleClearAdminStatusField('statusImageUrl')} variant="outline" size="sm"><Trash2 className="mr-1 h-3 w-3"/>Clear Story Image</Button>
-              </div>
-            </CardContent>
-            <CardFooter className="mt-2">
-              <Button onClick={handleSaveAdminStatus} className="w-full sm:w-auto"><UserCircle className="mr-2 h-4 w-4"/>Save "My Status" Details (Global)</Button>
-            </CardFooter>
-          </Card>
+          <Alert variant="default" className="mb-8 bg-primary/10 border-primary/30">
+            <Globe className="h-5 w-5 !text-primary" />
+            <AlertTitle className="text-primary font-semibold">Admin Panel Active</AlertTitle>
+            <AlertDescription className="text-primary/80 text-sm">
+              You are now in the admin panel. All global settings can be managed from here.
+            </AlertDescription>
+          </Alert>
 
-          <Card className="bg-card text-card-foreground mb-6 shadow-lg">
-            <CardHeader className="pb-4">
-              <CardTitle className="flex items-center text-xl font-semibold"><Users className="mr-2 h-5 w-5 text-primary"/>Manage Demo Contact Statuses (Global)</CardTitle>
-              <CardDescription className="text-sm">Set the ephemeral stories for the demo contacts that appear on the Status page. Visible to all users.</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6 pt-2">
-              {managedContactStatuses.map((contact) => (
-                <div key={contact.id} className="border p-4 rounded-md space-y-3 bg-secondary/20 shadow-sm">
-                  <div className="flex items-center gap-3">
-                    <Avatar className="h-10 w-10 border" key={`${contact.id}-admin-avatar-${contact.avatarUrl}`}><AvatarImage src={contact.avatarUrl} alt={contact.name} data-ai-hint={contact.dataAiHint || "profile person"} onError={(e) => console.error(`Admin Page - Demo Contact Avatar load error. URL: ${contact.avatarUrl}`, e)} /><AvatarFallback>{contact.name.charAt(0)}</AvatarFallback></Avatar>
-                    <h4 className="font-medium text-md text-secondary-foreground">{contact.name} (Demo)</h4>
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label htmlFor={`contactStoryText-${contact.id}`} className="font-medium text-xs">Status Text</Label>
-                    <Input id={`contactStoryText-${contact.id}`} value={contact.statusText} onChange={(e) => handleManagedContactChange(contact.id, 'statusText', e.target.value)} placeholder="e.g., At the movies!" className="text-sm"/>
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label htmlFor={`contactStoryImageUrl-${contact.id}`} className="font-medium text-xs">Story Image URL (Optional)</Label>
-                    <Input id={`contactStoryImageUrl-${contact.id}`} type="url" value={contact.statusImageUrl || ""} onChange={(e) => handleManagedContactChange(contact.id, 'statusImageUrl', e.target.value)} placeholder="https://placehold.co/300x500.png" className="text-sm"/>
-                    {contact.statusImageUrl && contact.statusImageUrl.trim() !== '' && (<Avatar className="w-20 h-32 mt-2 border rounded shadow" key={`${contact.id}-admin-story-image-${contact.statusImageUrl}`}><AvatarImage src={contact.statusImageUrl} alt={`${contact.name} story preview`} data-ai-hint="story image content" className="object-contain" onError={(e) => console.error(`Admin Page - Demo Contact Story Image load error. URL: ${contact.statusImageUrl}`, e)} /><AvatarFallback>Preview</AvatarFallback></Avatar>)}
-                  </div>
-                  <div className="flex items-center space-x-2 pt-1">
-                    <Switch id={`contactHasUpdate-${contact.id}`} checked={contact.hasUpdate} onCheckedChange={(checked) => handleManagedContactChange(contact.id, 'hasUpdate', checked)}/>
-                    <Label htmlFor={`contactHasUpdate-${contact.id}`} className="text-xs font-medium">Show as new/unread update</Label>
-                  </div>
-                   <div className="flex flex-wrap gap-2 pt-1">
-                    <Button onClick={() => handleClearManagedContactField(contact.id, 'statusText')} variant="outline" size="xs" className="text-xs px-2 py-1 h-auto"><Trash2 className="mr-1 h-3 w-3"/>Clear Text</Button>
-                    <Button onClick={() => handleClearManagedContactField(contact.id, 'statusImageUrl')} variant="outline" size="xs" className="text-xs px-2 py-1 h-auto"><Trash2 className="mr-1 h-3 w-3"/>Clear Image</Button>
-                  </div>
-                </div>
-              ))}
-            </CardContent>
-            <CardFooter className="mt-2">
-              <Button onClick={handleSaveManagedContactStatuses} className="w-full sm:w-auto"><Users className="mr-2 h-4 w-4"/>Save Demo Contact Statuses (Global)</Button>
-            </CardFooter>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="analytics">
-          <Card className="bg-card text-card-foreground shadow-lg">
-            <CardHeader className="pb-4">
-              <CardTitle className="flex items-center text-xl font-semibold"><Database className="mr-2 h-5 w-5 text-primary"/>Usage Analytics Dashboard</CardTitle>
-              <div className="flex gap-2 mt-4">
-                <Button onClick={handleExportData} variant="outline" size="sm">
-                  <FileText className="mr-2 h-4 w-4"/>Export Data
-                </Button>
-                <Button onClick={handleBackupSettings} variant="outline" size="sm">
-                  <Database className="mr-2 h-4 w-4"/>Backup Settings
-                </Button>
-                <Button onClick={handleRestoreSettings} variant="outline" size="sm" className="bg-primary/10 hover:bg-primary/20">
-                  <RotateCcw className="mr-2 h-4 w-4"/>Restore Settings
-                </Button>
-              </div>
-              <Alert variant={supabaseError ? "destructive" : "default"} className={`mt-4 ${supabaseError ? "" : "bg-primary/10 border-primary/30"}`}>
-                {supabaseError ? <Terminal className="h-4 w-4 !text-destructive" /> : <Database className="h-4 w-4 !text-primary" />}
-                <AlertTitle className={supabaseError ? "text-destructive font-semibold" : "text-primary font-semibold"}>
-                  {supabaseError ? "Supabase Connection Issue" : "Analytics Data Source"}
-                </AlertTitle>
-                <AlertDescription className={`${supabaseError ? "text-destructive/80" : "text-primary/80"} text-sm`}>
-                  {supabaseError
-                    ? `Error: ${supabaseError}. Realtime analytics might be unavailable or incorrect. Ensure Supabase is configured correctly as per SUPABASE_SETUP.md, including all SQL functions and tables.`
-                    : "Total User Messages, Total AI Messages, Daily Active Users (DAU), and related charts are fetched from Supabase if configured. DAU is an estimate based on browser-specific pseudo-anonymous identifiers for Kruthika Chat."}
-                </AlertDescription>
-              </Alert>
-            </CardHeader>
-            <CardContent className="space-y-6 pt-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                <Card className="shadow-sm p-4">
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-0"><CardTitle className="text-sm font-medium">Total User Messages</CardTitle><MessageSquare className="h-4 w-4 text-muted-foreground" /></CardHeader>
-                  <CardContent className="p-0 pt-1">{analyticsLoading ? <p className="text-2xl font-bold">Loading...</p> : <p className="text-2xl font-bold">{realTotalUserMessages ?? 'N/A'}</p>}<p className="text-xs text-muted-foreground">From Supabase (real data)</p></CardContent>
-                </Card>
-                 <Card className="shadow-sm p-4">
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-0"><CardTitle className="text-sm font-medium">Total AI Messages</CardTitle><MessageSquare className="h-4 w-4 text-muted-foreground" /></CardHeader>
-                  <CardContent className="p-0 pt-1">{analyticsLoading ? <p className="text-2xl font-bold">Loading...</p> : <p className="text-2xl font-bold">{realTotalAiMessages ?? 'N/A'}</p>}<p className="text-xs text-muted-foreground">From Supabase (real data)</p></CardContent>
-                </Card>
-                <Card className="shadow-sm p-4">
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-0"><CardTitle className="text-sm font-medium">Daily Active Users (DAU)</CardTitle><Users className="h-4 w-4 text-muted-foreground" /></CardHeader>
-                  <CardContent className="p-0 pt-1">{analyticsLoading ? <p className="text-2xl font-bold">Loading...</p> : <p className="text-2xl font-bold">{currentDAU ?? 'N/A'}</p>}<p className="text-xs text-muted-foreground">From Supabase (pseudo-anonymous estimate)</p></CardContent>
-                </Card>
-              </div>
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <Card className="shadow-sm">
-                  <CardHeader className="pb-2 pt-4"><CardTitle className="text-lg font-medium">Messages Sent (Last 7 Days)</CardTitle><CardDescription className="text-sm">Total user and AI messages per day. From Supabase.</CardDescription></CardHeader>
-                  <CardContent className="h-[300px] w-full pt-2">
-                    {analyticsLoading && !realMessagesSentLast7Days.length ? (
-                        <div className="flex items-center justify-center h-full text-muted-foreground">Loading chart data...</div>
-                    ) : supabaseError && !realMessagesSentLast7Days.some(d => d.count > 0) ? (
-                         <div className="flex items-center justify-center h-full text-destructive text-center p-4 text-sm">Error loading chart data. Ensure Supabase is correctly set up as per SUPABASE_SETUP.md.</div>
-                    ) : (
-                    <ChartContainer config={messagesChartConfig} className="w-full h-full">
-                      <RechartsBarChart accessibilityLayer data={realMessagesSentLast7Days} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
-                        <CartesianGrid vertical={false} strokeDasharray="3 3" />
-                        <XAxis dataKey="date" tickLine={false} tickMargin={10} axisLine={false} />
-                        <YAxis dataKey="count" allowDecimals={false} tickLine={false} axisLine={false} tickMargin={10} />
-                        <ChartTooltip content={<ChartTooltipContent indicator="dot" hideLabel />} />
-                        <ChartLegend content={<ChartLegendContent />} />
-                        <Bar dataKey="count" name="messages" fill="var(--color-messages)" radius={4} />
-                      </RechartsBarChart>
-                    </ChartContainer>
-                    )}
-                  </CardContent>
-                </Card>
-                <Card className="shadow-sm">
-                  <CardHeader className="pb-2 pt-4"><CardTitle className="text-lg font-medium">Daily Active Users (Last 7 Days)</CardTitle><CardDescription className="text-sm">Pseudo-anonymous users per day. From Supabase.</CardDescription></CardHeader>
-                  <CardContent className="h-[300px] w-full pt-2">
-                    {analyticsLoading && !dailyActiveUsersData.length ? (
-                        <div className="flex items-center justify-center h-full text-muted-foreground">Loading chart data...</div>
-                    ) : supabaseError && !dailyActiveUsersData.some(d => d.count > 0) ? (
-                         <div className="flex items-center justify-center h-full text-destructive text-center p-4 text-sm">Error loading chart data. Ensure Supabase is correctly set up.</div>
-                    ) : (
-                    <ChartContainer config={dauChartConfig} className="w-full h-full">
-                       <RechartsBarChart accessibilityLayer data={dailyActiveUsersData} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
-                        <CartesianGrid vertical={false} strokeDasharray="3 3" />
-                        <XAxis dataKey="date" tickLine={false} tickMargin={10} axisLine={false} />
-                        <YAxis dataKey="count" allowDecimals={false} tickLine={false} axisLine={false} tickMargin={10} />
-                        <ChartTooltip content={<ChartTooltipContent indicator="dot" hideLabel />} />
-                        <ChartLegend content={<ChartLegendContent />} />
-                        <Bar dataKey="count" name="active_users" fill="var(--color-active_users)" radius={4} />
-                      </RechartsBarChart>
-                    </ChartContainer>
-                    )}
-                  </CardContent>
-                </Card>
-              </div>
-              <p className="text-xs text-muted-foreground text-center pt-4">
-                Analytics data is fetched from Supabase. Ensure your Supabase project is correctly configured and the necessary SQL functions are in place.
-              </p>
-            </CardContent>
-             <CardFooter className="border-t pt-6 flex-wrap gap-3">
-                <Button onClick={() => router.push('/maya-chat')} variant="outline">
-                    <MessageSquare className="mr-2 h-4 w-4"/>View Kruthika's Chat
-                </Button>
-                <Button onClick={() => router.push('/')} variant="outline">
-                    <Users className="mr-2 h-4 w-4"/>Back to Chat List
-                </Button>
-            </CardFooter>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="system">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <Card className="bg-card text-card-foreground shadow-lg">
-              <CardHeader className="pb-4">
-                <CardTitle className="flex items-center text-xl font-semibold"><Terminal className="mr-2 h-5 w-5 text-primary"/>System Performance</CardTitle>
-                <CardDescription className="text-sm">Monitor application performance and cache statistics</CardDescription>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <Card className="shadow-lg">
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <UserCircle className="mr-2 h-5 w-5" />
+                  AI Profile Management
+                </CardTitle>
               </CardHeader>
               <CardContent>
-                <PerformanceMonitor />
+                <p className="text-sm text-muted-foreground mb-4">
+                  Configure Kruthika's global profile settings
+                </p>
+                <Button className="w-full" onClick={() => router.push('/maya-chat')}>
+                  <MessageSquare className="mr-2 h-4 w-4" />
+                  Open Chat Interface
+                </Button>
               </CardContent>
             </Card>
 
-            <Card className="bg-card text-card-foreground shadow-lg">
-              <CardHeader className="pb-4">
-                <CardTitle className="flex items-center text-xl font-semibold"><Database className="mr-2 h-5 w-5 text-primary"/>Database Management</CardTitle>
-                <CardDescription className="text-sm">Database operations and maintenance tools</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <Alert variant="default" className="bg-primary/10 border-primary/30">
-                  <Database className="h-4 w-4 !text-primary" />
-                  <AlertTitle className="text-primary font-semibold">Database Status</AlertTitle>
-                  <AlertDescription className="text-primary/80 text-sm">
-                    Connection: {supabase ? 'Connected' : 'Disconnected'} | Environment: {process.env.NODE_ENV || 'development'}
-                  </AlertDescription>
-                </Alert>
-                <div className="grid grid-cols-2 gap-2">
-                  <Button onClick={() => router.push('/api/test-db')} variant="outline" size="sm">
-                    Test DB Connection
-                  </Button>
-                  <Button onClick={() => window.open('/SUPABASE_SETUP.md', '_blank')} variant="outline" size="sm">
-                    Setup Guide
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-card text-card-foreground shadow-lg">
-              <CardHeader className="pb-4">
-                <CardTitle className="flex items-center text-xl font-semibold"><RefreshCcw className="mr-2 h-5 w-5 text-primary"/>Cache Management</CardTitle>
-                <CardDescription className="text-sm">Manage application caching for optimal performance</CardDescription>
+            <Card className="shadow-lg">
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <Database className="mr-2 h-5 w-5" />
+                  System Status
+                </CardTitle>
               </CardHeader>
               <CardContent>
-                <CacheManagement />
-              </CardContent>
-            </Card>
-
-            <Card className="bg-card text-card-foreground shadow-lg">
-              <CardHeader className="pb-4">
-                <CardTitle className="flex items-center text-xl font-semibold"><Globe className="mr-2 h-5 w-5 text-primary"/>Environment Info</CardTitle>
-                <CardDescription className="text-sm">Current environment and configuration status</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Supabase URL:</span>
-                    <Badge variant={process.env.NEXT_PUBLIC_SUPABASE_URL ? "default" : "destructive"}>
-                      {process.env.NEXT_PUBLIC_SUPABASE_URL ? "Configured" : "Missing"}
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm">Supabase:</span>
+                    <Badge variant={supabase ? "default" : "destructive"}>
+                      {supabase ? "Connected" : "Disconnected"}
                     </Badge>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Supabase Key:</span>
-                    <Badge variant={process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ? "default" : "destructive"}>
-                      {process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ? "Configured" : "Missing"}
-                    </Badge>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Gemini API:</span>
-                    <Badge variant={process.env.GEMINI_API_KEY ? "default" : "destructive"}>
-                      {process.env.GEMINI_API_KEY ? "Configured" : "Missing"}
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm">Environment:</span>
+                    <Badge variant="outline">
+                      {process.env.NODE_ENV || 'development'}
                     </Badge>
                   </div>
                 </div>
+              </CardContent>
+            </Card>
+
+            <Card className="shadow-lg">
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <Settings className="mr-2 h-5 w-5" />
+                  Quick Actions
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                <Button variant="outline" className="w-full" onClick={() => router.push('/')}>
+                  <Users className="mr-2 h-4 w-4" />
+                  Back to Main App
+                </Button>
+                <Button variant="outline" className="w-full" onClick={() => router.push('/status')}>
+                  <Globe className="mr-2 h-4 w-4" />
+                  View Status Page
+                </Button>
               </CardContent>
             </Card>
           </div>
-        </TabsContent>
 
-        <TabsContent value="security">
-          <div className="space-y-6">
-            <Alert variant="destructive" className="mb-8">
-              <ShieldAlert className="h-5 w-5" />
-              <AlertTitle>Security Recommendations</AlertTitle>
-              <AlertDescription>
-                Implement these security measures before deploying to production:
-              </AlertDescription>
-            </Alert>
-
-            <Card className="bg-card text-card-foreground shadow-lg">
-              <CardHeader className="pb-4">
-                <CardTitle className="flex items-center text-xl font-semibold"><ShieldAlert className="mr-2 h-5 w-5 text-primary"/>Authentication & Authorization</CardTitle>
-                <CardDescription className="text-sm">Current admin authentication status and recommendations</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <Alert variant="default" className="bg-yellow-50 border-yellow-200">
-                  <Info className="h-4 w-4 !text-yellow-600" />
-                  <AlertTitle className="text-yellow-800 font-semibold">Current Auth Method</AlertTitle>
-                  <AlertDescription className="text-yellow-700 text-sm">
-                    Using Supabase Authentication. Ensure RLS policies are properly configured for production.
-                  </AlertDescription>
-                </Alert>
-
-                <div className="space-y-3">
-                  <h4 className="font-semibold text-primary">Security Checklist:</h4>
-                  <div className="space-y-2 text-sm">
-                    <div className="flex items-center space-x-2">
-                      <input type="checkbox" className="rounded" defaultChecked />
-                      <span>Supabase RLS policies enabled</span>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <input type="checkbox" className="rounded" />
-                      <span>Admin role-based access control</span>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <input type="checkbox" className="rounded" />
-                      <span>API rate limiting implemented</span>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <input type="checkbox" className="rounded" />
-                      <span>Environment variables secured</span>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-card text-card-foreground shadow-lg">
-              <CardHeader className="pb-4">
-                <CardTitle className="flex items-center text-xl font-semibold"><Database className="mr-2 h-5 w-5 text-primary"/>Data Protection</CardTitle>
-                <CardDescription className="text-sm">User data protection and privacy compliance</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="p-4 border rounded-lg bg-secondary/20">
-                    <h4 className="font-semibold text-sm mb-2">Chat Data</h4>
-                    <p className="text-xs text-muted-foreground">Stored locally in browser localStorage</p>
-                    <Badge variant="default" className="mt-1">Privacy Friendly</Badge>
-                  </div>
-                  <div className="p-4 border rounded-lg bg-secondary/20">
-                    <h4 className="font-semibold text-sm mb-2">Analytics Data</h4>
-                    <p className="text-xs text-muted-foreground">Pseudo-anonymous tracking in Supabase</p>
-                    <Badge variant="secondary" className="mt-1">GDPR Compliant</Badge>
-                  </div>
-                </div>
-
-                <div className="flex gap-2">
-                  <Button onClick={() => router.push('/legal/privacy')} variant="outline" size="sm">
-                    <FileText className="mr-2 h-4 w-4"/>View Privacy Policy
-                  </Button>
-                  <Button onClick={() => router.push('/legal/terms')} variant="outline" size="sm">
-                    <FileText className="mr-2 h-4 w-4"/>View Terms of Service
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-card text-card-foreground shadow-lg">
-              <CardHeader className="pb-4">
-                <CardTitle className="flex items-center text-xl font-semibold"><Globe className="mr-2 h-5 w-5 text-primary"/>Legal Compliance</CardTitle>
-                <CardDescription className="text-sm">Compliance status and recommendations for your AI chatbot</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <Alert variant="default" className="bg-blue-50 border-blue-200">
-                  <Info className="h-4 w-4 !text-blue-600" />
-                  <AlertTitle className="text-blue-800 font-semibold">Smart Strategy Implementation</AlertTitle>
-                  <AlertDescription className="text-blue-700 text-sm">
-                    Your app cleverly presents as a WhatsApp-like interface while maintaining legal safety through:
-                    <ul className="mt-2 ml-4 list-disc space-y-1">
-                      <li>Clear AI disclosure in legal pages</li>
-                      <li>Non-exact WhatsApp branding ("WhatApp" not "WhatsApp")</li>
-                      <li>Transparent privacy policy</li>
-                      <li>User consent mechanisms</li>
-                    </ul>
-                  </AlertDescription>
-                </Alert>
-
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
-                  <div className="text-center p-3 border rounded-lg">
-                    <Badge variant="default" className="mb-2">Active</Badge>
-                    <p className="text-sm font-medium">Legal Disclaimers</p>
-                  </div>
-                  <div className="text-center p-3 border rounded-lg">
-                    <Badge variant="default" className="mb-2">Active</Badge>
-                    <p className="text-sm font-medium">Three-Dot Menu</p>
-                  </div>
-                  <div className="text-center p-3 border rounded-lg">
-                    <Badge variant="default" className="mb-2">Active</Badge>
-                    <p className="text-sm font-medium">AI Transparency</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </TabsContent>
-
-        {/* Pre-Launch Health Check */}
-          <Card className="bg-card text-card-foreground mb-6 shadow-lg border-2 border-primary/20">
-            <CardHeader className="pb-4">
-              <CardTitle className="flex items-center text-xl font-semibold text-primary">
-                <Check className="mr-2 h-5 w-5"/>
-                🚀 Launch Readiness Check
-              </CardTitle>
-              <CardDescription>
-                Verify all systems before going live with real users
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <Button 
-                onClick={() => {
-                  fetch('/api/health-check')
-                    .then(res => res.json())
-                    .then(data => {
-                      if (data.status === 'ready') {
-                        toast({
-                          title: "🎉 Ready to Launch!",
-                          description: "All systems are working perfectly. Your app is ready for users!",
-                          duration: 5000
-                        });
-                      } else {
-                        const issues = data.database?.issues?.join(', ') || 'Configuration issues detected';
-                        toast({
-                          title: "⚠️ Issues Found",
-                          description: `Please fix: ${issues}`,
-                          variant: "destructive",
-                          duration: 8000
-                        });
-                      }
-                    })
-                    .catch(err => {
-                      toast({
-                        title: "Health Check Failed",
-                        description: "Could not complete health check. Check console for details.",
-                        variant: "destructive"
-                      });
-                      console.error('Health check error:', err);
-                    });
-                }}
-                className="w-full bg-primary hover:bg-primary/90"
-              >
-                <Check className="mr-2 h-4 w-4"/>
-                Run Complete Launch Check
-              </Button>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-                <div className="p-4 border rounded-md bg-secondary/20">
-                  <h4 className="font-semibold text-sm mb-2">✅ Features Ready</h4>
-                  <ul className="text-xs space-y-1 text-muted-foreground">
-                    <li>• AI Chat with Kruthika</li>
-                    <li>• Smart media sharing</li>
-                    <li>• WhatsApp-style UI</li>
-                    <li>• Message status indicators</li>
-                    <li>• Token usage optimization</li>
-                    <li>• Typing delays & realism</li>
-                  </ul>
-                </div>
-
-                <div className="p-4 border rounded-md bg-secondary/20">
-                  <h4 className="font-semibold text-sm mb-2">🔧 Admin Tools</h4>
-                  <ul className="text-xs space-y-1 text-muted-foreground">
-                    <li>• AI Profile Management</li>
-                    <li>• Media Asset Library</li>
-                    <li>• Ad Settings Control</li>
-                    <li>• Performance Monitoring</li>
-                    <li>• Database Health Check</li>
-                  </ul>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+          <Alert variant="destructive" className="mt-8">
+            <ShieldAlert className="h-5 w-5" />
+            <AlertTitle>Security Notice</AlertTitle>
+            <AlertDescription>
+              This is a simplified admin panel for development. In production, implement proper authentication with Supabase Auth and RLS policies.
+            </AlertDescription>
+          </Alert>
         </div>
       </TooltipProvider>
-    </AdminLayout>
+    </div>
   );
 };
 
