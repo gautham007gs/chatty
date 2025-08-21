@@ -1,6 +1,4 @@
 
-#!/usr/bin/env node
-
 console.log('🔍 Kruthika Chat - Startup Verification');
 console.log('=====================================');
 
