@@ -575,7 +575,7 @@ const AdminProfilePage: React.FC = () => {
 
   return (
     <AdminLayout>
-    <TooltipProvider>
+      <TooltipProvider>
     <div className="container mx-auto p-2 sm:p-4 lg:p-6 bg-background min-h-screen">
       <div className="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">
         <h1 className="text-2xl sm:text-3xl font-bold text-primary flex items-center">

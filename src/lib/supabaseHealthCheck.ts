@@ -1,4 +1,3 @@
-
 import { supabase } from './supabaseClient';
 
 interface HealthCheckResult {
@@ -33,7 +32,7 @@ export async function performSupabaseHealthCheck(): Promise<HealthCheckResult> {
       .from('messages_log')
       .select('user_id, text_content, has_image')
       .limit(1);
-    
+
     if (messagesError && messagesError.code === '42703') {
       issues.push('messages_log table missing required columns');
       suggestions.push('Run fix_database_schema.sql to add missing columns');
@@ -45,7 +44,7 @@ export async function performSupabaseHealthCheck(): Promise<HealthCheckResult> {
       .select('settings')
       .eq('id', 'ai_profile_kruthika_chat_v1')
       .single();
-    
+
     if (profileError && profileError.code === 'PGRST116') {
       suggestions.push('Set up AI profile in admin panel');
     }

@@ -1,4 +1,3 @@
-
 -- =============================================
 -- COMPLETE SUPABASE DATABASE SCHEMA
 -- Copy and run this entire script in Supabase SQL Editor
@@ -33,24 +32,18 @@ INSERT INTO ai_settings (settings) VALUES ('{
 DROP TABLE IF EXISTS messages_log CASCADE;
 
 CREATE TABLE messages_log (
-    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-    user_id TEXT NOT NULL,
+    id BIGINT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+    user_id TEXT NOT NULL DEFAULT 'anonymous',
+    sender_type TEXT NOT NULL CHECK (sender_type IN ('user', 'ai')),
     message_content TEXT NOT NULL,
-    response_content TEXT,
-    response_array JSONB, -- For chunked responses
-    timestamp TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    message_type TEXT DEFAULT 'user_message',
-    ai_mood TEXT,
-    time_of_day TEXT,
-    tokens_used INTEGER DEFAULT 0,
-    cached BOOLEAN DEFAULT FALSE,
+    message TEXT NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
 -- Create indexes for better performance
 CREATE INDEX IF NOT EXISTS idx_messages_log_user_id ON messages_log(user_id);
-CREATE INDEX IF NOT EXISTS idx_messages_log_timestamp ON messages_log(timestamp);
-CREATE INDEX IF NOT EXISTS idx_messages_log_type ON messages_log(message_type);
+CREATE INDEX IF NOT EXISTS idx_messages_log_timestamp ON messages_log(created_at);
+CREATE INDEX IF NOT EXISTS idx_messages_log_type ON messages_log(sender_type);
 
 -- =============================================
 -- 3. USER PERSONALIZATION TABLE
