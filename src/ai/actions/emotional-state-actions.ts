@@ -66,6 +66,30 @@ export async function generateResponse(input: EmotionalStateInput, userId?: stri
     }
   }
 
+  // Step 1: Emoji-only messages optimization
+  const emojiOnlyPattern = /^[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{1F1E0}-\u{1F1FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\s]*$/u;
+  if (emojiOnlyPattern.test(input.userMessage.trim())) {
+    console.log('Emoji-only message detected - using optimized response');
+
+    const emojiResponses = [
+      "😊❤️", "🥰💕", "😘✨", "🤗💖", "😍🌸", "💋😊", "🌟💕", 
+      "😊🎀", "💖🥰", "✨😘", "🌸❤️", "💕🤗", "😍💋", "🎉😊"
+    ];
+
+    const randomEmoji = emojiResponses[Math.floor(Math.random() * emojiResponses.length)];
+
+    if (userId) userPersonalization.trackTokenUsage(userId, 2); // Minimal tokens for emoji response
+
+    const output: EmotionalStateOutput = {
+      response: randomEmoji,
+      newMood: input.mood,
+    };
+
+    // Cache emoji responses too
+    chatCache.set(input.userMessage, output, input.mood, input.timeOfDay);
+    return output;
+  }
+
   // Step 2: Smart cache with similarity matching
   const cachedResponse = chatCache.get(input.userMessage, input.mood, input.timeOfDay);
   if (cachedResponse) {
