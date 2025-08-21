@@ -113,6 +113,28 @@ body {
 
     --chat-bg-ai: 220 10% 20%; /* WhatsApp AI/other person bubble: Dark grey (e.g. #2E3033) */
     --chat-text-ai: 0 0% 90%; /* Light text for AI messages on dark background */
+  }
+
+  /* Touch-friendly styles for admin panel */
+  .touch-manipulation {
+    touch-action: manipulation;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Ensure proper tap targets on mobile */
+  @media (max-width: 768px) {
+    .admin-panel-wrapper button {
+      min-height: 44px;
+      min-width: 44px;
+    }
+    
+    .admin-panel-wrapper input,
+    .admin-panel-wrapper textarea {
+      min-height: 44px;
+      font-size: 16px; /* Prevent zoom on iOS */
+    }
+  }
 
     /* This is the background for the chat message viewing area in dark mode */
     --chat-bg-default: 220 13% 12%; /* Darker grey for chat area background */

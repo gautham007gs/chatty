@@ -439,18 +439,18 @@ const AdminProfilePage: React.FC = () => {
           )}
 
           <Tabs defaultValue="overview" className="w-full">
-            <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 lg:grid-cols-7">
-              <TabsTrigger value="overview">Overview</TabsTrigger>
-              <TabsTrigger value="ai-profile">AI Profile</TabsTrigger>
-              <TabsTrigger value="admin-status">Admin Status</TabsTrigger>
-              <TabsTrigger value="contacts">Demo Contacts</TabsTrigger>
-              <TabsTrigger value="ads">Ad Settings</TabsTrigger>
-              <TabsTrigger value="media">Media Assets</TabsTrigger>
-              <TabsTrigger value="system">System</TabsTrigger>
+            <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 h-auto">
+              <TabsTrigger value="overview" className="text-xs sm:text-sm py-2 px-2">Overview</TabsTrigger>
+              <TabsTrigger value="ai-profile" className="text-xs sm:text-sm py-2 px-2">AI Profile</TabsTrigger>
+              <TabsTrigger value="admin-status" className="text-xs sm:text-sm py-2 px-2">Status</TabsTrigger>
+              <TabsTrigger value="contacts" className="text-xs sm:text-sm py-2 px-2">Contacts</TabsTrigger>
+              <TabsTrigger value="ads" className="text-xs sm:text-sm py-2 px-2">Ads</TabsTrigger>
+              <TabsTrigger value="media" className="text-xs sm:text-sm py-2 px-2">Media</TabsTrigger>
+              <TabsTrigger value="system" className="text-xs sm:text-sm py-2 px-2">System</TabsTrigger>
             </TabsList>
 
-            <TabsContent value="overview" className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <TabsContent value="overview" className="space-y-4 sm:space-y-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
                 <Card>
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                     <CardTitle className="text-sm font-medium">Total User Messages</CardTitle>
@@ -570,7 +570,7 @@ const AdminProfilePage: React.FC = () => {
                     </div>
                   </div>
                   
-                  <Button onClick={() => setIsProfileEditorOpen(true)} className="w-full sm:w-auto">
+                  <Button onClick={() => setIsProfileEditorOpen(true)} className="w-full sm:w-auto min-h-[44px] touch-manipulation">
                     <Edit3 className="mr-2 h-4 w-4" />
                     Edit Global Profile
                   </Button>
@@ -619,7 +619,7 @@ const AdminProfilePage: React.FC = () => {
                       placeholder="Avatar Image URL"
                     />
                   </div>
-                  <Button onClick={handleSaveAdminStatus} className="w-full sm:w-auto">
+                  <Button onClick={handleSaveAdminStatus} className="w-full sm:w-auto min-h-[44px] touch-manipulation">
                     <Check className="mr-2 h-4 w-4" />
                     Save Admin Status
                   </Button>
@@ -641,13 +641,16 @@ const AdminProfilePage: React.FC = () => {
                 <CardContent>
                   <div className="space-y-4">
                     {(managedContactStatuses || []).map((contact, index) => (
-                      <div key={contact.id} className="flex items-center space-x-4 p-4 border rounded-lg">
-                        <Avatar>
-                          <AvatarImage src={contact.avatarUrl} alt={contact.name} />
-                          <AvatarFallback>{contact.name.charAt(0)}</AvatarFallback>
-                        </Avatar>
+                      <div key={contact.id} className="flex flex-col sm:flex-row sm:items-center space-y-3 sm:space-y-0 sm:space-x-4 p-3 sm:p-4 border rounded-lg">
+                        <div className="flex items-center space-x-3 sm:space-x-0">
+                          <Avatar>
+                            <AvatarImage src={contact.avatarUrl} alt={contact.name} />
+                            <AvatarFallback>{contact.name.charAt(0)}</AvatarFallback>
+                          </Avatar>
+                          <div className="sm:hidden font-medium">{contact.name}</div>
+                        </div>
                         <div className="flex-1 space-y-2">
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                          <div className="grid grid-cols-1 gap-2">
                             <Input
                               value={contact.name}
                               onChange={(e) => {
@@ -679,7 +682,7 @@ const AdminProfilePage: React.FC = () => {
                         </div>
                       </div>
                     ))}
-                    <Button onClick={handleSaveManagedContacts} className="w-full sm:w-auto">
+                    <Button onClick={handleSaveManagedContacts} className="w-full sm:w-auto min-h-[44px] touch-manipulation">
                       <Check className="mr-2 h-4 w-4" />
                       Save Demo Contacts
                     </Button>
@@ -782,7 +785,7 @@ const AdminProfilePage: React.FC = () => {
                     </div>
                   </div>
                   
-                  <Button onClick={handleSaveAdSettings} className="w-full sm:w-auto">
+                  <Button onClick={handleSaveAdSettings} className="w-full sm:w-auto min-h-[44px] touch-manipulation">
                     <Check className="mr-2 h-4 w-4" />
                     Save Ad Settings
                   </Button>
@@ -807,7 +810,7 @@ const AdminProfilePage: React.FC = () => {
                         onChange={(e) => setNewImageUrl(e.target.value)}
                         placeholder="Add new image URL"
                       />
-                      <Button onClick={handleAddImageAsset} size="sm">
+                      <Button onClick={handleAddImageAsset} size="sm" className="min-h-[40px] min-w-[40px] touch-manipulation">
                         <PlusCircle className="h-4 w-4" />
                       </Button>
                     </div>
@@ -815,7 +818,7 @@ const AdminProfilePage: React.FC = () => {
                       {(aiMediaAssets?.images || []).map((image) => (
                         <div key={image.id} className="flex items-center justify-between p-2 border rounded">
                           <span className="text-sm truncate">{image.url}</span>
-                          <Button onClick={() => handleRemoveImageAsset(image.id)} variant="destructive" size="sm">
+                          <Button onClick={() => handleRemoveImageAsset(image.id)} variant="destructive" size="sm" className="min-h-[36px] min-w-[36px] touch-manipulation">
                             <Trash2 className="h-4 w-4" />
                           </Button>
                         </div>
@@ -839,7 +842,7 @@ const AdminProfilePage: React.FC = () => {
                         onChange={(e) => setNewAudioPath(e.target.value)}
                         placeholder="Add new audio path"
                       />
-                      <Button onClick={handleAddAudioAsset} size="sm">
+                      <Button onClick={handleAddAudioAsset} size="sm" className="min-h-[40px] min-w-[40px] touch-manipulation">
                         <PlusCircle className="h-4 w-4" />
                       </Button>
                     </div>
@@ -847,7 +850,7 @@ const AdminProfilePage: React.FC = () => {
                       {(aiMediaAssets?.audioFiles || []).map((audio) => (
                         <div key={audio.id} className="flex items-center justify-between p-2 border rounded">
                           <span className="text-sm truncate">{audio.url}</span>
-                          <Button onClick={() => handleRemoveAudioAsset(audio.id)} variant="destructive" size="sm">
+                          <Button onClick={() => handleRemoveAudioAsset(audio.id)} variant="destructive" size="sm" className="min-h-[36px] min-w-[36px] touch-manipulation">
                             <Trash2 className="h-4 w-4" />
                           </Button>
                         </div>
@@ -858,7 +861,7 @@ const AdminProfilePage: React.FC = () => {
               </div>
               
               <div className="flex justify-center">
-                <Button onClick={handleSaveMediaAssets} className="w-full sm:w-auto">
+                <Button onClick={handleSaveMediaAssets} className="w-full sm:w-auto min-h-[44px] touch-manipulation">
                   <Check className="mr-2 h-4 w-4" />
                   Save Media Assets
                 </Button>
