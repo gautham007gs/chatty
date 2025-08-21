@@ -640,7 +640,7 @@ const AdminProfilePage: React.FC = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    {managedContactStatuses.map((contact, index) => (
+                    {(managedContactStatuses || []).map((contact, index) => (
                       <div key={contact.id} className="flex items-center space-x-4 p-4 border rounded-lg">
                         <Avatar>
                           <AvatarImage src={contact.avatarUrl} alt={contact.name} />
@@ -812,7 +812,7 @@ const AdminProfilePage: React.FC = () => {
                       </Button>
                     </div>
                     <div className="space-y-2">
-                      {aiMediaAssets.images.map((image) => (
+                      {(aiMediaAssets?.images || []).map((image) => (
                         <div key={image.id} className="flex items-center justify-between p-2 border rounded">
                           <span className="text-sm truncate">{image.url}</span>
                           <Button onClick={() => handleRemoveImageAsset(image.id)} variant="destructive" size="sm">
@@ -844,7 +844,7 @@ const AdminProfilePage: React.FC = () => {
                       </Button>
                     </div>
                     <div className="space-y-2">
-                      {aiMediaAssets.audioFiles.map((audio) => (
+                      {(aiMediaAssets?.audioFiles || []).map((audio) => (
                         <div key={audio.id} className="flex items-center justify-between p-2 border rounded">
                           <span className="text-sm truncate">{audio.url}</span>
                           <Button onClick={() => handleRemoveAudioAsset(audio.id)} variant="destructive" size="sm">
