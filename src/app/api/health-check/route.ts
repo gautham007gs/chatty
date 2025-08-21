@@ -1,29 +1,34 @@
-
 import { NextResponse } from 'next/server';
-import { performSupabaseHealthCheck } from '@/lib/supabaseHealthCheck';
+import { supabase } from '@/lib/supabaseClient';
 
 export async function GET() {
   try {
-    const healthCheck = await performSupabaseHealthCheck();
-    
-    const environmentChecks = {
-      geminiApiKey: !!process.env.GEMINI_API_KEY,
+    // Check environment variables
+    const envChecks = {
       supabaseUrl: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
       supabaseKey: !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+      geminiKey: !!process.env.GEMINI_API_KEY
     };
 
-    const allEnvVarsPresent = Object.values(environmentChecks).every(Boolean);
+    // Test Supabase connection
+    const { data, error } = await supabase
+      .from('app_configurations')
+      .select('id')
+      .limit(1);
 
-    return NextResponse.json({
-      status: healthCheck.success && allEnvVarsPresent ? 'ready' : 'needs_attention',
-      database: healthCheck,
-      environment: environmentChecks,
-      timestamp: new Date().toISOString()
+    return Response.json({
+      status: 'ok',
+      timestamp: new Date().toISOString(),
+      environment: envChecks,
+      supabase: {
+        connected: !error,
+        error: error?.message || null
+      }
     });
   } catch (error: any) {
-    return NextResponse.json({
+    return Response.json({
       status: 'error',
-      message: error.message,
+      error: error.message,
       timestamp: new Date().toISOString()
     }, { status: 500 });
   }

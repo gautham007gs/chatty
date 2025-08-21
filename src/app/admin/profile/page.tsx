@@ -550,10 +550,17 @@ const AdminProfilePage: React.FC = () => {
 
   const handleSaveApiSettings = async () => {
     if (!supabase) {
-      toast({ title: "Supabase Error", description: "Supabase client not available.", variant: "destructive" });
+      toast({ title: "Supabase Error", description: "Supabase client not available. Check environment variables.", variant: "destructive" });
       return;
     }
+    
     try {
+      // Test connection first
+      const { error: testError } = await supabase.from('app_configurations').select('id').limit(1);
+      if (testError) {
+        throw new Error(`Connection failed: ${testError.message}`);
+      }
+
       const { error } = await supabase
         .from('app_configurations')
         .upsert(
@@ -564,7 +571,7 @@ const AdminProfilePage: React.FC = () => {
       toast({ title: "API Settings Saved!", description: "API configuration has been updated. Restart the application to apply changes." });
     } catch (error: any) {
       console.error("Failed to save API settings:", error);
-      toast({ title: "Error Saving API Settings", description: `Could not save API settings. ${error.message || ''}`, variant: "destructive" });
+      toast({ title: "Error Saving API Settings", description: `Could not save API settings. ${error.message || 'Unknown error'}`, variant: "destructive" });
     }
   };
 

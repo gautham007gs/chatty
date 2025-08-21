@@ -28,10 +28,10 @@ const AdminLoginPage: React.FC = () => {
     setError('');
     setIsLoading(true);
 
-    if (!supabase) {
-      setError('Supabase client is not available. Please check configuration.');
+    if (!supabase || typeof supabase.auth?.signInWithPassword !== 'function') {
+      setError('Supabase authentication is not available. Please check your environment configuration.');
       setIsLoading(false);
-      toast({ title: 'Login Error', description: 'Authentication service not available.', variant: 'destructive' });
+      toast({ title: 'Login Error', description: 'Authentication service not properly configured.', variant: 'destructive' });
       return;
     }
 

@@ -1,3 +1,4 @@
+
 import { supabase } from './supabaseClient';
 
 interface HealthCheckResult {
@@ -15,6 +16,7 @@ export async function performSupabaseHealthCheck(): Promise<HealthCheckResult> {
     const { error: connectionError } = await supabase.from('app_configurations').select('id').limit(1);
     if (connectionError) {
       issues.push(`Connection failed: ${connectionError.message}`);
+      suggestions.push('Check your NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY');
     }
 
     // Check required tables exist
@@ -30,7 +32,7 @@ export async function performSupabaseHealthCheck(): Promise<HealthCheckResult> {
     // Check messages_log columns
     const { data: messagesData, error: messagesError } = await supabase
       .from('messages_log')
-      .select('user_id, message_content, has_image')
+      .select('message_id, sender_type, chat_id')
       .limit(1);
 
     if (messagesError && messagesError.code === '42703') {
@@ -38,25 +40,34 @@ export async function performSupabaseHealthCheck(): Promise<HealthCheckResult> {
       suggestions.push('Run fix_database_schema.sql to add missing columns');
     }
 
-    // Test AI profile fetch
-    const { error: profileError } = await supabase
+    // Check app_configurations structure
+    const { data: configData, error: configError } = await supabase
       .from('app_configurations')
-      .select('settings')
-      .eq('id', 'ai_profile_kruthika_chat_v1')
-      .single();
+      .select('id, settings')
+      .limit(1);
 
-    if (profileError && profileError.code === 'PGRST116') {
-      suggestions.push('Set up AI profile in admin panel');
+    if (configError && configError.code === '42703') {
+      issues.push('app_configurations table has incorrect structure');
+      suggestions.push('Recreate app_configurations table with correct schema');
     }
 
-    return {
-      success: issues.length === 0,
-      issues,
-      suggestions
-    };
-
   } catch (error: any) {
-    issues.push(`Health check failed: ${error.message}`);
-    return { success: false, issues, suggestions };
+    issues.push(`Unexpected error: ${error.message}`);
+    suggestions.push('Check your environment variables and network connection');
+  }
+
+  return {
+    success: issues.length === 0,
+    issues,
+    suggestions
+  };
+}
+
+export async function testSupabaseConnection(): Promise<boolean> {
+  try {
+    const { error } = await supabase.from('app_configurations').select('id').limit(1);
+    return !error;
+  } catch {
+    return false;
   }
 }
