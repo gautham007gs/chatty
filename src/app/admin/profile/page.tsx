@@ -21,7 +21,6 @@ import { Badge } from '@/components/ui/badge';
 import { Terminal, Database, Users, MessageSquare, LogOut, LinkIcon, Settings, ExternalLink, Palette, Info, UserCircle, Globe, ImagePlus, Music2, Trash2, PlusCircle, Edit3, Sparkles, BarChartHorizontalBig, Edit, FileText, RefreshCcw, RotateCcw, Newspaper, LayoutPanelLeft, TrendingUp, ShieldAlert, Check } from "lucide-react"
 import CacheManagement from '@/components/admin/CacheManagement';
 import PerformanceMonitor from '@/components/admin/PerformanceMonitor';
-import AdminLayout from '@/components/admin/AdminLayout';
 import { supabase } from '@/lib/supabaseClient';
 import { format, subDays, eachDayOfInterval } from 'date-fns';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -32,6 +31,7 @@ import { useAIMediaAssets } from '@/contexts/AIMediaAssetsContext';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
+import AdminLayout from '@/components/admin/AdminLayout';
 
 
 const ADMIN_AUTH_KEY = 'isAdminLoggedIn_KruthikaChat';
