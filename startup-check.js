@@ -1,4 +1,7 @@
 
+// Load environment variables from .env file
+require('dotenv').config();
+
 console.log('🔍 Kruthika Chat - Startup Verification');
 console.log('=====================================');
 
