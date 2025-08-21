@@ -1,4 +1,4 @@
-import type {NextConfig} from 'next';
+import type { NextConfig } from "next";
 
 const securityHeaders = [
   {
@@ -34,7 +34,13 @@ const nextConfig: NextConfig = {
       },
     ],
   },
-  serverExternalPackages: ['@google/generative-ai'],
+  experimental: {
+    serverComponentsExternalPackages: ['@google/generative-ai'],
+  },
+  allowedDevOrigins: [
+    '9dea2973-7c90-4379-bbb4-6be097a44ded-00-1cdp7mrc8u5w1.sisko.replit.dev',
+    '*.replit.dev'
+  ],
   async headers() {
     return [
       {
@@ -45,11 +51,12 @@ const nextConfig: NextConfig = {
   },
   webpack: (config, { isServer }) => {
     if (!isServer) {
+      // Fix for client-side imports
       config.resolve.fallback = {
         ...config.resolve.fallback,
         fs: false,
-        net: false,
-        tls: false,
+        path: false,
+        crypto: false,
       };
     }
     return config;

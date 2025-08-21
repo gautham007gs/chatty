@@ -61,6 +61,11 @@ const AdminProfilePage: React.FC = () => {
 
   const [newImageUrl, setNewImageUrl] = useState('');
   const [newAudioPath, setNewAudioPath] = useState('');
+  const [apiSettings, setApiSettings] = useState({
+    geminiApiKey: '',
+    supabaseUrl: '',
+    supabaseKey: ''
+  });
 
   const [isProfileEditorOpen, setIsProfileEditorOpen] = useState(false);
 
@@ -543,6 +548,26 @@ const AdminProfilePage: React.FC = () => {
     }
   };
 
+  const handleSaveApiSettings = async () => {
+    if (!supabase) {
+      toast({ title: "Supabase Error", description: "Supabase client not available.", variant: "destructive" });
+      return;
+    }
+    try {
+      const { error } = await supabase
+        .from('app_configurations')
+        .upsert(
+          { id: 'api_settings', settings: apiSettings, updated_at: new Date().toISOString() },
+          { onConflict: 'id' }
+        );
+      if (error) throw error;
+      toast({ title: "API Settings Saved!", description: "API configuration has been updated. Restart the application to apply changes." });
+    } catch (error: any) {
+      console.error("Failed to save API settings:", error);
+      toast({ title: "Error Saving API Settings", description: `Could not save API settings. ${error.message || ''}`, variant: "destructive" });
+    }
+  };
+
   const handleLogout = () => {
     try {
         sessionStorage.removeItem(ADMIN_AUTH_KEY);
@@ -576,7 +601,7 @@ const AdminProfilePage: React.FC = () => {
   return (
     <AdminLayout>
       <TooltipProvider>
-    <div className="container mx-auto p-2 sm:p-4 lg:p-6 bg-background min-h-screen">
+        <div className="container mx-auto p-2 sm:p-4 lg:p-6 bg-background min-h-screen">
       <div className="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">
         <h1 className="text-2xl sm:text-3xl font-bold text-primary flex items-center">
           <Sparkles className="mr-3 h-7 w-7" /> Kruthika Chat Admin Panel
@@ -607,9 +632,10 @@ const AdminProfilePage: React.FC = () => {
 
 
       <Tabs defaultValue="kruthika" className="w-full">
-        <TabsList className="grid w-full grid-cols-2 md:grid-cols-6 mb-8 h-auto py-2">
+        <TabsList className="grid w-full grid-cols-2 md:grid-cols-7 mb-8 h-auto py-2">
           <TabsTrigger value="kruthika" className="text-xs sm:text-sm py-2.5"><UserCircle className="mr-1 sm:mr-2 h-4 w-4"/>Kruthika's Settings</TabsTrigger>
           <TabsTrigger value="ads" className="text-xs sm:text-sm py-2.5"><Settings className="mr-1 sm:mr-2 h-4 w-4"/>Ad Settings</TabsTrigger>
+          <TabsTrigger value="api" className="text-xs sm:text-sm py-2.5"><Database className="mr-1 sm:mr-2 h-4 w-4"/>API Settings</TabsTrigger>
           <TabsTrigger value="status_content" className="text-xs sm:text-sm py-2.5"><FileText className="mr-1 sm:mr-2 h-4 w-4"/>Status Page</TabsTrigger>
           <TabsTrigger value="analytics" className="text-xs sm:text-sm py-2.5"><BarChartHorizontalBig className="mr-1 sm:mr-2 h-4 w-4"/>Analytics</TabsTrigger>
           <TabsTrigger value="system" className="text-xs sm:text-sm py-2.5"><Terminal className="mr-1 sm:mr-2 h-4 w-4"/>System</TabsTrigger>
@@ -931,6 +957,70 @@ const AdminProfilePage: React.FC = () => {
             </CardContent>
             <CardFooter className="mt-4">
               <Button onClick={handleSaveAdSettings} className="w-full sm:w-auto text-base py-3 px-6"><Settings className="mr-2 h-5 w-5" /> Save Global Ad Settings</Button>
+            </CardFooter>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="api">
+          <Card className="bg-card text-card-foreground mb-8 shadow-lg">
+            <CardHeader className="pb-4">
+              <CardTitle className="flex items-center text-xl font-semibold"><Database className="mr-2 h-5 w-5 text-primary"/>API Configuration</CardTitle>
+              <CardDescription className="text-sm">
+                Manage API keys and external service configurations
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6 pt-2">
+              <Alert variant="default" className="bg-yellow-50 border-yellow-200">
+                <Info className="h-4 w-4 !text-yellow-600" />
+                <AlertTitle className="text-yellow-800 font-semibold">Security Notice</AlertTitle>
+                <AlertDescription className="text-yellow-700 text-sm">
+                  API keys are sensitive. Changes require application restart to take effect.
+                </AlertDescription>
+              </Alert>
+
+              <div className="space-y-4">
+                <div className="space-y-1.5">
+                  <Label htmlFor="geminiApiKey" className="font-medium text-sm">Gemini API Key</Label>
+                  <Input
+                    id="geminiApiKey"
+                    type="password"
+                    value={apiSettings.geminiApiKey}
+                    onChange={(e) => setApiSettings(prev => ({ ...prev, geminiApiKey: e.target.value }))}
+                    placeholder="AIzaSy..."
+                    className="text-sm"
+                  />
+                  <p className="text-xs text-muted-foreground">Google Gemini API key for AI responses</p>
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label htmlFor="supabaseUrl" className="font-medium text-sm">Supabase URL</Label>
+                  <Input
+                    id="supabaseUrl"
+                    type="url"
+                    value={apiSettings.supabaseUrl}
+                    onChange={(e) => setApiSettings(prev => ({ ...prev, supabaseUrl: e.target.value }))}
+                    placeholder="https://your-project.supabase.co"
+                    className="text-sm"
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label htmlFor="supabaseKey" className="font-medium text-sm">Supabase Anon Key</Label>
+                  <Input
+                    id="supabaseKey"
+                    type="password"
+                    value={apiSettings.supabaseKey}
+                    onChange={(e) => setApiSettings(prev => ({ ...prev, supabaseKey: e.target.value }))}
+                    placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                    className="text-sm"
+                  />
+                </div>
+              </div>
+            </CardContent>
+            <CardFooter className="mt-4">
+              <Button onClick={handleSaveApiSettings} className="w-full sm:w-auto text-base py-3 px-6">
+                <Database className="mr-2 h-5 w-5" /> Save API Settings
+              </Button>
             </CardFooter>
           </Card>
         </TabsContent>
@@ -1383,8 +1473,8 @@ const AdminProfilePage: React.FC = () => {
           </Card>
         </TabsContent>
       </Tabs>
-    </div>
-    </TooltipProvider>
+        </div>
+      </TooltipProvider>
     </AdminLayout>
   );
 };

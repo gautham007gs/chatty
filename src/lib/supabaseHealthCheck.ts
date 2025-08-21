@@ -30,7 +30,7 @@ export async function performSupabaseHealthCheck(): Promise<HealthCheckResult> {
     // Check messages_log columns
     const { data: messagesData, error: messagesError } = await supabase
       .from('messages_log')
-      .select('user_id, text_content, has_image')
+      .select('user_id, message_content, has_image')
       .limit(1);
 
     if (messagesError && messagesError.code === '42703') {

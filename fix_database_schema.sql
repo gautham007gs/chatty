@@ -37,6 +37,16 @@ CREATE TABLE messages_log (
     sender_type TEXT NOT NULL CHECK (sender_type IN ('user', 'ai')),
     message_content TEXT NOT NULL,
     message TEXT NOT NULL,
+    text_content TEXT,
+    has_image BOOLEAN DEFAULT FALSE,
+    response_content TEXT,
+    response_array JSONB,
+    timestamp TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    message_type TEXT DEFAULT 'user_message',
+    ai_mood TEXT,
+    time_of_day TEXT,
+    tokens_used INTEGER DEFAULT 0,
+    cached BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
