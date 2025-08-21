@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect, useCallback } from 'react';
@@ -59,7 +58,7 @@ const AdminProfilePage: React.FC = () => {
   const [managedContactStatuses, setManagedContactStatuses] = useState<ManagedContactStatus[]>(defaultManagedContactStatuses);
   const [adSettings, setAdSettings] = useState<AdSettings>(defaultAdSettings);
   const [aiMediaAssets, setAiMediaAssets] = useState<AIMediaAssetsConfig>(defaultAIMediaAssetsConfig);
-  
+
   const [newImageUrl, setNewImageUrl] = useState('');
   const [newAudioPath, setNewAudioPath] = useState('');
 
@@ -135,7 +134,7 @@ const AdminProfilePage: React.FC = () => {
 
       if (adConfigError && adConfigError.code !== 'PGRST116') throw adConfigError;
       const adSettingsData = adConfigData?.settings;
-      
+
       const mergedAdSettings = { 
         ...defaultAdSettings, 
         ...(adSettingsData as Partial<AdSettings>),
@@ -167,7 +166,7 @@ const AdminProfilePage: React.FC = () => {
       fetchAllNonAnalyticsConfigs();
     }
   }, [isAuthenticated, fetchAllNonAnalyticsConfigs]);
-  
+
    useEffect(() => {
     if (!isAuthenticated) return;
 
@@ -226,7 +225,7 @@ const AdminProfilePage: React.FC = () => {
           return { date: format(day, 'EEE'), count: found ? Number(found.active_users) : 0 };
         });
         setDailyActiveUsersData(formattedDAUCounts);
-        
+
         const todayFormatted = format(todayDate, 'EEE');
         const todayDAU = formattedDAUCounts.find(d => d.date === todayFormatted);
         setCurrentDAU(todayDAU ? todayDAU.count : 0);
@@ -251,6 +250,92 @@ const AdminProfilePage: React.FC = () => {
     }
   }, [toast, isAuthenticated]);
 
+  // --- Backup and Restore Functions ---
+  const handleExportData = () => {
+    const dataToExport = {
+      aiProfile: currentGlobalAIProfile,
+      adminStatus: adminStatus,
+      managedContactStatuses: managedContactStatuses,
+      adSettings: adSettings,
+      aiMediaAssets: aiMediaAssets,
+    };
+
+    const jsonString = JSON.stringify(dataToExport, null, 2);
+    const blob = new Blob([jsonString], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `admin_config_backup_${format(new Date(), 'yyyyMMdd_HHmmss')}.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    toast({ title: "Data Exported", description: "Your current admin configurations have been exported." });
+  };
+
+  const handleBackupSettings = async () => {
+    if (!supabase) {
+      toast({ title: "Supabase Error", description: "Supabase client not available. Cannot perform backup.", variant: "destructive" });
+      return;
+    }
+    const configData = {
+      aiProfile: currentGlobalAIProfile,
+      adminStatus: adminStatus,
+      managedContactStatuses: managedContactStatuses,
+      adSettings: adSettings,
+      aiMediaAssets: aiMediaAssets,
+    };
+
+    try {
+      const { error } = await supabase
+        .from('app_configurations')
+        .upsert(
+          { id: 'admin_settings_backup', settings: configData, updated_at: new Date().toISOString() },
+          { onConflict: 'id' }
+        );
+      if (error) throw error;
+      toast({ title: "Settings Backed Up", description: "Your current admin settings are backed up in Supabase." });
+    } catch (error: any) {
+      console.error("Failed to backup settings to Supabase:", error);
+      toast({ title: "Error Backing Up Settings", description: `Could not back up settings to Supabase. ${error.message || ''}`, variant: "destructive" });
+    }
+  };
+
+  const handleRestoreSettings = async () => {
+    if (!supabase) {
+      toast({ title: "Supabase Error", description: "Supabase client not available. Cannot restore settings.", variant: "destructive" });
+      return;
+    }
+    try {
+      const { data, error } = await supabase
+        .from('app_configurations')
+        .select('settings')
+        .eq('id', 'admin_settings_backup')
+        .single();
+
+      if (error && error.code !== 'PGRST116') throw error;
+      if (!data || !data.settings) {
+        toast({ title: "No Backup Found", description: "No previous settings backup found in Supabase.", variant: "warning" });
+        return;
+      }
+
+      const { aiProfile, adminStatus, managedContactStatuses, adSettings, aiMediaAssets } = data.settings;
+
+      // Update states
+      setCurrentGlobalAIProfile(aiProfile || defaultAIProfile);
+      setAdminStatus(adminStatus || defaultAdminStatusDisplay);
+      setManagedContactStatuses(managedContactStatuses || defaultManagedContactStatuses);
+      setAdSettings(adSettings || defaultAdSettings);
+      setAiMediaAssets(aiMediaAssets || defaultAIMediaAssetsConfig);
+
+      toast({ title: "Settings Restored", description: "Previous admin settings have been restored. Please save to apply globally." });
+
+    } catch (error: any) {
+      console.error("Failed to restore settings from Supabase:", error);
+      toast({ title: "Error Restoring Settings", description: `Could not restore settings from Supabase. ${error.message || ''}`, variant: "destructive" });
+    }
+  };
+
 
   const handleSaveKruthikaCoreProfile = async (updatedCoreProfileData: Partial<AIProfile>) => {
     // Construct the data to update, ensuring empty avatarUrl is treated as undefined
@@ -273,7 +358,7 @@ const AdminProfilePage: React.FC = () => {
     console.log("[AdminProfilePage] handleSaveKruthikaStory - storyDataToUpdate before calling context update:", JSON.stringify(storyDataToUpdate, null, 2));
     await updateAIProfile(storyDataToUpdate);
   };
-  
+
   const handleClearKruthikaStoryField = (field: 'statusStoryText' | 'statusStoryImageUrl') => {
     setCurrentGlobalAIProfile(p => ({
       ...p,
@@ -307,7 +392,7 @@ const AdminProfilePage: React.FC = () => {
       toast({ title: "Error Saving 'My Status'", description: `Could not save your status globally. ${error.message || ''}`, variant: "destructive" });
     }
   };
-  
+
   const handleClearAdminStatusField = (field: 'statusText' | 'statusImageUrl') => {
     setAdminStatus(s => ({
         ...s,
@@ -467,7 +552,7 @@ const AdminProfilePage: React.FC = () => {
     toast({ title: 'Logged Out', description: 'You have been logged out of the admin panel.' });
     router.replace('/admin/login');
   };
-  
+
   const handleForceRefreshGlobalData = async () => {
     toast({ title: "Refreshing...", description: "Manually fetching latest global data from Supabase."});
     await fetchAllNonAnalyticsConfigs(); 
@@ -480,7 +565,7 @@ const AdminProfilePage: React.FC = () => {
   }
 
   const scriptPasteInstruction = "Paste the full ad script code provided by the ad network here. Include any <!-- comments --> or <script> tags as provided.";
-  
+
   let adminPageAvatarUrlToUse = currentGlobalAIProfile.avatarUrl;
   if (!adminPageAvatarUrlToUse || typeof adminPageAvatarUrlToUse !== 'string' || adminPageAvatarUrlToUse.trim() === '' || (!adminPageAvatarUrlToUse.startsWith('http') && !adminPageAvatarUrlToUse.startsWith('data:'))) {
     adminPageAvatarUrlToUse = defaultAIProfile.avatarUrl;
@@ -581,7 +666,7 @@ const AdminProfilePage: React.FC = () => {
               />
             )}
           </Card>
-          
+
           <Card className="bg-card text-card-foreground mb-8 shadow-lg">
             <CardHeader className="pb-4">
                <CardTitle className="flex items-center text-xl font-semibold"><Palette className="mr-2 h-5 w-5 text-primary"/>Kruthika's Status Story (Global)</CardTitle>
@@ -714,7 +799,7 @@ const AdminProfilePage: React.FC = () => {
                 <Switch id="adsEnabledGlobally" checked={adSettings.adsEnabledGlobally} onCheckedChange={(checked) => handleAdSettingChange('adsEnabledGlobally', checked)}/>
                 <Label htmlFor="adsEnabledGlobally" className="text-md font-semibold">Enable All Ads Globally</Label>
               </div>
-              
+
               <Card className="bg-secondary/10 border-border shadow-sm">
                 <CardHeader className="pb-3 pt-4">
                   <CardTitle className="text-lg font-semibold text-primary flex items-center"><TrendingUp className="mr-2 h-5 w-5"/>Direct Link Ad Frequency</CardTitle>
@@ -849,7 +934,7 @@ const AdminProfilePage: React.FC = () => {
             </CardFooter>
           </Card>
         </TabsContent>
-        
+
         <TabsContent value="status_content">
           <Card className="bg-card text-card-foreground mb-8 shadow-lg">
             <CardHeader className="pb-4">
@@ -931,6 +1016,17 @@ const AdminProfilePage: React.FC = () => {
           <Card className="bg-card text-card-foreground shadow-lg">
             <CardHeader className="pb-4">
               <CardTitle className="flex items-center text-xl font-semibold"><Database className="mr-2 h-5 w-5 text-primary"/>Usage Analytics Dashboard</CardTitle>
+              <div className="flex gap-2 mt-4">
+                <Button onClick={handleExportData} variant="outline" size="sm">
+                  <FileText className="mr-2 h-4 w-4"/>Export Data
+                </Button>
+                <Button onClick={handleBackupSettings} variant="outline" size="sm">
+                  <Database className="mr-2 h-4 w-4"/>Backup Settings
+                </Button>
+                <Button onClick={handleRestoreSettings} variant="outline" size="sm" className="bg-primary/10 hover:bg-primary/20">
+                  <RotateCcw className="mr-2 h-4 w-4"/>Restore Settings
+                </Button>
+              </div>
               <Alert variant={supabaseError ? "destructive" : "default"} className={`mt-4 ${supabaseError ? "" : "bg-primary/10 border-primary/30"}`}>
                 {supabaseError ? <Terminal className="h-4 w-4 !text-destructive" /> : <Database className="h-4 w-4 !text-primary" />}
                 <AlertTitle className={supabaseError ? "text-destructive font-semibold" : "text-primary font-semibold"}>
@@ -1117,7 +1213,7 @@ const AdminProfilePage: React.FC = () => {
                     Using Supabase Authentication. Ensure RLS policies are properly configured for production.
                   </AlertDescription>
                 </Alert>
-                
+
                 <div className="space-y-3">
                   <h4 className="font-semibold text-primary">Security Checklist:</h4>
                   <div className="space-y-2 text-sm">
@@ -1160,7 +1256,7 @@ const AdminProfilePage: React.FC = () => {
                     <Badge variant="secondary" className="mt-1">GDPR Compliant</Badge>
                   </div>
                 </div>
-                
+
                 <div className="flex gap-2">
                   <Button onClick={() => router.push('/legal/privacy')} variant="outline" size="sm">
                     <FileText className="mr-2 h-4 w-4"/>View Privacy Policy
@@ -1191,7 +1287,7 @@ const AdminProfilePage: React.FC = () => {
                     </ul>
                   </AlertDescription>
                 </Alert>
-                
+
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
                   <div className="text-center p-3 border rounded-lg">
                     <Badge variant="default" className="mb-2">Active</Badge>
@@ -1218,5 +1314,3 @@ const AdminProfilePage: React.FC = () => {
 };
 
 export default AdminProfilePage;
-
-    
