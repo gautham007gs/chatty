@@ -1,32 +1,31 @@
 
--- Fix the messages_log table structure
--- Run this in your Supabase SQL editor
+-- Fix missing columns in messages_log table
+ALTER TABLE messages_log 
+ADD COLUMN IF NOT EXISTS user_id TEXT,
+ADD COLUMN IF NOT EXISTS text_content TEXT,
+ADD COLUMN IF NOT EXISTS has_image BOOLEAN DEFAULT false;
 
--- First, let's see what we have
--- SELECT column_name, data_type FROM information_schema.columns WHERE table_name = 'messages_log';
+-- Update existing column name if needed
+DO $$ 
+BEGIN 
+    IF EXISTS(SELECT 1 FROM information_schema.columns WHERE table_name = 'messages_log' AND column_name = 'message_content') THEN
+        ALTER TABLE messages_log RENAME COLUMN message_content TO text_content;
+    END IF;
+END $$;
 
--- Drop and recreate the table with correct structure
-DROP TABLE IF EXISTS messages_log;
-
-CREATE TABLE messages_log (
-    id BIGSERIAL PRIMARY KEY,
+-- Ensure all required columns exist
+CREATE TABLE IF NOT EXISTS messages_log (
+    id SERIAL PRIMARY KEY,
     message_id TEXT NOT NULL,
-    sender_type TEXT NOT NULL CHECK (sender_type IN ('user', 'ai')),
+    sender_type TEXT NOT NULL,
     chat_id TEXT NOT NULL,
-    user_id TEXT NOT NULL,  -- This was missing!
+    user_id TEXT,
     text_content TEXT,
-    has_image BOOLEAN DEFAULT FALSE,
-    created_at TIMESTAMPTZ DEFAULT NOW()
+    has_image BOOLEAN DEFAULT false,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Create index for better performance
-CREATE INDEX idx_messages_log_user_id ON messages_log(user_id);
-CREATE INDEX idx_messages_log_chat_id ON messages_log(chat_id);
-CREATE INDEX idx_messages_log_created_at ON messages_log(created_at);
-
--- Enable RLS (Row Level Security)
-ALTER TABLE messages_log ENABLE ROW LEVEL SECURITY;
-
--- Create policy to allow all operations (you can make this more restrictive later)
-CREATE POLICY "Allow all operations on messages_log" ON messages_log
-    FOR ALL USING (true);
+-- Create indexes for better performance
+CREATE INDEX IF NOT EXISTS idx_messages_log_user_id ON messages_log(user_id);
+CREATE INDEX IF NOT EXISTS idx_messages_log_chat_id ON messages_log(chat_id);
+CREATE INDEX IF NOT EXISTS idx_messages_log_created_at ON messages_log(created_at);

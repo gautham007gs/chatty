@@ -18,7 +18,7 @@ import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartLegend, ChartLe
 import type { ChartConfig } from "@/components/ui/chart";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Badge } from '@/components/ui/badge';
-import { Terminal, Database, Users, MessageSquare, LogOut, LinkIcon, Settings, ExternalLink, Palette, Info, UserCircle, Globe, ImagePlus, Music2, Trash2, PlusCircle, Edit3, Sparkles, BarChartHorizontalBig, Edit, FileText, RefreshCcw, RotateCcw, Newspaper, LayoutPanelLeft, TrendingUp, ShieldAlert } from "lucide-react"
+import { Terminal, Database, Users, MessageSquare, LogOut, LinkIcon, Settings, ExternalLink, Palette, Info, UserCircle, Globe, ImagePlus, Music2, Trash2, PlusCircle, Edit3, Sparkles, BarChartHorizontalBig, Edit, FileText, RefreshCcw, RotateCcw, Newspaper, LayoutPanelLeft, TrendingUp, ShieldAlert, Check } from "lucide-react"
 import CacheManagement from '@/components/admin/CacheManagement';
 import PerformanceMonitor from '@/components/admin/PerformanceMonitor';
 import AdminLayout from '@/components/admin/AdminLayout';
@@ -1305,6 +1305,82 @@ const AdminProfilePage: React.FC = () => {
               </CardContent>
             </Card>
           </div>
+        </TabsContent>
+
+        {/* Pre-Launch Health Check */}
+          <Card className="bg-card text-card-foreground mb-6 shadow-lg border-2 border-primary/20">
+            <CardHeader className="pb-4">
+              <CardTitle className="flex items-center text-xl font-semibold text-primary">
+                <Check className="mr-2 h-5 w-5"/>
+                🚀 Launch Readiness Check
+              </CardTitle>
+              <CardDescription>
+                Verify all systems before going live with real users
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <Button 
+                onClick={() => {
+                  fetch('/api/health-check')
+                    .then(res => res.json())
+                    .then(data => {
+                      if (data.status === 'ready') {
+                        toast({
+                          title: "🎉 Ready to Launch!",
+                          description: "All systems are working perfectly. Your app is ready for users!",
+                          duration: 5000
+                        });
+                      } else {
+                        const issues = data.database?.issues?.join(', ') || 'Configuration issues detected';
+                        toast({
+                          title: "⚠️ Issues Found",
+                          description: `Please fix: ${issues}`,
+                          variant: "destructive",
+                          duration: 8000
+                        });
+                      }
+                    })
+                    .catch(err => {
+                      toast({
+                        title: "Health Check Failed",
+                        description: "Could not complete health check. Check console for details.",
+                        variant: "destructive"
+                      });
+                      console.error('Health check error:', err);
+                    });
+                }}
+                className="w-full bg-primary hover:bg-primary/90"
+              >
+                <Check className="mr-2 h-4 w-4"/>
+                Run Complete Launch Check
+              </Button>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                <div className="p-4 border rounded-md bg-secondary/20">
+                  <h4 className="font-semibold text-sm mb-2">✅ Features Ready</h4>
+                  <ul className="text-xs space-y-1 text-muted-foreground">
+                    <li>• AI Chat with Kruthika</li>
+                    <li>• Smart media sharing</li>
+                    <li>• WhatsApp-style UI</li>
+                    <li>• Message status indicators</li>
+                    <li>• Token usage optimization</li>
+                    <li>• Typing delays & realism</li>
+                  </ul>
+                </div>
+
+                <div className="p-4 border rounded-md bg-secondary/20">
+                  <h4 className="font-semibold text-sm mb-2">🔧 Admin Tools</h4>
+                  <ul className="text-xs space-y-1 text-muted-foreground">
+                    <li>• AI Profile Management</li>
+                    <li>• Media Asset Library</li>
+                    <li>• Ad Settings Control</li>
+                    <li>• Performance Monitoring</li>
+                    <li>• Database Health Check</li>
+                  </ul>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </TabsContent>
       </Tabs>
     </div>

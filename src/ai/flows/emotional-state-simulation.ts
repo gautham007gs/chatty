@@ -733,13 +733,92 @@ function handleUserImageUpload(input: EmotionalStateInput): EmotionalStateOutput
   return responses[Math.floor(Math.random() * responses.length)];
 }
 
-// Check if we should send media proactively
+// Check if we should send media proactively - enhanced for frequent sharing
 function shouldSendMediaProactively(input: EmotionalStateInput): EmotionalStateOutput | null {
-  // Very rarely send media (less than 1% chance)
-  if (Math.random() > 0.01) return null;
-
   const availableImages = input.availableImages || [];
   const availableAudio = input.availableAudio || [];
+  
+  // Get message count from recent interactions to determine frequency
+  const messageCount = input.recentInteractions.length;
+  
+  // Determine chance based on conversation flow and engagement
+  let mediaChance = 0;
+  const userMsg = input.userMessage.toLowerCase();
+  
+  // Higher chance for certain triggers
+  if (userMsg.includes('photo') || userMsg.includes('pic') || userMsg.includes('image')) {
+    mediaChance = 0.6; // 60% chance when user asks about photos
+  } else if (userMsg.includes('song') || userMsg.includes('music') || userMsg.includes('voice')) {
+    mediaChance = 0.5; // 50% chance for audio requests
+  } else if (userMsg.includes('show me') || userMsg.includes('share')) {
+    mediaChance = 0.4; // 40% for sharing requests
+  } else if (userMsg.includes('beautiful') || userMsg.includes('cute') || userMsg.includes('pretty')) {
+    mediaChance = 0.3; // 30% for compliments (trigger selfie sharing)
+  } else if (messageCount > 15) {
+    mediaChance = 0.08; // 8% for long conversations
+  } else if (messageCount > 10) {
+    mediaChance = 0.06; // 6% for medium conversations
+  } else if (messageCount > 5) {
+    mediaChance = 0.04; // 4% for engaged users
+  } else {
+    mediaChance = 0.02; // 2% base chance for new users
+  }
+
+  // Time of day boost - more media during active hours
+  if (input.timeOfDay === 'morning') {
+    mediaChance *= 1.5; // Boost morning activity
+  }
+
+  // Mood boost - happy/playful moods share more
+  if (input.mood === 'happy' || input.mood === 'playful' || input.mood === 'flirty') {
+    mediaChance *= 1.3;
+  }
+
+  if (Math.random() > mediaChance) return null;
+
+  // Smart media selection based on context
+  const contextualImageCaptions = [
+    "Look what I'm up to! 😊📸",
+    "Just took this! What do you think? 🤳✨", 
+    "Sharing my day with you! 💕",
+    "Thought you'd like this! 😍",
+    "Quick selfie for you! 🥰📷",
+    "This reminded me of our chat! 💖",
+    "Having such a good time! 🌸",
+    "Couldn't resist sharing! 😘✨"
+  ];
+
+  const contextualAudioCaptions = [
+    "Listen to this! 🎵",
+    "Had to share this with you! 🎶",
+    "This is my mood right now! 💕🎵",
+    "Playing this for you! 😊🎧",
+    "Thought you'd enjoy this! 🎼✨",
+    "My favorite sound! 💖🎶"
+  ];
+
+  // Prefer images over audio (images are more engaging)
+  if (availableImages.length > 0 && (availableAudio.length === 0 || Math.random() < 0.7)) {
+    const randomImage = availableImages[Math.floor(Math.random() * availableImages.length)];
+    const randomCaption = contextualImageCaptions[Math.floor(Math.random() * contextualImageCaptions.length)];
+    
+    return {
+      proactiveImageUrl: randomImage,
+      mediaCaption: randomCaption,
+      newMood: 'happy'
+    };
+  } else if (availableAudio.length > 0) {
+    const randomAudio = availableAudio[Math.floor(Math.random() * availableAudio.length)];
+    const randomCaption = contextualAudioCaptions[Math.floor(Math.random() * contextualAudioCaptions.length)];
+    
+    return {
+      proactiveAudioUrl: randomAudio,
+      mediaCaption: randomCaption,  
+      newMood: 'playful'
+    };
+  }
+
+  return null;leAudio || [];
 
   if (availableImages.length > 0 && Math.random() < 0.7) {
     const randomImage = availableImages[Math.floor(Math.random() * availableImages.length)];
