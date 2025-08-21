@@ -29,4 +29,8 @@ mode = "sequential"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
+args = "node startup-check.js"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
 args = "npm run dev -- --port 5000 --hostname 0.0.0.0"
